@@ -16,3 +16,7 @@ package-lock.json
 **/*.snap
 snap/.snapcraft/
 .idea
+.env
+.project
+.pydevproject
+.tern-project

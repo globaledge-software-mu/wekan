@@ -617,6 +617,63 @@ if (Meteor.isServer) {
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
+    
+    cloneBoard(toId, fromId) {
+      check(toId, String);
+      check(fromId, String);
+      const toBoard = Boards.findOne(toId);
+      const fromBoard = Boards.findOne(fromId);
+      if (!toBoard || !fromBoard) throw new Meteor.Error('error-board-doesNotExist');
+      const userId = Meteor.userId();
+      if (!toBoard.hasAdmin(userId)) throw new Meteor.Error('error-board-notAdmin');
+      if (fromBoard.permission === 'private' && !fromBoard.hasMember(userId)) throw new Meteor.Error('error-board-notAMember');
+      
+      Boards.update(toId, {
+        $set: {
+          members: fromBoard.members,
+          labels: fromBoard.labels,
+          color: fromBoard.color,
+          description: fromBoard.description,
+        },
+      });
+      // copy lists
+      const listMap = {};
+      const lists = Lists.find({boardId: fromId}, { sort: ['sort'] }).fetch();
+      lists.forEach((list) => {
+        const newList = _.omit(list, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+        newList.boardId = toId;
+        newList.createdAt = new Date();
+        listMap[list._id] = Lists.insert(newList);
+      });
+      
+      // copy cards
+      const cards = Cards.find({boardId: fromId, archived: false}, {sort: ['sort']}).fetch();
+      cards.forEach((card) => {
+        const newCard = _.omit(card, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+        newCard.boardId = toId;
+        newCard.createdAt = new Date();
+        newCard.listId = listMap[card.listId];
+        const newCardId = Cards.insert(newCard);
+        
+        //copy checklists
+        const checklists = Checklists.find({cardId: card._id});
+        checklists.forEach((checklist) => {
+          const newChecklist = _.omit(checklist, ['_id', 'cardId', 'createdAt', 'finishedAt']);
+          newChecklist.cardId = newCardId;
+          const newChecklistId = Checklists.insert(newChecklist);
+          
+          //copy checklistItems
+          const checklistItems = ChecklistItems.find({checklistId: checklist._id, cardId: card._id})
+          checklistItems.forEach((checklistItem) => {
+            const newChecklistItem = _.omit(checklistItem, ['_id', 'checklistId', 'cardId']);
+            newChecklistItem.checklistId = newChecklistId;
+            newChecklistItem.cardId = newCardId;
+            ChecklistItems.insert(newChecklistItem);
+          });
+        });
+      });
+      return true;
+    },
   });
 }
 

@@ -24,6 +24,7 @@ Template.boardMenuPopup.events({
     FlowRouter.go('home');
   }),
   'click .js-outgoing-webhooks': Popup.open('outgoingWebhooks'),
+  'click .js-clone-board': Popup.open('cloneBoard'),
   'click .js-import-board': Popup.open('chooseBoardSource'),
   'click .js-subtask-settings': Popup.open('boardSubtaskSettings'),
 });
@@ -338,6 +339,41 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('boardChangeVisibilityPopup');
+
+BlazeComponent.extendComponent({
+  template() {
+    return 'cloneBoardPopup';
+  },
+    
+  onSubmit(evt) {
+    evt.preventDefault();
+    const title = this.find('.js-new-board-title').value;
+    this.visibility = new ReactiveVar('private');
+    this.boardId = new ReactiveVar('');
+
+    this.boardId.set(Boards.insert({
+      title,
+      permission: this.visibility.get(),
+    }));
+
+    Swimlanes.insert({
+      title: 'Default',
+      boardId: this.boardId.get(),
+    });
+        
+    Meteor.call('cloneBoard', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
+      if (!err && ret) {
+        Popup.close();
+        Utils.goBoardId(this.boardId.get());
+        }
+      });
+    },
+    events() {
+      return [{
+        submit: this.onSubmit
+      }];
+    },
+  }).register('cloneBoardPopup');
 
 BlazeComponent.extendComponent({
   watchLevel() {
