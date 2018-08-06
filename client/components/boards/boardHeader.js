@@ -356,11 +356,6 @@ BlazeComponent.extendComponent({
       permission: this.visibility.get(),
     }));
 
-    Swimlanes.insert({
-      title: 'Default',
-      boardId: this.boardId.get(),
-    });
-        
     Meteor.call('cloneBoard', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
       if (!err && ret) {
         Popup.close();
