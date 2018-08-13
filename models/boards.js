@@ -617,6 +617,105 @@ if (Meteor.isServer) {
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
+    
+    cloneBoard(toId, fromId) {
+      check(toId, String);
+      check(fromId, String);
+      const toBoard = Boards.findOne(toId);
+      const fromBoard = Boards.findOne(fromId);
+      if (!toBoard || !fromBoard) throw new Meteor.Error('error-board-doesNotExist');
+      const userId = Meteor.userId();
+      if (!toBoard.hasAdmin(userId)) throw new Meteor.Error('error-board-notAdmin');
+      if (fromBoard.permission === 'private' && !fromBoard.hasMember(userId)) throw new Meteor.Error('error-board-notAMember');
+      
+      const getBase64Data = function(doc, callback) {
+        let buffer = new Buffer(0);
+        const readStream = doc.createReadStream();
+        readStream.on('data', function(chunk) {
+          buffer = Buffer.concat([buffer, chunk]);
+        });
+        readStream.on('error', function(err) {
+          callback(err, null);
+        });
+        readStream.on('end', function() {
+          // done
+          callback(null, buffer.toString('base64'));
+        });
+      };
+      const getBase64DataSync = Meteor.wrapAsync(getBase64Data);
+      
+      Boards.update(toId, {
+        $set: {
+          members: fromBoard.members,
+          labels: fromBoard.labels,
+          color: fromBoard.color,
+          description: fromBoard.description,
+        },
+      });
+      
+      //Copy swimlanes
+      const swimlanesMap = {};
+      fromBoard.swimlanes().forEach((swimlane) => {
+        const newSwimlane = _.omit(swimlane, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+        newSwimlane.boardId = toId;
+        newSwimlane.crateAt = new Date();
+        swimlanesMap[swimlane._id] = Swimlanes.insert(newSwimlane);
+      });
+      
+      // copy lists
+      const listMap = {};
+      fromBoard.lists().forEach((list) => {
+        const newList = _.omit(list, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+        newList.boardId = toId;
+        newList.createdAt = new Date();
+        listMap[list._id] = Lists.insert(newList);
+      });
+      
+      // copy cards
+      fromBoard.cards().forEach((card) => {
+        const newCard = _.omit(card, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+        newCard.boardId = toId;
+        newCard.createdAt = new Date();
+        newCard.listId = listMap[card.listId];
+        newCard.swimlaneId = swimlanesMap[card.swimlaneId];
+        const newCardId = Cards.insert(newCard);
+        
+        //copy checklists
+        card.checklists().forEach((checklist) => {
+          const newChecklist = _.omit(checklist, ['_id', 'cardId', 'createdAt', 'finishedAt']);
+          newChecklist.cardId = newCardId;
+          const newChecklistId = Checklists.insert(newChecklist);
+          
+          //copy checklistItems
+          checklist.items().forEach((checklistItem) => {
+            const newChecklistItem = _.omit(checklistItem, ['_id', 'checklistId', 'cardId']);
+            newChecklistItem.checklistId = newChecklistId;
+            newChecklistItem.cardId = newCardId;
+            ChecklistItems.insert(newChecklistItem);
+          });
+        });
+        
+        //copy attachments
+        card.attachments().forEach((attachment) => {
+          const file = new FS.File();
+          const base64Data = getBase64DataSync(attachment);
+          file.attachData(new Buffer(base64Data, 'base64'), {type: attachment.original.type}, (error) => {
+            file.name(attachment.original.name);
+            file.boardId = toId;
+            file.cardId = newCardId;
+            // The field source will only be used to prevent adding
+            // attachments' related activities automatically
+            file.source = 'import';
+            if (error) {
+              throw(error);
+            } else {
+              const wekanAtt = Attachments.insert(file);
+            }
+          });
+        });
+      });
+      return true;
+    },
   });
 }
 
