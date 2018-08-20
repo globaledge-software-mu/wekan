@@ -1,3 +1,48 @@
+# v1.33 2018-08-16 Wekan release
+
+This release fixes the following bugs:
+
+- [Change default value of label ids](https://github.com/wekan/wekan/pull/1837).
+
+Thanks to GitHub user omarsy for contributions.
+
+# v1.32 2018-08-16 Wekan release
+
+This release fixes the following bugs:
+
+- [Content Policy: Allow inline scripts, otherwise there is errors in browser/inspect/console](https://github.com/wekan/wekan/commit/807c6ce09e4b5d49049d343d73bbca24fa84d527);
+- [Use only framing policy, not all of content policy](https://github.com/wekan/wekan/commit/b3005f828dbf69bdf174d4bcd7654310fa9e0968);
+- [Set default matomo settings to disabled](https://github.com/wekan/wekan/commit/807c6ce09e4b5d49049d343d73bbca24fa84d527);
+- Fix [hidden](https://github.com/wekan/wekan/commit/be00465e67931f2a5655ed47f6e075ed1c589f54)
+  [system](https://github.com/wekan/wekan/commit/9fc3de8502919f9aeb18c9f8ea3b0678b66ce176) [messages](https://github.com/wekan/wekan/issues/1830);
+- Fix [Requested By](https://github.com/wekan/wekan/commit/e55d7e4f72a4b425c4aca5ba04a7be1fc642649b) and
+  [Assigned By](https://github.com/wekan/wekan/commit/5c33a8534186920be642be8e2ac17743a54f16db) [fields](https://github.com/wekan/wekan/issues/1830);
+- [Fix Date and Time Formats are only US in every language](https://github.com/wekan/wekan/commit/b3005f828dbf69bdf174d4bcd7654310fa9e0968).
+
+Thanks to GitHub users andresmanelli and xet7 for their contributions.
+
+# v1.31 2018-08-14 Wekan release
+
+This release fixes the following bugs:
+
+- [Export of Board does not work on Docker](https://github.com/wekan/wekan/issues/1820).
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.30 2018-08-14 Wekan release
+
+This release add the following new features:
+
+- [When Content Policy is enabled, allow one URL to have iframe that embeds Wekan](https://github.com/wekan/wekan/commit/b9929dc68297539a94d21950995e26e06745a263);
+- [Add option to turn off Content Policy](https://github.com/wekan/wekan/commit/b9929dc68297539a94d21950995e26e06745a263);
+- [Allow always in Wekan markdown `<img src="any-image-url-here">`](https://github.com/wekan/wekan/commit/b9929dc68297539a94d21950995e26e06745a263).
+
+and fixes the following bugs:
+
+- [Fix Import from Trello error 400](https://github.com/wekan/wekan/commit/2f557ae3a558c654cc6f3befff22f5ee4ea6c3d9).
+
+Thanks to GitHub user xet7 for contributions.
+
 # v1.29 2018-08-12 Wekan release
 
 This release fixes the following bugs:

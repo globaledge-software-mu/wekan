@@ -6,6 +6,8 @@ Cards = new Mongo.Collection('cards');
 Cards.attachSchema(new SimpleSchema({
   title: {
     type: String,
+    optional: true,
+    defaultValue: '',
   },
   archived: {
     type: Boolean,
@@ -22,6 +24,8 @@ Cards.attachSchema(new SimpleSchema({
   },
   listId: {
     type: String,
+    optional: true,
+    defaultValue: '',
   },
   swimlaneId: {
     type: String,
@@ -31,10 +35,14 @@ Cards.attachSchema(new SimpleSchema({
   // difficult to manage and less efficient.
   boardId: {
     type: String,
+    optional: true,
+    defaultValue: '',
   },
   coverId: {
     type: String,
     optional: true,
+    defaultValue: '',
+
   },
   createdAt: {
     type: Date,
@@ -49,15 +57,19 @@ Cards.attachSchema(new SimpleSchema({
   customFields: {
     type: [Object],
     optional: true,
+    defaultValue: [],
   },
   'customFields.$': {
     type: new SimpleSchema({
       _id: {
         type: String,
+        optional: true,
+        defaultValue: '',
       },
       value: {
         type: Match.OneOf(String, Number, Boolean, Date),
         optional: true,
+        defaultValue: '',
       },
     }),
   },
@@ -70,22 +82,27 @@ Cards.attachSchema(new SimpleSchema({
   description: {
     type: String,
     optional: true,
+    defaultValue: '',
   },
   requestedBy: {
     type: String,
     optional: true,
+    defaultValue: '',
   },
   assignedBy: {
     type: String,
     optional: true,
+    defaultValue: '',
   },
   labelIds: {
     type: [String],
     optional: true,
+    defaultValue: [],
   },
   members: {
     type: [String],
     optional: true,
+    defaultValue: [],
   },
   receivedAt: {
     type: Date,
@@ -107,6 +124,7 @@ Cards.attachSchema(new SimpleSchema({
     type: Number,
     decimal: true,
     optional: true,
+    defaultValue: 0,
   },
   isOvertime: {
     type: Boolean,
@@ -126,6 +144,7 @@ Cards.attachSchema(new SimpleSchema({
   sort: {
     type: Number,
     decimal: true,
+    defaultValue: '',
   },
   subtaskSort: {
     type: Number,
@@ -135,10 +154,12 @@ Cards.attachSchema(new SimpleSchema({
   },
   type: {
     type: String,
+    defaultValue: '',
   },
   linkedId: {
     type: String,
     optional: true,
+    defaultValue: '',
   },
 }));
 
@@ -745,6 +766,52 @@ Cards.helpers({
       return board.archived;
     } else {
       return this.archived;
+    }
+  },
+
+  setRequestedBy(requestedBy) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {requestedBy}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {requestedBy}}
+      );
+    }
+  },
+
+  getRequestedBy() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.requestedBy;
+    } else  {
+      return this.requestedBy;
+    }
+  },
+
+  setAssignedBy(assignedBy) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {assignedBy}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {assignedBy}}
+      );
+    }
+  },
+
+  getAssignedBy() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.assignedBy;
+    } else  {
+      return this.assignedBy;
     }
   },
 });
