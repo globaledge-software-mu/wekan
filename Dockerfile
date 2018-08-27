@@ -17,6 +17,13 @@ ARG MATOMO_DO_NOT_TRACK
 ARG MATOMO_WITH_USERNAME
 ARG BROWSER_POLICY_ENABLED
 ARG TRUSTED_URL
+ARG WEBHOOKS_ATTRIBUTES
+ARG OAUTH2_CLIENT_ID
+ARG OAUTH2_SECRET
+ARG OAUTH2_SERVER_URL
+ARG OAUTH2_AUTH_ENDPOINT
+ARG OAUTH2_USERINFO_ENDPOINT
+ARG OAUTH2_TOKEN_ENDPOINT
 
 # Set the environment variables (defaults where required)
 # DOES NOT WORK: paxctl fix for alpine linux: https://github.com/wekan/wekan/issues/1303
@@ -36,7 +43,14 @@ ENV BUILD_DEPS="apt-utils gnupg gosu wget curl bzip2 build-essential python git 
     MATOMO_DO_NOT_TRACK=true \
     MATOMO_WITH_USERNAME=false \
     BROWSER_POLICY_ENABLED=true \
-    TRUSTED_URL=""
+    TRUSTED_URL="" \
+    WEBHOOKS_ATTRIBUTES="" \
+    OAUTH2_CLIENT_ID="" \
+    OAUTH2_SECRET="" \
+    OAUTH2_SERVER_URL="" \
+    OAUTH2_AUTH_ENDPOINT="" \
+    OAUTH2_USERINFO_ENDPOINT="" \
+    OAUTH2_TOKEN_ENDPOINT=""
 
 # Copy the app to the image
 COPY ${SRC_PATH} /home/wekan/app
