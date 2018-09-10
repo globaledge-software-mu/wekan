@@ -914,8 +914,9 @@ Cards.mutations({
 
 //FUNCTIONS FOR creation of Activities
 
-function cardMove(userId, doc, fieldNames, oldListId) {
-  if (_.contains(fieldNames, 'listId') && doc.listId !== oldListId) {
+function cardMove(userId, doc, fieldNames, oldListId, oldSwimlaneId) {
+  if ((_.contains(fieldNames, 'listId') && doc.listId !== oldListId) ||
+      (_.contains(fieldNames, 'swimlaneId') && doc.swimlaneId !== oldSwimlaneId)){
     Activities.insert({
       userId,
       oldListId,
@@ -923,6 +924,8 @@ function cardMove(userId, doc, fieldNames, oldListId) {
       listId: doc.listId,
       boardId: doc.boardId,
       cardId: doc._id,
+      swimlaneId: doc.swimlaneId,
+      oldSwimlaneId,
     });
   }
 }
@@ -990,6 +993,7 @@ function cardCreation(userId, doc) {
     boardId: doc.boardId,
     listId: doc.listId,
     cardId: doc._id,
+    swimlaneId: doc.swimlaneId,
   });
 }
 
@@ -1017,6 +1021,12 @@ if (Meteor.isServer) {
   // queries more efficient.
   Meteor.startup(() => {
     Cards._collection._ensureIndex({boardId: 1, createdAt: -1});
+    // https://github.com/wekan/wekan/issues/1863
+    // Swimlane added a new field in the cards collection of mongodb named parentId.
+    // When loading a board, mongodb is searching for every cards, the id of the parent (in the swinglanes collection).
+    // With a huge database, this result in a very slow app and high CPU on the mongodb side.
+    // To correct it, add Index to parentId:
+    Cards._collection._ensureIndex({parentId: 1});
   });
 
   Cards.after.insert((userId, doc) => {
@@ -1031,7 +1041,8 @@ if (Meteor.isServer) {
   //New activity for card moves
   Cards.after.update(function (userId, doc, fieldNames) {
     const oldListId = this.previous.listId;
-    cardMove(userId, doc, fieldNames, oldListId);
+    const oldSwimlaneId = this.previous.swimlaneId;
+    cardMove(userId, doc, fieldNames, oldListId, oldSwimlaneId);
   });
 
   // Add a new activity if we add or remove a member to the card
@@ -1137,6 +1148,51 @@ if (Meteor.isServer) {
       const newlabelIds = req.body.labelIds;
       Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
         {$set: {labelIds: newlabelIds}});
+    }
+    if (req.body.hasOwnProperty('requestedBy')) {
+      const newrequestedBy = req.body.requestedBy;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {requestedBy: newrequestedBy}});
+    }
+    if (req.body.hasOwnProperty('assignedBy')) {
+      const newassignedBy = req.body.assignedBy;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {assignedBy: newassignedBy}});
+    }
+    if (req.body.hasOwnProperty('receivedAt')) {
+      const newreceivedAt = req.body.receivedAt;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {receivedAt: newreceivedAt}});
+    }
+    if (req.body.hasOwnProperty('startAt')) {
+      const newstartAt = req.body.startAt;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {startAt: newstartAt}});
+    }
+    if (req.body.hasOwnProperty('dueAt')) {
+      const newdueAt = req.body.dueAt;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {dueAt: newdueAt}});
+    }
+    if (req.body.hasOwnProperty('endAt')) {
+      const newendAt = req.body.endAt;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {endAt: newendAt}});
+    }
+    if (req.body.hasOwnProperty('spentTime')) {
+      const newspentTime = req.body.spentTime;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {spentTime: newspentTime}});
+    }
+    if (req.body.hasOwnProperty('isOverTime')) {
+      const newisOverTime = req.body.isOverTime;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {isOverTime: newisOverTime}});
+    }
+    if (req.body.hasOwnProperty('customFields')) {
+      const newcustomFields = req.body.customFields;
+      Cards.direct.update({_id: paramCardId, listId: paramListId, boardId: paramBoardId, archived: false},
+        {$set: {customFields: newcustomFields}});
     }
     JsonRoutes.sendResult(res, {
       code: 200,

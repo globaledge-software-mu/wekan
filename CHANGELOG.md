@@ -1,3 +1,98 @@
+# Upcoming Wekan release
+
+This release adds the following new features:
+
+- [Upgrade MongoDB to 3.2.21](https://github.com/wekan/wekan/commit/0cb3aee803781e4241c38a3e1e700703d063035a).
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.45 2018-09-09 Wekan release
+
+This release fixes the following bugs:
+
+- [Fix lint error](https://github.com/wekan/wekan/commit/45c0343f45b4cfc06d83cf357ffb50d6fca2f23b).
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.44 2018-09-09 Wekan release
+
+This release adds the following new features:
+
+- REST API: [Add startAt/dueAt/endAt etc](https://github.com/wekan/wekan/commit/1e0fdf8abc10130ea3c50b13ae97396223ce7fa9).
+  Docs at https://github.com/wekan/wekan/wiki/REST-API-Cards
+- [Fix cards export and add customFields export](https://github.com/wekan/wekan/pull/1886).
+
+Thanks to GitHub users ymeramees and xet7 for their contributions.
+
+# v1.43 2018-09-06 Wekan release
+
+This release fixes the following bugs:
+
+- [Fix "No Comments" permission on Wekan and Trello import](https://github.com/wekan/wekan/commit/0a001d505d81961e6bd6715d885fffee0adb702d).
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.42 2018-09-06 Wekan release
+
+This release adds the following new features:
+
+- REST API: [Create board options to be modifiable](https://github.com/wekan/wekan/commit/9cea76e4efaacaebcb2e9f0690dfeb4ef6d62527),
+  like permissions, public/private board - now private by default,
+  and board background color.
+  Docs at https://github.com/wekan/wekan/wiki/REST-API-Boards
+- [Add swimlaneId in activity. Create default swimlaneId in API](https://github.com/wekan/wekan/pull/1876).
+
+Thanks to GitHub users andresmanelli and xet7 for their contributions.
+
+# v1.41 2018-09-05 Wekan release
+
+This release tries to fix the following bugs:
+
+- [Try to fix Wekan Sandstorm API](https://github.com/wekan/wekan/issues/1279#issuecomment-418440401).
+
+Thanks to GitHub users ocdtrekkie and xet7 for their contributions.
+
+# v1.40 2018-09-04 Wekan release
+
+This release adds the following new features:
+
+- [Add permission "No comments"](https://github.com/wekan/wekan/commit/77efcf71376d3da6c19ad1a4910567263e83c0ca).
+  It is like normal user, but [does not show comments and activities](https://github.com/wekan/wekan/issues/1861).
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.39 2018-08-29 Wekan release
+
+This release fixes the following bugs:
+
+- [Only allow ifCanModify users to add dates on cards](https://github.com/wekan/wekan/pull/1867).
+
+Thanks to GitHub user rjevnikar for contributions.
+
+# v1.38 2018-08-29 Wekan release
+
+This release adds the following new features:
+
+- Add [msavin:userCache](https://github.com/msavin/userCache) to speedup Wekan.
+  See [meteor forums post](https://forums.meteor.com/t/introducing-a-new-approach-to-meteor-user-this-simple-trick-can-save-you-millions-of-database-requests/45336/7).
+
+and fixes the following bugs:
+
+- [Fix Delete Board](https://github.com/wekan/wekan/commit/534b20fedac9162d2d316bd74eff743d636f2b3d).
+
+Thanks to GitHub users msavin, rjevnikar and xet7 for their contributions.
+
+# v1.37 2018-08-28 Wekan release
+
+This release fixes the following bugs:
+
+- [Add Missing Index on cards.parentId since Swimlane integration
+  to speedup Wekan](https://github.com/wekan/wekan/issues/1863);
+- [Update OpenShift template to add Route and parameterize](https://github.com/wekan/wekan/pull/1865);
+- [Fix typos in Wekan snap help](https://github.com/wekan/wekan/commit/0c5fc6d7fd899a6bc67a446ab43e53290d8571e4).
+
+Thanks to GitHub users Clement87, InfoSec812 and xet7 for their contributions.
+
 # v1.36 2018-08-25 Wekan release
 
 This release adds the following new features:

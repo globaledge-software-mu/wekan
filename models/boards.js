@@ -110,6 +110,7 @@ Boards.attachSchema(new SimpleSchema({
           userId: this.userId,
           isAdmin: true,
           isActive: true,
+          isNoComments: false,
           isCommentOnly: false,
         }];
       }
@@ -122,6 +123,9 @@ Boards.attachSchema(new SimpleSchema({
     type: Boolean,
   },
   'members.$.isActive': {
+    type: Boolean,
+  },
+  'members.$.isNoComments': {
     type: Boolean,
   },
   'members.$.isCommentOnly': {
@@ -290,6 +294,10 @@ Boards.helpers({
 
   hasAdmin(memberId) {
     return !!_.findWhere(this.members, { userId: memberId, isActive: true, isAdmin: true });
+  },
+
+  hasNoComments(memberId) {
+    return !!_.findWhere(this.members, { userId: memberId, isActive: true, isAdmin: false, isNoComments: true });
   },
 
   hasCommentOnly(memberId) {
@@ -501,6 +509,7 @@ Boards.mutations({
           userId: memberId,
           isAdmin: false,
           isActive: true,
+          isNoComments: false,
           isCommentOnly: false,
         },
       },
@@ -528,7 +537,7 @@ Boards.mutations({
     };
   },
 
-  setMemberPermission(memberId, isAdmin, isCommentOnly) {
+  setMemberPermission(memberId, isAdmin, isNoComments, isCommentOnly) {
     const memberIndex = this.memberIndex(memberId);
 
     // do not allow change permission of self
@@ -539,6 +548,7 @@ Boards.mutations({
     return {
       $set: {
         [`members.${memberIndex}.isAdmin`]: isAdmin,
+        [`members.${memberIndex}.isNoComments`]: isNoComments,
         [`members.${memberIndex}.isCommentOnly`]: isCommentOnly,
       },
     };
@@ -935,18 +945,24 @@ if (Meteor.isServer) {
         members: [
           {
             userId: req.body.owner,
-            isAdmin: true,
-            isActive: true,
-            isCommentOnly: false,
+            isAdmin: req.body.isAdmin || true,
+            isActive: req.body.isActive || true,
+            isNoComments: req.body.isNoComments || false,
+            isCommentOnly: req.body.isCommentOnly || false,
           },
         ],
-        permission: 'public',
-        color: 'belize',
+        permission: req.body.permission || 'private',
+        color: req.body.color || 'belize',
+      });
+      const swimlaneId = Swimlanes.insert({
+        title: TAPi18n.__('default'),
+        boardId: id,
       });
       JsonRoutes.sendResult(res, {
         code: 200,
         data: {
           _id: id,
+          defaultSwimlaneId: swimlaneId,
         },
       });
     }
