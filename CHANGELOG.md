@@ -1,10 +1,33 @@
-# Upcoming Wekan release
+# v1.47 2018-09-16 Wekan release
 
 This release adds the following new features:
 
-- [Upgrade MongoDB to 3.2.21](https://github.com/wekan/wekan/commit/0cb3aee803781e4241c38a3e1e700703d063035a).
+- [IFTTT Rules](https://github.com/wekan/wekan/pull/1896). Useful to automate things like
+  [adding labels, members, moving card, archiving them, checking checklists etc](https://github.com/wekan/wekan/issues/1160).
+  Please test and report bugs. Later colors need to be made translatable.
 
-Thanks to GitHub user xet7 for contributions.
+Thanks to GitHub users Angtrim and xet7 for their contributions.
+
+# v1.46 2018-09-15 Wekan release
+
+This release adds the following new features:
+
+- [Upgrade MongoDB to 3.2.21](https://github.com/wekan/wekan/commit/0cb3aee803781e4241c38a3e1e700703d063035a);
+- [Add source-map-support](https://github.com/wekan/wekan/issues/1889);
+- [Allow Announcement to be markdown](https://github.com/wekan/wekan/issues/1892).
+  Note: xet7 did not yet figure out how to keep announcement on one line
+  when markdown was added, so now Font Awesome icons are above and below.
+
+and fixes the following bugs:
+
+- [Turn of http/2 in Caddyfile](https://github.com/wekan/wekan/commit/f1ab46d5178b6fb7e9c4e43628eec358026d287a)
+  so that Firefox Inspect Console does not [show errors about wss](https://github.com/wekan/wekan/issues/934)
+  websocket config. Chrome web console supports http/2.
+  Note: If you are already using Caddy and have modified your Caddyfile, you need to edit your Caddyfile manually.
+- [Partially fix: Cannot move card from one swimline to the other if moving in the same list](https://github.com/wekan/wekan/issues/1887);
+- [Fix: Linking cards from empty board is possible and makes current board not load anymore](https://github.com/wekan/wekan/issues/1885).
+
+Thanks to GitHub users andresmanelli, HLFH and xet7 for their contributions.
 
 # v1.45 2018-09-09 Wekan release
 
