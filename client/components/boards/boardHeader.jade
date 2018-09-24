@@ -129,6 +129,7 @@ template(name="boardMenuPopup")
       ul.pop-over-list
         li: a(href="{{exportUrl}}", download="{{exportFilename}}") {{_ 'export-board'}}
         li: a.js-archive-board {{_ 'archive-board'}}
+        li: a.js-clone-board {{_ 'clone-board'}}
         li: a.js-outgoing-webhooks {{_ 'outgoing-webhooks'}}
       hr
       ul.pop-over-list
@@ -272,6 +273,13 @@ template(name="createBoard")
     span.quiet
       | {{_ 'or'}}
       a.js-import-board {{_ 'import-board'}}
+
+template(name="cloneBoardPopup")
+  form
+    label
+      | {{_ 'title'}}
+      input.js-new-board-title(type="text" placeholder="{{_ 'bucket-example'}}" autofocus required)
+    input.primary.wide(type="submit" value="{{_ 'confirm'}}")
 
 template(name="chooseBoardSource")
   ul.pop-over-list

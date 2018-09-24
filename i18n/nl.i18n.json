@@ -164,6 +164,8 @@
     "click-to-star": "Klik om het bord als favoriet in te stellen",
     "click-to-unstar": "Klik om het bord uit favorieten weg te halen",
     "clipboard": "Vanuit clipboard of sleep het bestand hierheen",
+    "clone-board": "Klonen Bord",
+    "cloneBoardPopup-title": "Huidige paneel klonen:",
     "close": "Sluiten",
     "close-board": "Sluit bord",
     "close-board-pop": "You will be able to restore the board by clicking the “Recycle Bin” button from the home header.",
@@ -184,6 +186,7 @@
     "no-comments": "No comments",
     "no-comments-desc": "Can not see comments and activities.",
     "computer": "Computer",
+    "confirm": "Bevestigen",
     "confirm-subtask-delete-dialog": "Are you sure you want to delete subtask?",
     "confirm-checklist-delete-dialog": "Are you sure you want to delete checklist?",
     "copy-card-link-to-clipboard": "Kopieer kaart link naar klembord",
@@ -548,7 +551,7 @@
     "r-when-the-label-is": "When the label is",
     "r-list-name": "List name",
     "r-when-a-member": "When a member is",
-    "r-when-the-member": "When the member is",
+    "r-when-the-member": "When the member",
     "r-name": "name",
     "r-is": "is",
     "r-when-a-attach": "When an attachment",
@@ -605,5 +608,6 @@
     "r-d-uncheck-one": "Uncheck item",
     "r-d-check-of-list": "of checklist",
     "r-d-add-checklist": "Add checklist",
-    "r-d-remove-checklist": "Remove checklist"
+    "r-d-remove-checklist": "Remove checklist",
+    "r-when-a-card-is-moved": "When a card is moved to another list"
 }
