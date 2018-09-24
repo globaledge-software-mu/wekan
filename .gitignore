@@ -4,6 +4,7 @@
 *.sublime-workspace
 tmp/
 node_modules/
+npm-debug.log
 .vscode/
 .idea/
 .build/*
@@ -20,3 +21,4 @@ snap/.snapcraft/
 .project
 .pydevproject
 .tern-project
+.DS_Store
