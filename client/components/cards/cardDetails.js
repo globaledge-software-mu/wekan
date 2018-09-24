@@ -1,5 +1,7 @@
+import Chart from 'chart.js';
 const subManager = new SubsManager();
 const { calculateIndexData, enableClickOnTouch } = Utils;
+scoreChart = null;
 
 BlazeComponent.extendComponent({
   mixins() {
@@ -186,6 +188,65 @@ BlazeComponent.extendComponent({
         $subtasksDom.sortable('option', 'disabled', !userIsMember());
       }
     });
+    const cardScores = this.currentData().scores();
+    let labels = []
+    let scores = {'current': [], 'target': []};
+    cardScores.forEach((score) => {
+      labels.push(moment(score.dueDate).format('L'));
+      scores['current'].push(score.currentScore);
+      scores['target'].push(score.targetScore);
+    });
+    let chartCtx = $('.score-line');
+    scoreChart = new Chart(chartCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Current Score',
+                backgroundColor: '#0079bf',
+                borderColor: '#0079bf',
+                data: scores['current'],
+                fill: false,
+            }, {
+                label: 'Target Score',
+                fill: false,
+                backgroundColor: '#3cb500',
+                borderColor: '#3cb500',
+                data: scores['target'],
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Historic scores'
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Due date'
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Score'
+                    }
+                }]
+            }
+        }
+    });
   },
 
   onDestroyed() {
@@ -244,6 +305,7 @@ BlazeComponent.extendComponent({
       'click .js-start-date': Popup.open('editCardStartDate'),
       'click .js-due-date': Popup.open('editCardDueDate'),
       'click .js-end-date': Popup.open('editCardEndDate'),
+      'click .js-scores': Popup.open('editCardScores'),
       'mouseenter .js-card-details' () {
         const parentComponent =  this.parentComponent().parentComponent();
         //on mobile view parent is Board, not BoardBody.
@@ -315,6 +377,7 @@ Template.cardDetailsActionsPopup.events({
   'click .js-due-date': Popup.open('editCardDueDate'),
   'click .js-end-date': Popup.open('editCardEndDate'),
   'click .js-spent-time': Popup.open('editCardSpentTime'),
+  'click .js-score': Popup.open('editCardScores'),
   'click .js-move-card': Popup.open('moveCard'),
   'click .js-copy-card': Popup.open('copyCard'),
   'click .js-copy-checklist-cards': Popup.open('copyChecklistToManyCards'),

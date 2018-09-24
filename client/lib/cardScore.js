@@ -1,7 +1,45 @@
-import Inputmask from 'inputmask';
-DatePicker = BlazeComponent.extendComponent({
+import Inputmask from 'inputmask'
+
+CardScore = BlazeComponent.extendComponent({
   template() {
-    return 'datepicker';
+    return 'cardScore';
+  },
+  
+  onCreated() {
+    this.error = new ReactiveVar('');
+    this.card = this.data();
+    this.score = new ReactiveVar('');
+  },
+  
+  showScore() {
+    return this.score.get();
+  },
+  
+  events() {
+    return [{
+      'submit .edit-score'(evt) {
+        evt.preventDefault();
+        const score = evt.target.score.value
+        if (score !== '') {
+          this._storeScore(score);
+          Popup.close();
+        } else {
+            this.error.set('invalid-score');
+            evt.target.date.focus();
+        }
+      },
+      'click .js-delete-score'(evt) {
+        evt.preventDefault();
+        this._deleteScore();
+        Popup.close();
+      },
+    }]
+  }
+});
+
+CardScores = BlazeComponent.extendComponent({
+  template() {
+    return 'cardScores';
   },
 
   onCreated() {
@@ -28,6 +66,10 @@ DatePicker = BlazeComponent.extendComponent({
     Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('LT').toUpperCase(), placeholder: moment.localeData().longDateFormat('LT')}).mask(this.$('#time'));
   },
 
+  _storeDate(date) {
+    this.card.setReceived(date);
+  },
+  
   showDate() {
     if (this.date.get().isValid())
       return this.date.get().format('L');
@@ -62,7 +104,7 @@ DatePicker = BlazeComponent.extendComponent({
           this.error.set('');
         }
       },
-      'submit .edit-date'(evt) {
+      'submit .edit-card-score'(evt) {
         evt.preventDefault();
 
         // if no time was given, init with 12:00
@@ -70,20 +112,35 @@ DatePicker = BlazeComponent.extendComponent({
 
         const dateString = `${evt.target.date.value} ${time}`;
         const newDate = moment(dateString, 'L LT', true);
-        if (newDate.isValid()) {
-          this._storeDate(newDate.toDate());
-          Popup.close();
+        const currentScore = evt.target.currentScore.value;
+        const targetScore = evt.target.targetScore.value;
+        if (isNaN(currentScore)) {
+          this.error.set('invalid-score');
+          evt.target.currentScore.focus();
+          return;
         }
-        else {
+        if (isNaN(targetScore)) {
+          this.error.set('invalid-score');
+          evt.target.targetScore.focus();
+          return;
+        }
+        if (!newDate.isValid()) {
           this.error.set('invalid-date');
           evt.target.date.focus();
+          return;
         }
+        this._storeDate(newDate.toDate());
+        this._storeScores(currentScore, targetScore);
+        Popup.close();
       },
-      'click .js-delete-date'(evt) {
+      'click .js-delete'(evt) {
         evt.preventDefault();
-        this._deleteDate();
+        this._delete()
         Popup.close();
       },
     }];
-  },
+  }
 });
+
+  
+  

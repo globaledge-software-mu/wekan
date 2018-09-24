@@ -148,6 +148,31 @@ Template.dateBadge.helpers({
 
   _storeDate(date) {
     this.card.setDue(date);
+    const card = this.card;
+    if (this.card.isLinkedCard()) {
+      card = Cards.findOne({_id: this.linkedId});
+    }
+    CardScores.insert({
+      boardId: card.boardId,
+      cardId: card._id,
+      currentScore: card.currentScore,
+      targetScore: card.targetScore,
+      dueDate: date
+    });
+    const cardScores = this.card.scores();
+    let labels = []
+    let scores = {'current': [], 'target': []};
+    cardScores.forEach((score) => {
+      labels.push(moment(score.dueDate).format('L'));
+      scores['current'].push(score.currentScore);
+      scores['target'].push(score.targetScore);
+    });
+    if (cardScores.count() > 0 && scoreChart !== null) {
+      scoreChart.data.labels = labels;
+      scoreChart.data.datasets[0].data = scores.current;
+      scoreChart.data.datasets[1].data = scores.target;
+      scoreChart.update();
+    }
   }
 
   _deleteDate() {

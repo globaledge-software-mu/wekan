@@ -79,6 +79,22 @@ Cards.attachSchema(new SimpleSchema({
       return new Date();
     },
   },
+  initialScore: {
+    type: String,
+    optional: true, 
+  },
+  endScore: {
+    type: String,
+    optional: true, 
+  },
+  currentScore: {
+    type: String,
+    optional: true, 
+  },
+  targetScore: {
+    type: String,
+    optional: true, 
+  },
   description: {
     type: String,
     optional: true,
@@ -764,7 +780,184 @@ Cards.helpers({
       );
     }
   },
-
+  
+  setInitialScore(initialScore) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {initialScore}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {initialScore}}
+      );
+    }
+  },
+    
+  getInitialScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.initialScore;
+    } else {
+      return this.initialScore;
+    } 
+  },
+    
+  setEndScore(endScore) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {initialScore}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {endScore}}
+      );
+    }
+  },
+    
+  getEndScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.endScore;
+    } else {
+      return this.endScore;
+    } 
+  },
+    
+  scores() {
+    return CardScores.find({ cardId: this._id });
+  },
+  
+  setScores(currentScore, targetScore) {
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    let data = {};
+    if (currentScore != null) {
+      data['currentScore'] = currentScore;
+    } else {
+        currentScore = card.currentScore
+    }
+    if (targetScore != null) {
+      data['targetScore'] = targetScore;
+    } else {
+        targetScore = card.targetScore;
+    }
+    Cards.update(
+      {_id: this._id},
+      {$set: data}
+    );
+    
+    let boardId = card.boardId;
+    let cardId = card._id;
+    CardScores.insert({
+      boardId: boardId,
+      cardId: cardId,
+      currentScore: currentScore,
+      targetScore: targetScore,
+      dueDate: card.dueAt
+    });
+    
+    const cardScores = this.scores();
+    let labels = []
+    let scores = {'current': [], 'target': []};
+    cardScores.forEach((score) => {
+      labels.push(moment(score.dueDate).format('L'));
+      scores['current'].push(score.currentScore);
+      scores['target'].push(score.targetScore);
+    });
+    if (cardScores.count() > 0 && scoreChart !== null) {
+      scoreChart.data.labels = labels;
+      scoreChart.data.datasets[0].data = scores.current;
+      scoreChart.data.datasets[1].data = scores.target;
+      scoreChart.update();
+    }
+  },
+  
+  deleteCurrentScore() {
+    let cardId = this._id;
+    if (this.isLinkedCard()) {
+      cardId = this.linkedId;
+    } 
+    Cards.update(
+      {_id: cardId},
+      {$set: {'currentScore': null}}
+    );
+  },
+  
+  setCurrentScore(currentScore) {
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    
+    Cards.update(
+      {_id: card._id},
+      {$set: {currentScore}}
+    );
+    
+    return CardScores.insert({
+      boardId: card.boardId,
+      cardId: card._id,
+      currentScore: currentScore,
+      targetScore: card.targetScore,
+      dueDate: card.dueAt
+    });
+  },
+  
+  getCurrentScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.currentScore;
+    } else {
+      return this.currentScore;
+    }
+  },
+  
+  deleteTargetScore() {
+    let cardId = this._id;
+    if (this.isLinkedCard()) {
+      cardId = this.linkedId;
+    } 
+    Cards.update(
+      {_id: cardId},
+      {$set: {'targetScore': null}}
+    );
+  },
+  
+  setTargetScore(targetScore) {
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    
+    Cards.update(
+      {_id: card._id},
+      {$set: {targetScore}}
+    );
+    
+    return CardScores.insert({
+      boardId: card.boardId,
+      cardId: card._id,
+      currentScore: card.currentScore,
+      targetScore: targetScore,
+      dueDate: card.dueAt
+    });
+  },
+  
+  getTargetScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.targetScore;
+    } else {
+      return this.targetScore;
+    }
+  },
+  
   getArchived() {
     if (this.isLinkedCard()) {
       const card = Cards.findOne({ _id: this.linkedId });
