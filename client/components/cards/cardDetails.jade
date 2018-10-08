@@ -86,15 +86,16 @@ template(name="cardDetails")
         h3 {{_ 'card-initial-score-title'}}
         +cardInitialScore
       .card-details-item.card-details-item-name
-        h3 {{_ 'card-end-score-title'}}
-        +cardEndScore
-      .card-details-item.card-details-item-name
         h3 {{_ 'card-current-score-title'}}
         +cardCurrentScore
       .card-details-item.card-details-item-name
         h3 {{_ 'card-target-score-title'}}
         +cardTargetScore
-    canvas.card-details-item.score-line
+      .card-details-item.card-details-item-name
+        h3 {{_ 'card-end-score-title'}}
+        +cardEndScore
+    #historicScores
+        canvas.card-details-item.score-line
     
     .card-details-items
       each customFieldsWD

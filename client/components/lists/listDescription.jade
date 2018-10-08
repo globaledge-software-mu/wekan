@@ -1,0 +1,16 @@
+template(name="listDescription")
+  .list-description.js-list-description
+    +inlinedForm
+      +editListDescriptionForm
+    else
+      a.list-header-description(
+        class="{{#if currentUser.isBoardMember}}js-open-inlined-form is-editable{{/if}}")
+        = description
+        
+template(name="editListDescriptionForm")
+  .minicard.minicard-composer.js-composer
+    textarea.minicard-composer-textarea.js-card-title(autofocus)
+      = description
+  .edit-controls.clearfix
+    button.primary.confirm(type="submit") {{_ 'save'}}
+    a.fa.fa-times-thin.js-close-inlined-form

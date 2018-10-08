@@ -80,6 +80,11 @@ Template.listActionPopup.events({
     Popup.close();
   },
   'click .js-set-wip-limit': Popup.open('setWipLimit'),
+  'click .js-add-desctiption' (evt) {
+    const list = Template.currentData();
+    const forms = $('#js-list-' + Template.currentData()._id + ' .list-header-description');
+    forms[0].click();
+  },
   'click .js-more': Popup.open('listMore'),
 });
 

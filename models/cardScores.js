@@ -7,26 +7,15 @@ CardScores.attachSchema(new SimpleSchema({
   cardId: {
     type: String
   },
-  currentScore: {
+  score: {
     type: Number
   },
-  targetScore: {
-    type: Number
+  type: {
+    type: String
   },
-  currentDate: {
+  date: {
     type: Date,
     denyUpdate: false,
-    autoValue() {
-      if (this.isInsert) {
-        return new Date();
-      } else {
-        this.unset();
-      }
-    }
-  },
-  dueDate: {
-    type: Date,
-    denyUpdate: false
   },
   userId: {
     type: String,

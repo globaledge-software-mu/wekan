@@ -54,9 +54,10 @@ template(name="listActionPopup")
       if cards.count
         li: a.js-select-cards {{_ 'list-select-cards'}}
         hr
-    if currentUser.isBoardAdmin
+    if currentUser.isBoardMember
       ul.pop-over-list
         li: a.js-set-wip-limit {{#if isWipLimitEnabled }}{{_ 'edit-wip-limit'}}{{else}}{{_ 'setWipLimitPopup-title'}}{{/if}}
+        li: a.js-add-desctiption {{_ 'list-add-description-title'}}
       hr
     ul.pop-over-list
       li: a.js-close-list {{_ 'archive-list'}}

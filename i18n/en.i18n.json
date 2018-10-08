@@ -326,6 +326,7 @@
     "leave-board-pop": "Are you sure you want to leave __boardTitle__? You will be removed from all cards on this board.",
     "leaveBoardPopup-title": "Leave Board ?",
     "link-card": "Link to this card",
+    "list-add-description-title": "Add Description",
     "list-archive-cards": "Move all cards in this list to Recycle Bin",
     "list-archive-cards-pop": "This will remove all the cards in this list from the board. To view cards in Recycle Bin and bring them back to the board, click “Menu” > “Recycle Bin”.",
     "list-move-cards": "Move all cards in this list",
@@ -620,5 +621,6 @@
     "r-d-uncheck-one": "Uncheck item",
     "r-d-check-of-list": "of checklist",
     "r-d-add-checklist": "Add checklist",
-    "r-d-remove-checklist": "Remove checklist"
+    "r-d-remove-checklist": "Remove checklist",
+    "score": "Score"
 }

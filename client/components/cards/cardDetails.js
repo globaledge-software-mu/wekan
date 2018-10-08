@@ -192,61 +192,75 @@ BlazeComponent.extendComponent({
     let labels = []
     let scores = {'current': [], 'target': []};
     cardScores.forEach((score) => {
-      labels.push(moment(score.dueDate).format('L'));
-      scores['current'].push(score.currentScore);
-      scores['target'].push(score.targetScore);
+      labels.push(score.date);
+      scores[score.type].push({x: score.date, y: score.score})
     });
+    
+    $('#historicScores').hide();
+    if (labels.length > 0) {
+      $('#historicScores').show();
+    }
     let chartCtx = $('.score-line');
     scoreChart = new Chart(chartCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Current Score',
-                backgroundColor: '#0079bf',
-                borderColor: '#0079bf',
-                data: scores['current'],
-                fill: false,
-            }, {
-                label: 'Target Score',
-                fill: false,
-                backgroundColor: '#3cb500',
-                borderColor: '#3cb500',
-                data: scores['target'],
-            }]
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+            label: 'Current Score',
+            backgroundColor: '#0079bf',
+            borderColor: '#0079bf',
+            data: scores['current'],
+            fill: false
+        }, {
+            label: 'Target Score',
+            backgroundColor: '#3cb500',
+            borderColor: '#3cb500',
+            data: scores['target'],
+            fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        title: {
+          display: true,
+          text: 'Historic scores'
         },
-        options: {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Historic scores'
+        scales: {
+          xAxes: [{
+            type: 'time',
+            display: true,
+            time: {
+              unit: 'day',
+              displayFormats: {
+                day: 'DD/MM/YYYY'
+              },
+              tooltipFormat: 'DD/MM/YYYY'
             },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
+            scaleLabel: {
+              display: true,
+              labelString: 'Date'
             },
-            hover: {
-                mode: 'nearest',
-                intersect: true
-            },
-            scales: {
-                xAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Due date'
-                    }
-                }],
-                yAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Score'
-                    }
-                }]
+            ticks: {
+              autoSkip: false,
+              stepSize: 1,
+              minRotation: 45
             }
-        }
+          }],
+          yAxes: [{
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Score'
+          },
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
     });
+    scoreChart.scales["x-axis-0"].options.ticks.autoSkip = false;
+    scoreChart.scales["x-axis-0"].options.ticks.stepSize = 1;
   },
 
   onDestroyed() {

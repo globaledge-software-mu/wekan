@@ -326,6 +326,8 @@
     "leave-board-pop": "Weet u zeker dat u __boardTitle__ wilt verlaten? U wordt verwijderd van alle kaarten binnen dit bord",
     "leaveBoardPopup-title": "Bord verlaten?",
     "link-card": "Link naar deze kaart",
+    "list-add-description-title": "Voeg een beschrijving toe",
+    "listAddDescriptionPopup-title": "Add Description",
     "list-archive-cards": "Move all cards in this list to Recycle Bin",
     "list-archive-cards-pop": "This will remove all the cards in this list from the board. To view cards in Recycle Bin and bring them back to the board, click “Menu” > “Recycle Bin”.",
     "list-move-cards": "Verplaats alle kaarten in deze lijst",
@@ -620,5 +622,6 @@
     "r-d-check-of-list": "of checklist",
     "r-d-add-checklist": "Add checklist",
     "r-d-remove-checklist": "Remove checklist",
-    "r-when-a-card-is-moved": "When a card is moved to another list"
+    "r-when-a-card-is-moved": "When a card is moved to another list",
+    "score": "Partituur"
 }

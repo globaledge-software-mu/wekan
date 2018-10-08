@@ -7,19 +7,13 @@
 
   onRendered() {
     super.onRendered();
-    if (moment.isDate(this.card.getStart())) {
-      this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
-    }
   }
 
-  _storeScores(currentScore, targetScore) {
-    this.card.setScores(currentScore, targetScore);
+  _storeScores(dueAt, currentScore, targetScore) {
+    this.card.setScores(dueAt, currentScore, targetScore);
+    this.card.reloadHistoricScoreChart();
   }
   
-  _storeDate(date) {
-    this.card.setDue(date);
-  }
-
   _deleteDate() {
     this.card.setDue(null);
   }
@@ -75,6 +69,11 @@ BlazeComponent.extendComponent({
     super.onCreated();
     this.data().getInitialScore() && this.score.set(this.data().getInitialScore());
   }
+  
+  onRendered() {
+    super.onRendered();
+    this.$('.target-score').remove();
+  }
 
   _storeScore(score) {
     this.card.setInitialScore(score);
@@ -90,6 +89,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     super.onCreated();
     this.data().getEndScore() && this.score.set(this.data().getEndScore());
+  }
+  
+  onRendered() {
+    super.onRendered();
+    this.$('.target-score').remove();
   }
 
   _storeScore(score) {
@@ -107,23 +111,15 @@ BlazeComponent.extendComponent({
     super.onCreated();
     this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
   }
+  
+  onRendered() {
+    super.onRendered();
+    this.$('.target-score').remove();
+  }
 
   _storeScore(score) {
     this.card.setCurrentScore(score);
-    const cardScores = this.card.scores();
-    let labels = []
-    let scores = {'current': [], 'target': []};
-    cardScores.forEach((score) => {
-      labels.push(moment(score.dueDate).format('L'));
-      scores['current'].push(score.currentScore);
-      scores['target'].push(score.targetScore);
-    });
-    if (cardScores.count() > 0 && scoreChart !== null) {
-      scoreChart.data.labels = labels;
-      scoreChart.data.datasets[0].data = scores.current;
-      scoreChart.data.datasets[1].data = scores.target;
-      scoreChart.update();
-    }
+    this.card.reloadHistoricScoreChart();
   }
 
   _deleteScore() {
@@ -136,24 +132,20 @@ BlazeComponent.extendComponent({
   onCreated() {
     super.onCreated();
     this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
+    this.data().getDue() && this.date.set(moment(this.data().getDue()));
   }
-
+  
+  onRendered() {
+    super.onRendered();
+  }
+  
   _storeScore(score) {
     this.card.setTargetScore(score);
-    const cardScores = this.card.scores();
-    let labels = []
-    let scores = {'current': [], 'target': []};
-    cardScores.forEach((score) => {
-      labels.push(moment(score.dueDate).format('L'));
-      scores['current'].push(score.currentScore);
-      scores['target'].push(score.targetScore);
-    });
-    if (cardScores.count() > 0 && scoreChart !== null) {
-      scoreChart.data.labels = labels;
-      scoreChart.data.datasets[0].data = scores.current;
-      scoreChart.data.datasets[1].data = scores.target;
-      scoreChart.update();
-    }
+    this.card.reloadHistoricScoreChart();
+  }
+  
+  _storeDueDate(dueAt) {
+    this.card.setDue(dueAt);
   }
 
   _deleteScore() {

@@ -5,6 +5,8 @@ template(name="datepicker")
                 .left
                     label(for="date") {{_ 'date'}}
                     input.js-date-field#date(type="text" name="date" value=showDate placeholder=dateFormat autofocus)
+                    label.target-score(for="targetScore") {{_ 'card-target-score-title'}}
+                    input.target-score(type="text" id="targetScore" name="targetScore" value=targetScore)
                 .right
                     label(for="time") {{_ 'time'}}
                     input.js-time-field#time(type="text" name="time" value=showTime placeholder=timeFormat)

@@ -4,6 +4,10 @@ Lists.attachSchema(new SimpleSchema({
   title: {
     type: String,
   },
+  description: {
+    type: String,
+    optional: true
+  },
   archived: {
     type: Boolean,
     autoValue() { // eslint-disable-line consistent-return
@@ -109,6 +113,10 @@ Lists.helpers({
 Lists.mutations({
   rename(title) {
     return { $set: { title } };
+  },
+  
+  setDescription(description) {
+    return { $set: { description } };
   },
 
   archive() {
