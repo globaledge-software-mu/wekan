@@ -1,3 +1,33 @@
+# v1.53 2018-10-03 Wekan release
+
+This release fixes the following bugs:
+
+- [Fix Card URL](https://github.com/wekan/wekan/pull/1932);
+- [OpenShift: Drop default namespace value and duplicate WEKAN_SERVICE_NAME parameter](https://github.com/wekan/wekan/pull/1930);
+- [Add whole packages/ directory to .gitignore](https://github.com/wekan/wekan/commit/f437d8370e03439d7ba5649496ec188c5d7b7e0c);
+- [Add info about root-url to GitHub issue template](https://github.com/wekan/wekan/commit/001c8f2b0138fb26a8c84acab62a604d0c6e5dda).
+
+Thanks to GitHub users lberk, InfoSec812 and xet7 for their contributions.
+
+# v1.52 2018-10-01 Wekan release
+
+This release removes the following new features:
+
+- [Removed CAS from Wekan stable](https://github.com/wekan/wekan/commit/5923585584f9cb8121476bf5e5d0abf7891e86f6),
+  because [it does not work correctly](https://github.com/wekan/wekan/issues/1925).
+  CAS developent continues at edge.
+
+Thanks to GitHub user xet7 for contributions.
+
+# v1.51 2018-09-28 Wekan release
+
+This release adds the following new features:
+
+- [Add CAS with attributes](https://github.com/wekan/wekan/commit/c6cea2fb4e9e17403fe0ce2ba5bf2d20dcf81a8f);
+- [Move Add Board button to top left, so there is no need to scroll to bottom when there is a lot of boards](https://github.com/wekan/wekan/commit/a10b6fb173d529220861668cfb1c341ec45e2a53).
+
+Thanks to GitHub users ppoulard and xet7 for their contributions.
+
 # v1.50 2018-09-22 Wekan release
 
 This release adds the following new features:
