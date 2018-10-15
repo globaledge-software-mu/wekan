@@ -372,24 +372,24 @@ CardEndDate.register('cardEndDate');
 
 (class extends CardReceivedDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardReceivedDate');
 
 (class extends CardStartDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardStartDate');
 
 (class extends CardDueDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardDueDate');
 
 (class extends CardEndDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardEndDate');
