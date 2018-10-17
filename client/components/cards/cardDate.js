@@ -98,6 +98,11 @@ Template.dateBadge.helpers({
     super.onCreated();
     this.data().getReceived() && this.date.set(moment(this.data().getReceived()));
   }
+  
+  onRendered() {
+    super.onRendered();
+    $('.target-score').remove();
+  }
 
   _storeDate(date) {
     this.card.setReceived(date);
@@ -121,6 +126,7 @@ Template.dateBadge.helpers({
     if (moment.isDate(this.card.getReceived())) {
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getReceived());
     }
+    $('.target-score').remove();
   }
 
   _storeDate(date) {
@@ -149,6 +155,11 @@ Template.dateBadge.helpers({
   _storeDate(date) {
     this.card.setDue(date);
   }
+  
+  _storeTargetScore(targetScore) {
+    this.card.setTargetScore(targetScore);
+    this.card.reloadHistoricScoreChart();
+  }
 
   _deleteDate() {
     this.card.setDue(null);
@@ -167,6 +178,7 @@ Template.dateBadge.helpers({
     if (moment.isDate(this.card.getStart())) {
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
     }
+    $('.target-score').remove();
   }
 
   _storeDate(date) {
@@ -360,24 +372,24 @@ CardEndDate.register('cardEndDate');
 
 (class extends CardReceivedDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardReceivedDate');
 
 (class extends CardStartDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardStartDate');
 
 (class extends CardDueDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardDueDate');
 
 (class extends CardEndDate {
   showDate() {
-    return this.date.get().format('l');
+    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
   }
 }).register('minicardEndDate');

@@ -81,7 +81,22 @@ template(name="cardDetails")
         if canModifyCard
           a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
             i.fa.fa-plus
-
+    .card-details-items
+      .card-details-item.card-details-item-name
+        h3 {{_ 'card-initial-score-title'}}
+        +cardInitialScore
+      .card-details-item.card-details-item-name
+        h3 {{_ 'card-current-score-title'}}
+        +cardCurrentScore
+      .card-details-item.card-details-item-name
+        h3 {{_ 'card-target-score-title'}}
+        +cardTargetScore
+      .card-details-item.card-details-item-name
+        h3 {{_ 'card-end-score-title'}}
+        +cardEndScore
+    #historicScores
+        canvas.card-details-item.score-line
+    
     .card-details-items
       each customFieldsWD
         .card-details-item.card-details-item-customfield
@@ -214,7 +229,7 @@ template(name="editCardAssignerForm")
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-assigner-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
-
+    
 template(name="cardDetailsActionsPopup")
   ul.pop-over-list
     li: a.js-toggle-watch-card {{#if isWatching}}{{_ 'unwatch'}}{{else}}{{_ 'watch'}}{{/if}}
@@ -230,6 +245,7 @@ template(name="cardDetailsActionsPopup")
       li: a.js-due-date {{_ 'editCardDueDatePopup-title'}}
       li: a.js-end-date {{_ 'editCardEndDatePopup-title'}}
       li: a.js-spent-time {{_ 'editCardSpentTimePopup-title'}}
+      li: a.js-score {{_ 'editCardScoresPopup-title'}}
     hr
     ul.pop-over-list
       li: a.js-move-card-to-top {{_ 'moveCardToTop-title'}}

@@ -1,17 +1,19 @@
-template(name="datepicker")
+template(name="cardScores")
     .datepicker-container
-        form.edit-date
+        form.edit-card-score
             .fields
                 .left
-                    label(for="date") {{_ 'date'}}
+                    label(for="currentScore") {{_ 'card-current-score-title'}}
+                    input(type="text" name="currentScore" value=currentScore)
+                    label(for="date") {{_ 'target-date'}}
                     input.js-date-field#date(type="text" name="date" value=showDate placeholder=dateFormat autofocus)
-                    label.target-score(for="targetScore") {{_ 'card-target-score-title'}}
-                    input.target-score(type="text" id="targetScore" name="targetScore" value=targetScore)
                 .right
+                    label(for="targetScore") {{_ 'card-target-score-title'}}
+                    input(type="text" name="targetScore" value=targetScore)
                     label(for="time") {{_ 'time'}}
                     input.js-time-field#time(type="text" name="time" value=showTime placeholder=timeFormat)
             .js-datepicker
             if error.get
                 .warning {{_ error.get}}
             button.primary.wide.left.js-submit-date(type="submit") {{_ 'save'}}
-            button.js-delete-date.negate.wide.right.js-delete-date {{_ 'delete'}}
+            button.js-delete.negate.wide.right.js-delete-date {{_ 'delete'}}

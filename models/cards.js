@@ -79,6 +79,22 @@ Cards.attachSchema(new SimpleSchema({
       return new Date();
     },
   },
+  initialScore: {
+    type: String,
+    optional: true, 
+  },
+  endScore: {
+    type: String,
+    optional: true, 
+  },
+  currentScore: {
+    type: String,
+    optional: true, 
+  },
+  targetScore: {
+    type: String,
+    optional: true, 
+  },
   description: {
     type: String,
     optional: true,
@@ -764,7 +780,232 @@ Cards.helpers({
       );
     }
   },
-
+  
+  setInitialScore(initialScore) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {initialScore}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {initialScore}}
+      );
+    }
+  },
+    
+  getInitialScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.initialScore;
+    } else {
+      return this.initialScore;
+    } 
+  },
+    
+  setEndScore(endScore) {
+    if (this.isLinkedCard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        {$set: {initialScore}}
+      );
+    } else {
+      return Cards.update(
+        {_id: this._id},
+        {$set: {endScore}}
+      );
+    }
+  },
+    
+  getEndScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.endScore;
+    } else {
+      return this.endScore;
+    } 
+  },
+    
+  scores() {
+    return CardScores.find({ cardId: this._id }, {sort: {date: 1}});
+  },
+  
+  setScores(dueAt, currentScore, targetScore) {
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    let data = {};
+    
+    if (dueAt != null) {
+      data['dueAt'] = dueAt;
+    }
+    
+    if (currentScore != null) {
+      data['currentScore'] = currentScore;
+    }
+    
+    if (targetScore != null) {
+      data['targetScore'] = targetScore;
+    }
+    
+    Cards.update(
+      {_id: this._id},
+      {$set: data}
+    );
+    
+    let boardId = card.boardId;
+    let cardId = card._id;
+    if (typeof data['currentScore'] !== 'undefined' && data['currentScore'] !== card.currentScore) {
+      let today = new Date();
+      today.setHours(0,0,0,0);
+      let lastCurrentScore = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$gt: today}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastCurrentScore.length > 0) {
+        return CardScores.update({_id: lastCurrentScore[0]._id}, {$set: {'score': data['currentScore']}})
+      }
+      CardScores.insert({
+        boardId: boardId,
+        cardId: cardId,
+        score: data['currentScore'],
+        type: 'current',
+        date: new Date()
+      });
+    }
+    if (typeof data['targetScore'] !== 'undefined' && typeof data['dueAt'] !== 'undefined' && data['targetScore'] !== card.targetScore) {
+      let dueDate = new Date(dueAt);
+      dueDate.setHours(0, 0, 0, 0);
+      let lastTargetScore = CardScores.find({type: 'target', 'cardId': card._id, 'date': {$gte: dueDate, $lte: dueAt}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastTargetScore.length > 0) {
+        return CardScores.update({_id: lastTargetScore[0]._id}, {$set: {'score': data['targetScore']}})
+      }
+      CardScores.insert({
+        boardId: boardId,
+        cardId: cardId,
+        score: data['targetScore'],
+        type: 'target',
+        date: data['dueAt']
+      });
+    }
+  },
+  
+  deleteCurrentScore() {
+    let cardId = this._id;
+    if (this.isLinkedCard()) {
+      cardId = this.linkedId;
+    } 
+    Cards.update(
+      {_id: cardId},
+      {$set: {'currentScore': null}}
+    );
+  },
+  
+  setCurrentScore(currentScore) {
+    let today = new Date();
+    today.setHours(0,0,0,0);
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    
+    Cards.update(
+      {_id: card._id},
+      {$set: {currentScore}}
+    );
+    
+    if (currentScore != null) {
+      let lastScore = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$gte: today}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastScore.length > 0) {
+        return CardScores.update({_id: lastScore[0]._id}, {$set: {'score': currentScore}});
+      }
+      return CardScores.insert({
+        boardId: card.boardId,
+        cardId: card._id,
+        score: currentScore,
+        type: 'current',
+        date: new Date()
+      });
+    }
+  },
+  
+  getCurrentScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.currentScore;
+    } else {
+      return this.currentScore;
+    }
+  },
+  
+  deleteTargetScore() {
+    let cardId = this._id;
+    if (this.isLinkedCard()) {
+      cardId = this.linkedId;
+    } 
+    Cards.update(
+      {_id: cardId},
+      {$set: {'targetScore': null}}
+    );
+  },
+  
+  setTargetScore(targetScore) {
+    const card = Cards.findOne(this._id);
+    if (this.isLinkedCard()) {
+      card = Cards.findOne(this.linkedId);
+    }
+    
+    Cards.update(
+      {_id: card._id},
+      {$set: {targetScore}}
+    );
+    
+    if (card.dueAt !== null && targetScore !== null) {
+      let dueDate = new Date(card.dueAt);
+      dueDate.setHours(0, 0, 0, 0);
+      let lastScore = CardScores.find({type: 'target', 'cardId': card._id, 'date': {$lte: new Date(card.dueAt), $gte: dueDate}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastScore.length > 0) {
+        return CardScores.update({_id: lastScore[0]._id}, {$set: {'score': targetScore}});
+      }
+      return CardScores.insert({
+        boardId: card.boardId,
+        cardId: card._id,
+        score: targetScore,
+        type: 'target',
+        date: card.dueAt
+      });
+    }
+  },
+  
+  getTargetScore() {
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      return card.targetScore;
+    } else {
+      return this.targetScore;
+    }
+  },
+  
+  reloadHistoricScoreChart() {
+    const cardScores = this.scores();
+    if (this.isLinkedCard()) {
+      const card = Cards.findOne({ _id: this.linkedId });
+      cardScores = card.scores();
+    }
+    let labels = []
+    let scores = {'current': [], 'target': []};
+    cardScores.forEach((score) => {
+      labels.push(score.date);
+      scores[score.type].push({x: score.date, y: score.score})
+    });
+    if (cardScores.count() > 0 && scoreChart !== null) {
+      scoreChart.data.labels = labels;
+      scoreChart.data.datasets[0].data = scores.current;
+      scoreChart.data.datasets[1].data = scores.target;
+      scoreChart.update();
+      $('#historicScores').show();
+    }
+  },
+  
   getArchived() {
     if (this.isLinkedCard()) {
       const card = Cards.findOne({ _id: this.linkedId });
@@ -1054,6 +1295,29 @@ if (Meteor.isServer) {
   // Remove also card_comments / checklists / attachments
   Cards.after.remove((userId, doc) => {
     cardRemover(userId, doc);
+  });
+}
+//SWIMLANES REST API
+if (Meteor.isServer) {
+  JsonRoutes.add('GET', '/api/boards/:boardId/swimlanes/:swimlaneId/cards', function(req, res) {
+    const paramBoardId = req.params.boardId;
+    const paramSwimlaneId = req.params.swimlaneId;
+    Authentication.checkBoardAccess(req.userId, paramBoardId);
+    JsonRoutes.sendResult(res, {
+      code: 200,
+      data: Cards.find({
+        boardId: paramBoardId,
+        swimlaneId: paramSwimlaneId,
+        archived: false,
+      }).map(function(doc) {
+        return {
+          _id: doc._id,
+          title: doc.title,
+          description: doc.description,
+          listId: doc.listId,
+        };
+      }),
+    });
   });
 }
 //LISTS REST API

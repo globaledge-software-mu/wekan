@@ -1,0 +1,25 @@
+template(name="cardScore")
+  .datepicker-container
+     form.edit-score
+      .fields
+        label(for="score") {{_ 'score'}}
+        input(type="text" name="score" value=showScore autofocus)
+        .left
+          label.target-score(for="date") {{_ 'target-date'}}
+          input.target-score.js-date-field#date(type="text" name="date" value=showDate placeholder=dateFormat autofocus)
+        .right
+          label.target-score(for="time") {{_ 'time'}}
+          input.target-score.js-time-field#time(type="text" name="time" value=showTime placeholder=timeFormat)
+      .js-datepicker.target-score
+      if error.get
+        .warning {{_ error.get}}
+      button.primary.wide.left.js-submit-date(type="submit") {{_ 'save'}}
+      button.js-delete-score.negate.wide.right.js-delete-date {{_ 'delete'}}
+      
+template(name="scoreBadge")
+  if canModifyCard
+    a.js-edit-score.card-score(class="{{classes}}")
+      | {{#if showScore}} {{showScore}} {{else}}?{{/if}}
+  else
+    a.card-score(class="{{classes}}")
+      | {{#if showScore}} {{showScore}} {{else}}?{{/if}}

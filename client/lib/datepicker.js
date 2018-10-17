@@ -1,3 +1,4 @@
+import Inputmask from 'inputmask';
 DatePicker = BlazeComponent.extendComponent({
   template() {
     return 'datepicker';
@@ -23,6 +24,8 @@ DatePicker = BlazeComponent.extendComponent({
     if (this.date.get().isValid()) {
       $picker.datepicker('update', this.date.get().toDate());
     }
+    Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('L').toLowerCase(), placeholder: moment.localeData().longDateFormat('L')}).mask(this.$('#date'));
+    Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('LT').toUpperCase(), placeholder: moment.localeData().longDateFormat('LT')}).mask(this.$('#time'));
   },
 
   showDate() {
@@ -67,14 +70,22 @@ DatePicker = BlazeComponent.extendComponent({
 
         const dateString = `${evt.target.date.value} ${time}`;
         const newDate = moment(dateString, 'L LT', true);
-        if (newDate.isValid()) {
-          this._storeDate(newDate.toDate());
-          Popup.close();
-        }
-        else {
+        
+        if (!newDate.isValid()) {
           this.error.set('invalid-date');
           evt.target.date.focus();
+          return false;
         }
+        if (typeof evt.target.targetScore != 'undefined' && evt.target.targetScore.value == '') {
+            this.error.set('invalid-score');
+            evt.target.targetScore.focus();
+            return false;
+        }
+        this._storeDate(newDate.toDate());
+        if (typeof evt.target.targetScore != 'undefined') {
+          this._storeTargetScore(evt.target.targetScore.value);
+        }
+        Popup.close();
       },
       'click .js-delete-date'(evt) {
         evt.preventDefault();

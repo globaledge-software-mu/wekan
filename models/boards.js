@@ -653,10 +653,17 @@ if (Meteor.isServer) {
         });
       };
       const getBase64DataSync = Meteor.wrapAsync(getBase64Data);
+      const members = [];
+      fromBoard.members.forEach((member) => {
+        if(!member.hasOwnProperty('isNoComments')) {
+          member['isNoComments'] = false;
+        }
+        members.push(member);
+      });
       
       Boards.update(toId, {
         $set: {
-          members: fromBoard.members,
+          members: members,
           labels: fromBoard.labels,
           color: fromBoard.color,
           description: fromBoard.description,

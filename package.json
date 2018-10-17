@@ -1,6 +1,6 @@
 {
   "name": "wekan",
-  "version": "1.53.0",
+  "version": "1.54.0",
   "description": "The open-source kanban",
   "private": true,
   "scripts": {
@@ -25,7 +25,9 @@
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "bson-ext": "^2.0.0",
+    "chart.js": "^2.7.2",
     "es6-promise": "^4.2.4",
+    "inputmask": "^4.0.0",
     "meteor-node-stubs": "^0.4.1",
     "os": "^0.1.1",
     "page": "^1.8.6",
