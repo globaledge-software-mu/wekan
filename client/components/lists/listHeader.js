@@ -86,6 +86,7 @@ Template.listActionPopup.events({
     forms[0].click();
   },
   'click .js-more': Popup.open('listMore'),
+  'click .js-list-properties': Popup.open('listProperties')
 });
 
 BlazeComponent.extendComponent({
@@ -149,3 +150,29 @@ Template.listMorePopup.events({
     Utils.goBoardId(this.boardId);
   }),
 });
+
+BlazeComponent.extendComponent({
+  events() {
+    return [{
+      'click .card-property' (evt) {
+        const value = evt.target.id || $(evt.target).parent()[0].id ||  $(evt.target).parent()[0].parent()[0].id;
+        const list = Template.currentData();
+        if (value === 'card-received-score-title' || value === 'card-start-score-title' || value === 'card-due-score-title' || value === 'card-end-score-title') {
+            const dateType = value.split('-score-')[0]
+            if (!list.getPropertyVisibility(dateType)) {
+              return false;
+            }
+        }
+        var checked = $(`#${value} .materialCheckBox`).hasClass('is-checked');
+        $(`#${value} .materialCheckBox`).toggleClass('is-checked', !checked);
+        $(`#${value}`).toggleClass('is-checked', !checked);
+        list.changePropertyVisibility(value, !checked);
+        if (checked && (value === 'card-received' || value === 'card-start' || value === 'card-due' || value === 'card-end')) {
+            $(`#${value}-score-title .materialCheckBox`).toggleClass('is-checked', false);
+            $(`#${value}-score-title`).toggleClass('is-checked', false);
+            list.changePropertyVisibility(value + '-score-title', false);
+        }
+      }
+    }];
+  }
+}).register('listPropertiesPopup');
