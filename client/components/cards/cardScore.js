@@ -1,158 +1,3 @@
-//editCardScorePopup
-(class extends CardScores {
-  onCreated() {
-    super.onCreated();
-    this.data().getDue() && this.date.set(moment(this.data().getDue()));
-  }
-
-  onRendered() {
-    super.onRendered();
-  }
-
-  _storeScores(dueAt, currentScore, targetScore) {
-    this.card.setScores(dueAt, currentScore, targetScore);
-    this.card.reloadHistoricScoreChart();
-  }
-  
-  _deleteDate() {
-    this.card.setDue(null);
-  }
-  
-  _delete() {
-    this.card.deleteCurrentScore();
-    this.card.deleteTargetScore();
-    this.card.setDue(null);
-  }
-}).register('editCardScoresPopup');
-
-//Edit Initial, End, Current and Target Scores
-BlazeComponent.extendComponent({
-  template() {
-    return 'editCardScore';
-  },
-
-  onCreated() {
-    this.error = new ReactiveVar('');
-    this.card = this.data();
-    this.score = new ReactiveVar('');
-  },
-  
-  showScore() {
-    return this.score.get();
-  },
-
-  events() {
-    return [{
-      'submit .edit-score'(evt) {
-        evt.preventDefault();
-        const score = evt.target.score.value
-        if (score !== '') {
-          this._storeScore(score);
-          Popup.close();
-        } else {
-            this.error.set('invalid-score');
-            evt.target.date.focus();
-        }
-      },
-      'click .js-delete-score'(evt) {
-        evt.preventDefault();
-        this._deleteScore();
-        Popup.close();
-      },
-    }];
-  },
-});
-
-//editCardInitialScorePopup
-(class extends CardScore {
-  onCreated() {
-    super.onCreated();
-    this.data().getInitialScore() && this.score.set(this.data().getInitialScore());
-  }
-  
-  onRendered() {
-    super.onRendered();
-    this.$('.target-score').remove();
-  }
-
-  _storeScore(score) {
-    this.card.setInitialScore(score);
-  }
-
-  _deleteScore() {
-    this.card.setInitialScore(null);
-  }
-}).register('editCardInitialScorePopup');
-
-//editCardEndScorePopup
-(class extends CardScore {
-  onCreated() {
-    super.onCreated();
-    this.data().getEndScore() && this.score.set(this.data().getEndScore());
-  }
-  
-  onRendered() {
-    super.onRendered();
-    this.$('.target-score').remove();
-  }
-
-  _storeScore(score) {
-    this.card.setEndScore(score);
-  }
-
-  _deleteScore() {
-    this.card.setEndScore(null);
-  }
-}).register('editCardEndScorePopup');
-
-//editCardCurrentScorePopup
-(class extends CardScore {
-  onCreated() {
-    super.onCreated();
-    this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
-  }
-  
-  onRendered() {
-    super.onRendered();
-    this.$('.target-score').remove();
-  }
-
-  _storeScore(score) {
-    this.card.setCurrentScore(score);
-    this.card.reloadHistoricScoreChart();
-  }
-
-  _deleteScore() {
-    this.card.setCurrentScore(null);
-  }
-}).register('editCardCurrentScorePopup');
-
-//editCardTargetScorePopup
-(class extends CardScore {
-  onCreated() {
-    super.onCreated();
-    this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
-    this.data().getDue() && this.date.set(moment(this.data().getDue()));
-  }
-  
-  onRendered() {
-    super.onRendered();
-  }
-  
-  _storeScore(score) {
-    this.card.setTargetScore(score);
-    this.card.reloadHistoricScoreChart();
-  }
-  
-  _storeDueDate(dueAt) {
-    this.card.setDue(dueAt);
-  }
-
-  _deleteScore() {
-    this.card.setTargetScore(null);
-  }
-}).register('editCardTargetScorePopup');
-
 //Display Initial, End, Current and Target Scores
 const CardScoreForm = BlazeComponent.extendComponent({
   template() {
@@ -175,7 +20,7 @@ Template.scoreBadge.helpers({
   },
 });
 
-(class extends CardScoreForm {
+class CardInitialScore extends CardScoreForm {
   onCreated() {
     super.onCreated();
     const self = this;
@@ -185,17 +30,25 @@ Template.scoreBadge.helpers({
   }
   
   classes() {
-    return 'card-label-silver';
+    let classes = 'received-date ';
+    let property = this.data().list().getProperty('card-received');
+    if (property !== null) {
+      classes += 'card-label-' + property.color + ' date';
+    } else {
+        classes +=  'card-label-silver';
+    }
+    return classes;
   }
 
   events() {
     return super.events().concat({
-      'click .js-edit-score': Popup.open('editCardInitialScore'),
+      'click .js-edit-date': Popup.open('editCardReceivedDate'),
     });
   }
-}).register('cardInitialScore');
+}
+CardInitialScore.register('cardInitialScore');
 
-(class extends CardScoreForm {
+class CardEndScore extends CardScoreForm {
   onCreated() {
     super.onCreated();
     const self = this;
@@ -205,17 +58,25 @@ Template.scoreBadge.helpers({
   }
   
   classes() {
-    return 'card-label-silver';
+    let classes = 'end-date ';
+    let property = this.data().list().getProperty('card-end');
+    if (property !== null) {
+      classes += 'card-label-' + property.color + ' date';
+    } else {
+        classes += 'card-label-silver';
+    }
+    return classes;
   }
 
   events() {
     return super.events().concat({
-      'click .js-edit-score': Popup.open('editCardEndScore'),
+      'click .js-edit-date': Popup.open('editCardEndDate'),
     });
   }
-}).register('cardEndScore');
+}
+CardEndScore.register('cardEndScore');
 
-(class extends CardScoreForm {
+class CardCurrentScore extends CardScoreForm {
   onCreated() {
     super.onCreated();
     const self = this;
@@ -225,17 +86,25 @@ Template.scoreBadge.helpers({
   }
   
   classes() {
-    return 'card-label-blue';
+    let classes = 'start-date ';
+    let property = this.data().list().getProperty('card-start');
+    if (property !== null) {
+      classes += 'card-label-' + property.color + ' date';
+    } else {
+      classes += 'card-label-silver';
+    }
+    return classes;
   }
   
   events() {
     return super.events().concat({
-      'click .js-edit-score': Popup.open('editCardCurrentScore'),
+      'click .js-edit-date': Popup.open('editCardStartDate'),
     });
   }
-}).register('cardCurrentScore');
+}
+CardCurrentScore.register('cardCurrentScore');
 
-(class extends CardScoreForm {
+class CardTargetScore extends CardScoreForm {
   onCreated() {
     super.onCreated();
     const self = this;
@@ -245,12 +114,20 @@ Template.scoreBadge.helpers({
   }
   
   classes() {
-    return 'card-label-green';
+    let classes = 'due-date ';
+    let property = this.data().list().getProperty('card-due');
+    if (property !== null) {
+      classes += 'card-label-' + property.color + ' date';
+    } else {
+      classes += 'card-label-silver';
+    }
+    return classes;
   }
 
   events() {
     return super.events().concat({
-      'click .js-edit-score': Popup.open('editCardTargetScore'),
+      'click .js-edit-date': Popup.open('editCardDueDate'),
     });
   }
-}).register('cardTargetScore');
+}
+CardTargetScore.register('cardTargetScore');

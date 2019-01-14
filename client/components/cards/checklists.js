@@ -185,6 +185,19 @@ BlazeComponent.extendComponent({
       keydown: this.pressKey,
     }];
   },
+  
+  getPropertyAlias(key) {
+    const card = Cards.findOne(this.currentData().cardId);
+    if (card.isLinked())
+      card = Cards.findOne(card.linkedId);
+      
+    const property = ListProperties.findOne({listId: card.listId, i18nKey: key});
+    const alias = TAPi18n.__(key);
+    if (typeof property !== 'undefined') {
+      alias = property.alias;
+    }
+    return alias;
+  }
 }).register('checklists');
 
 Template.checklistDeleteDialog.onCreated(() => {

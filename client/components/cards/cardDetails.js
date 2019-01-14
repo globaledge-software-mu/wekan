@@ -209,15 +209,31 @@ BlazeComponent.extendComponent({
     const cardScores = this.currentData().scores();
     let labels = []
     let scores = {'current': [], 'target': []};
-    cardScores.forEach((score) => {
-      labels.push(score.date);
-      scores[score.type].push({x: score.date, y: score.score})
+    cardScores.forEach((cardScore) => {
+      labels.push(cardScore.date);
+      var score = cardScore.score;
+      if (typeof score === 'number') {
+        score = score.toString();
+      }
+      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim()})
     });
     
     $('#historicScores').hide();
     if (labels.length > 0) {
       $('#historicScores').show();
     }
+    let list = this.currentData().list();
+    let cardStart = list.getProperty('card-start');
+    let cardStartColor = '#0079bf';
+    if (cardStart !== null) {
+        cardStartColor = cardStart.color;
+    }
+    let cardDue = list.getProperty('card-due');
+    let cardDueColor = '#3cb500';
+    if (cardDue !== null) {
+      cardDueColor = cardDue.color;
+    }
+    
     let chartCtx = $('.score-line');
     scoreChart = new Chart(chartCtx, {
       type: 'line',
@@ -225,14 +241,14 @@ BlazeComponent.extendComponent({
         labels: labels,
         datasets: [{
             label: 'Current Score',
-            backgroundColor: '#0079bf',
-            borderColor: '#0079bf',
+            backgroundColor: cardStartColor,
+            borderColor: cardStartColor,
             data: scores['current'],
             fill: false
         }, {
             label: 'Target Score',
-            backgroundColor: '#3cb500',
-            borderColor: '#3cb500',
+            backgroundColor: cardDueColor,
+            borderColor: cardDueColor,
             data: scores['target'],
             fill: false
         }]
@@ -337,7 +353,6 @@ BlazeComponent.extendComponent({
       'click .js-start-date': Popup.open('editCardStartDate'),
       'click .js-due-date': Popup.open('editCardDueDate'),
       'click .js-end-date': Popup.open('editCardEndDate'),
-      'click .js-scores': Popup.open('editCardScores'),
       'mouseenter .js-card-details' () {
         const parentComponent =  this.parentComponent().parentComponent();
         //on mobile view parent is Board, not BoardBody.

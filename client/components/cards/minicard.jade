@@ -42,17 +42,15 @@ template(name="minicard")
       if getStart
         .date
           +minicardStartDate
-      if currentScore
+      if getCurrentScore
         .score
-          a.card-score(class="card-current-score")
-            = currentScore
+          +cardCurrentScore
       if getDue
         .date
           +minicardDueDate
-      if targetScore
+      if getTargetScore
         .score
-          a.card-score(class="card-target-score")
-            = targetScore
+          +cardTargetScore
       if getSpentTime
         .date
           +cardSpentTime

@@ -108,6 +108,50 @@ Lists.helpers({
       return list.wipLimit[option] ? list.wipLimit[option] : 0; // Necessary check to avoid exceptions for the case where the doc doesn't have the wipLimit field yet set
     }
   },
+  
+  getPropertyAlias(key) {
+    const property = ListProperties.findOne({listId: this._id, i18nKey: key});
+    let alias = TAPi18n.__(key);
+    if (typeof property !== 'undefined') {
+      alias = property.alias;
+    }
+    return alias;
+  },
+  
+  getProperty(key) {
+    const property = ListProperties.findOne({listId: this._id, i18nKey: key});
+    if (typeof property !== 'undefined') {
+      return property;
+    }
+    return null
+  },
+  
+  changePropertyVisibility(key, state) {
+    const property = ListProperties.findOne({listId: this._id, i18nKey: key});
+    if (typeof property !== 'undefined') {
+      ListProperties.update({_id: property._id}, {$set: {visible: state}})
+    } else {
+      ListProperties.insert({i18nKey: key, boardId: this.boardId, listId: this._id, alias: TAPi18n.__(key), visible: state});
+    }
+  },
+  
+  getPropertyVisibility(key) {
+    const property = ListProperties.findOne({listId: this._id, i18nKey: key});
+    let visible = (typeof property !== 'undefined') ? property.visible : true;
+    //By default scores are hidden
+    if ((key == 'card-received-score-title' || key == 'card-start-score-title' || key == 'card-due-score-title' || key == 'card-end-score-title') && typeof property === 'undefined') {
+       visible = false;
+    }
+    return visible;
+  },
+  
+  getPropertyColor(key) {
+    const property = ListProperties.findOne({listId: this._id, i18nKey: key});
+    if (typeof property !== 'undefined') {
+      return property.color;
+    }
+    return null;
+  }
 });
 
 Lists.mutations({

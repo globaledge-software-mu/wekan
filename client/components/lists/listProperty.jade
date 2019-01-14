@@ -1,0 +1,177 @@
+template(name="listPropertiesPopup")
+  form#cardProperties
+    table
+      thead
+        tr
+          th {{_ 'name'}}
+          th {{_ 'alias'}}
+      tbody
+        tr
+          td
+            a#card-received.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-received'}}is-checked{{/if}}")
+              span {{_ 'card-received'}}
+          td
+            a.edit-property
+              +propertyCardReceived
+        tr
+          td
+            a#card-received-score-title.flex.card-property(class="{{#if getPropertyVisibility 'card-received'}}{{else}}disabled{{/if}}")
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-received-score-title'}}is-checked{{/if}} {{#if getPropertyVisibility 'card-received'}}{{else}}disabled{{/if}}")
+              span {{_ 'card-received-score-title'}}
+          td
+        tr
+          td
+            a#card-start.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-start'}}is-checked{{/if}}")
+              span {{_ 'card-start'}}
+          td
+            a.edit-property
+              +propertyCardStart
+        tr
+          td
+            a#card-start-score-title.flex.card-property(class="{{#if getPropertyVisibility 'card-start'}}{{else}}disabled{{/if}}")
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-start-score-title'}}is-checked{{/if}} {{#if getPropertyVisibility 'card-start'}}{{else}}disabled{{/if}}")
+              span {{_ 'card-start-score-title'}}
+          td
+        tr
+          td
+            a#card-due.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-due'}}is-checked{{/if}}")
+              span {{_ 'card-due'}}
+          td
+            a.edit-property
+              +propertyCardDue
+        tr
+          td
+            a#card-due-score-title.flex.card-property(class="{{#if getPropertyVisibility 'card-due'}}{{else}}disabled{{/if}}")
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-due-score-title'}}is-checked{{/if}} {{#if getPropertyVisibility 'card-due'}}{{else}}disabled{{/if}}")
+              span {{_ 'card-due-score-title'}}
+          td
+        tr
+          td
+            a#card-end.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-end'}}is-checked{{/if}}")
+              span {{_ 'card-end'}}
+          td
+            a.edit-property
+              +propertyCardEnd
+        tr
+          td
+            a#card-end-score-title.flex.card-property(class="{{#if getPropertyVisibility 'card-end'}}{{else}}disabled{{/if}}")
+              .materialCheckBox(class="{{#if getPropertyVisibility 'card-end-score-title'}}is-checked{{/if}} {{#if getPropertyVisibility 'card-end'}}{{else}}disabled{{/if}}")
+              span {{_ 'card-end-score-title'}}
+          td
+        tr
+          td
+            a#members.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'members'}}is-checked{{/if}}")
+              span {{_ 'members'}}
+          td
+            a.edit-property
+              +propertyCardMembers
+        tr
+          td
+            a#labels.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'labels'}}is-checked{{/if}}")
+              span {{_ 'labels'}}
+          td
+            a.edit-property
+              +propertyCardLabels
+        tr
+          td
+            a#spent-time-hours.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'spent-time-hours'}}is-checked{{/if}}")
+              span {{_ 'spent-time-hours'}}
+          td
+            a.edit-property
+              +propertyCardSpentTime
+        tr
+          td
+            a#description.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'description'}}is-checked{{/if}}")
+              span {{_ 'description'}}
+          td
+            a.edit-property
+              +propertyCardDescription
+        tr
+          td
+            a#requested-by.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'requested-by'}}is-checked{{/if}}")
+              span {{_ 'requested-by'}}
+          td
+            a.edit-property
+              +propertyCardRequestedBy
+        tr
+          td
+            a#assigned-by.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'assigned-by'}}is-checked{{/if}}")
+              span {{_ 'assigned-by'}}
+          td
+            a.edit-property
+              +propertyCardAssignedBy
+       tr
+          td
+            a#checklists.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'checklists'}}is-checked{{/if}}")
+              span {{_ 'checklists'}}
+          td
+            a.edit-property
+              +propertyCardChecklists
+       tr
+          td
+            a#subtasks.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'subtasks'}}is-checked{{/if}}")
+              span {{_ 'subtasks'}}
+          td
+            a.edit-property
+              +propertyCardSubtasks
+       tr
+          td
+            a#attachments.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'attachments'}}is-checked{{/if}}")
+              span {{_ 'attachments'}}
+          td
+            a.edit-property
+              +propertyCardAttachments
+       tr
+          td
+            a#activity.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'activity'}}is-checked{{/if}}")
+              span {{_ 'activity'}}
+          td
+            a.edit-property
+              +propertyCardActivity
+
+template(name="editPropertyAlias")
+  form.edit-property-alias
+    input(type="text" name="propertyAlias" value=showPropertyAlias autofocus)
+    br
+    a#warning.flex.date-warnings
+      .materialCheckBox(class="{{#if hasDateWarnings}}is-checked{{/if}}")
+      span {{_ 'use-date-warnings'}}
+    br
+    .color
+      label {{_ "select-color"}}
+      .edit-label
+        .palette-colors: each labels
+          span.card-label.palette-color.js-palette-color(class="card-label-{{color}}")
+            if(isSelected color)
+              i.fa.fa-check
+    if error.get
+      .warning {{_ error.get}}
+    button.primary.confirm(type="submit") {{_ 'save'}}
+    button.js-cancel-alias-edit.negate.wide.right(type="button") {{_ 'Cancel'}}
+
+template(name="propertyAlias")
+  if canModifyProperty
+    a.js-edit-property-alias.property-alias
+      |  {{#if showPropertyAlias}} {{showPropertyAlias}} {{else}}?{{/if}}
+      if showColor
+        span.card-date(class="card-label-{{showColor}} pull-right") &nbsp;&nbsp;
+      if showDateWarning
+        i.fa.fa-clock-o.date-warning.pull-right
+        
+  else
+    a.property-alias
+      | {{#if showPropertyAlias}} {{showPropertyAlias}} {{else}}?{{/if}}

@@ -31,71 +31,74 @@ template(name="cardDetails")
         p.warning {{_ 'card-archived'}}
 
     .card-details-items
-      .card-details-item.card-details-item-received
-        h3.card-details-item-title {{_ 'card-received'}}
-        if getReceived
-          +cardReceivedDate
-        else
-          if canModifyCard
-            a.js-received-date {{_ 'add'}}
+      if isPropertyVisible 'card-received'
+        .card-details-item.card-details-item-received
+          h3.card-details-item-title {{getPropertyAlias 'card-received'}}
+          if getReceived
+            +cardReceivedDate
+          else
+            if canModifyCard
+              a.js-received-date {{_ 'add'}}
+          if getInitialScore
+            +cardInitialScore
 
-      .card-details-item.card-details-item-start
-        h3.card-details-item-title {{_ 'card-start'}}
-        if getStart
-          +cardStartDate
-        else
-          if canModifyCard
-            a.js-start-date {{_ 'add'}}
+      if isPropertyVisible 'card-start'
+        .card-details-item.card-details-item-start
+          h3.card-details-item-title {{getPropertyAlias 'card-start'}}
+          if getStart
+            +cardStartDate
+          else
+            if canModifyCard
+              a.js-start-date {{_ 'add'}}
+          if getCurrentScore
+            +cardCurrentScore
 
-      .card-details-item.card-details-item-due
-        h3.card-details-item-title {{_ 'card-due'}}
-        if getDue
-          +cardDueDate
-        else
-          if canModifyCard
-            a.js-due-date {{_ 'add'}}
+      if isPropertyVisible 'card-due'
+        .card-details-item.card-details-item-due
+          h3.card-details-item-title {{getPropertyAlias 'card-due'}}
+          if getDue
+            +cardDueDate
+          else
+            if canModifyCard
+              a.js-due-date {{_ 'add'}}
+          if getTargetScore
+            +cardTargetScore
 
-      .card-details-item.card-details-item-end
-        h3.card-details-item-title {{_ 'card-end'}}
-        if getEnd
-          +cardEndDate
-        else
-          if canModifyCard
-            a.js-end-date {{_ 'add'}}
+      if isPropertyVisible 'card-end'
+        .card-details-item.card-details-item-end
+          h3.card-details-item-title {{getPropertyAlias 'card-end'}}
+          if getEnd
+            +cardEndDate
+          else
+            if canModifyCard
+              a.js-end-date {{_ 'add'}}
+          if getEndScore
+            +cardEndScore
 
     .card-details-items
-      .card-details-item.card-details-item-members
-        h3.card-details-item-title {{_ 'members'}}
-        each getMembers
-          +userAvatar(userId=this cardId=../_id)
-          | {{! XXX Hack to hide syntaxic coloration /// }}
-        if canModifyCard
-          a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
-            i.fa.fa-plus
+      if isPropertyVisible 'members'
+        .card-details-item.card-details-item-members
+          h3.card-details-item-title {{getPropertyAlias 'members'}}
+          each getMembers
+            +userAvatar(userId=this cardId=../_id)
+            | {{! XXX Hack to hide syntaxic coloration /// }}
+          if canModifyCard
+            a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
+              i.fa.fa-plus
 
-      .card-details-item.card-details-item-labels
-        h3.card-details-item-title {{_ 'labels'}}
-        a(class="{{#if canModifyCard}}js-add-labels{{else}}is-disabled{{/if}}" title="{{_ 'card-labels-title'}}")
-          each labels
-            span.card-label(class="card-label-{{color}}" title=name)= name
-        if canModifyCard
-          a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
-            i.fa.fa-plus
-    .card-details-items
-      .card-details-item.card-details-item-name
-        h3 {{_ 'card-initial-score-title'}}
-        +cardInitialScore
-      .card-details-item.card-details-item-name
-        h3 {{_ 'card-current-score-title'}}
-        +cardCurrentScore
-      .card-details-item.card-details-item-name
-        h3 {{_ 'card-target-score-title'}}
-        +cardTargetScore
-      .card-details-item.card-details-item-name
-        h3 {{_ 'card-end-score-title'}}
-        +cardEndScore
+      if isPropertyVisible 'labels'
+        .card-details-item.card-details-item-labels
+          h3.card-details-item-title {{getPropertyAlias 'labels'}}
+          a(class="{{#if canModifyCard}}js-add-labels{{else}}is-disabled{{/if}}" title="{{_ 'card-labels-title'}}")
+            each labels
+              span.card-label(class="card-label-{{color}}" title=name)= name
+          if canModifyCard
+            a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
+              i.fa.fa-plus
     #historicScores
         canvas.card-details-item.score-line
+    if reloadHistoricScoreChart
+      span
     
     .card-details-items
       each customFieldsWD
@@ -105,17 +108,18 @@ template(name="cardDetails")
           +cardCustomField
 
     .card-details-items
-      if getSpentTime
-        .card-details-item.card-details-item-spent
-          if getIsOvertime
-            h3.card-details-item-title {{_ 'overtime-hours'}}
-          else
-            h3.card-details-item-title {{_ 'spent-time-hours'}}
-          +cardSpentTime
+      if isPropertyVisible 'spent-time-hours'
+        if getSpentTime
+          .card-details-item.card-details-item-spent
+            if getIsOvertime
+              h3.card-details-item-title {{_ 'overtime-hours'}}
+            else
+              h3.card-details-item-title {{getPropertyAlias 'spent-time-hours'}}
+            +cardSpentTime
 
     //- XXX We should use "editable" to avoid repetiting ourselves
-    if canModifyCard
-      h3.card-details-item-title {{_ 'description'}}
+    if isPropertyVisible 'description' and canModifyCard
+      h3.card-details-item-title {{getPropertyAlias 'description'}}
       +inlinedCardDescription(classNames="card-description js-card-description")
         +editor(autofocus=true)
           | {{getUnsavedValue 'cardDescription' _id getDescription}}
@@ -135,81 +139,86 @@ template(name="cardDetails")
             a.js-open-inlined-form {{_ 'view-it'}}
             = ' - '
             a.js-close-inlined-form {{_ 'discard'}}
-    else if getDescription
-      h3.card-details-item-title {{_ 'description'}}
+    else if isPropertyVisible 'description' and getDescription
+      h3.card-details-item-title {{getPropertyAlias 'description'}}
       +viewer
         = getDescription
 
     .card-details-items
-      .card-details-item.card-details-item-name
-        h3.card-details-item-title {{_ 'requested-by'}}
-        if canModifyCard
-          +inlinedForm(classNames="js-card-details-requester")
-            +editCardRequesterForm
-          else
-            a.js-open-inlined-form
-              if getRequestedBy
-                +viewer
-                  = getRequestedBy
-              else
-                | {{_ 'add'}}
-        else if getRequestedBy
-          +viewer
-            = getRequestedBy
+      if isPropertyVisible 'requested-by'
+        .card-details-item.card-details-item-name
+          h3.card-details-item-title {{getPropertyAlias 'requested-by'}}
+          if canModifyCard
+            +inlinedForm(classNames="js-card-details-requester")
+              +editCardRequesterForm
+            else
+              a.js-open-inlined-form
+                if getRequestedBy
+                  +viewer
+                    = getRequestedBy
+                else
+                  | {{_ 'add'}}
+          else if getRequestedBy
+            +viewer
+              = getRequestedBy
 
-      .card-details-item.card-details-item-name
-        h3.card-details-item-title {{_ 'assigned-by'}}
-        if canModifyCard
-          +inlinedForm(classNames="js-card-details-assigner")
-            +editCardAssignerForm
-          else
-            a.js-open-inlined-form
-              if getAssignedBy
-                +viewer
-                  = getAssignedBy
-              else
-                | {{_ 'add'}}
-        else if getRequestedBy
-          +viewer
-            = getAssignedBy
+      if isPropertyVisible 'assigned-by'
+        .card-details-item.card-details-item-name
+          h3.card-details-item-title {{getPropertyAlias 'assigned-by'}}
+          if canModifyCard
+            +inlinedForm(classNames="js-card-details-assigner")
+              +editCardAssignerForm
+            else
+              a.js-open-inlined-form
+                if getAssignedBy
+                  +viewer
+                    = getAssignedBy
+                else
+                  | {{_ 'add'}}
+          else if getRequestedBy
+            +viewer
+              = getAssignedBy
 
-    hr
-    +checklists(cardId = _id)
+    if isPropertyVisible 'checklists'
+      hr
+      +checklists(cardId = _id)
 
     if currentBoard.allowsSubtasks
       hr
-      +subtasks(cardId = _id)
+      if isPropertyVisible 'subtasks'
+        +subtasks(cardId = _id)
+    if isPropertyVisible 'attachments'
+      hr
+      h3
+        i.fa.fa-paperclip
+        | {{getPropertyAlias 'attachments'}}
 
-    hr
-    h3
-      i.fa.fa-paperclip
-      | {{_ 'attachments'}}
-
-    +attachmentsGalery
-
-    hr
-    unless currentUser.isNoComments
-      .activity-title
-        h3 {{ _ 'activity'}}
-        if currentUser.isBoardMember
-          .material-toggle-switch
-            span.toggle-switch-title {{_ 'hide-system-messages'}}
-            if hiddenSystemMessages
-              input.toggle-switch(type="checkbox" id="toggleButton" checked="checked")
-            else
-              input.toggle-switch(type="checkbox" id="toggleButton")
-            label.toggle-label(for="toggleButton")
-    if currentUser.isBoardMember
+      +attachmentsGalery
+    
+    if isPropertyVisible 'activity'
+      hr
       unless currentUser.isNoComments
-        +commentForm
-    unless currentUser.isNoComments
-      if isLoaded.get
-        if isLinkedCard
-          +activities(card=this mode="linkedcard")
-        else if isLinkedBoard
-          +activities(card=this mode="linkedboard")
-        else
-          +activities(card=this mode="card")
+        .activity-title
+          h3 {{ _ 'activity'}}
+          if currentUser.isBoardMember
+            .material-toggle-switch
+              span.toggle-switch-title {{_ 'hide-system-messages'}}
+              if hiddenSystemMessages
+                input.toggle-switch(type="checkbox" id="toggleButton" checked="checked")
+              else
+                input.toggle-switch(type="checkbox" id="toggleButton")
+              label.toggle-label(for="toggleButton")
+      if currentUser.isBoardMember
+        unless currentUser.isNoComments
+          +commentForm
+      unless currentUser.isNoComments
+        if isLoaded.get
+          if isLinkedCard
+            +activities(card=this mode="linkedcard")
+          else if isLinkedBoard
+            +activities(card=this mode="linkedboard")
+          else
+            +activities(card=this mode="card")
 
 template(name="editCardTitleForm")
   textarea.js-edit-card-title(rows='1' autofocus)
@@ -236,16 +245,23 @@ template(name="cardDetailsActionsPopup")
   if canModifyCard
     hr
     ul.pop-over-list
-      li: a.js-members {{_ 'card-edit-members'}}
-      li: a.js-labels {{_ 'card-edit-labels'}}
-      li: a.js-attachments {{_ 'card-edit-attachments'}}
+      if isPropertyVisible 'members'
+        li: a.js-members {{_ 'card-edit-members'}}
+      if isPropertyVisible 'labels'
+        li: a.js-labels {{_ 'card-edit-labels'}}
+      if isPropertyVisible 'attachments'
+        li: a.js-attachments {{_ 'card-edit-attachments'}}
       li: a.js-custom-fields {{_ 'card-edit-custom-fields'}}
-      li: a.js-received-date {{_ 'editCardReceivedDatePopup-title'}}
-      li: a.js-start-date {{_ 'editCardStartDatePopup-title'}}
-      li: a.js-due-date {{_ 'editCardDueDatePopup-title'}}
-      li: a.js-end-date {{_ 'editCardEndDatePopup-title'}}
-      li: a.js-spent-time {{_ 'editCardSpentTimePopup-title'}}
-      li: a.js-score {{_ 'editCardScoresPopup-title'}}
+      if isPropertyVisible 'card-received'
+        li: a.js-received-date {{_ 'editCardReceivedDatePopup-title'}}
+      if isPropertyVisible 'card-start'
+        li: a.js-start-date {{_ 'editCardStartDatePopup-title'}}
+      if isPropertyVisible 'card-due'
+        li: a.js-due-date {{_ 'editCardDueDatePopup-title'}}
+      if isPropertyVisible 'card-end'
+        li: a.js-end-date {{_ 'editCardEndDatePopup-title'}}
+      if isPropertyVisible 'spent-time-hours'
+        li: a.js-spent-time {{_ 'editCardSpentTimePopup-title'}}
     hr
     ul.pop-over-list
       li: a.js-move-card-to-top {{_ 'moveCardToTop-title'}}
