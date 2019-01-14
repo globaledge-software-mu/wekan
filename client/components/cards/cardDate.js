@@ -8,6 +8,7 @@ BlazeComponent.extendComponent({
     this.error = new ReactiveVar('');
     this.card = this.data();
     this.date = new ReactiveVar(moment.invalid());
+    this.score = new ReactiveVar('');
   },
 
   onRendered() {
@@ -97,19 +98,30 @@ Template.dateBadge.helpers({
   onCreated() {
     super.onCreated();
     this.data().getReceived() && this.date.set(moment(this.data().getReceived()));
+    this.data().getInitialScore() && this.score.set(this.data().getInitialScore());
   }
   
   onRendered() {
     super.onRendered();
-    $('.target-score').remove();
+    if (!this.data().isPropertyVisible('card-received-score-title')) {
+      $('.score').remove();
+    }
   }
 
   _storeDate(date) {
     this.card.setReceived(date);
   }
+  
+  _storeScore(score) {
+    this.card.setInitialScore(score);
+  }
 
   _deleteDate() {
     this.card.setReceived(null);
+  }
+  
+  _deleteScore() {
+    this.card.setInitialScore(null);
   }
 }).register('editCardReceivedDatePopup');
 
@@ -118,23 +130,48 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    this.data().getStart() && this.date.set(moment(this.data().getStart()));
+    this.date.set(moment());
+    this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
   }
 
   onRendered() {
     super.onRendered();
+    this.$('.js-datepicker').datepicker('setEndDate', '+0d');
     if (moment.isDate(this.card.getReceived())) {
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getReceived());
     }
-    $('.target-score').remove();
+    if (!this.data().isPropertyVisible('card-start-score-title')) {
+      $('.score').remove();
+    }
   }
 
   _storeDate(date) {
+    let today = new Date();
+    let tomorrow = new Date();
+    tomorrow.setHours(0,0,0,0);
+    tomorrow.setDate(today.getDate() + 1);
+    if (date >= tomorrow) {
+       this.error.set('invalid-date');
+       $('.js-date-field').focus();
+       return false;
+    }
     this.card.setStart(date);
+  }
+  
+  _storeScore(score) {
+    if (this.error.get() !== '') {
+       return false;
+    }
+    this.card.setCurrentScore(score);
+    this.card.reloadHistoricScoreChart();
   }
 
   _deleteDate() {
     this.card.setStart(null);
+  }
+  
+  _deleteScore() {
+    this.card.setCurrentScore(null);
   }
 }).register('editCardStartDatePopup');
 
@@ -143,6 +180,7 @@ Template.dateBadge.helpers({
   onCreated() {
     super.onCreated();
     this.data().getDue() && this.date.set(moment(this.data().getDue()));
+    this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
   }
 
   onRendered() {
@@ -150,19 +188,26 @@ Template.dateBadge.helpers({
     if (moment.isDate(this.card.getStart())) {
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
     }
+    if (!this.data().isPropertyVisible('card-due-score-title')) {
+      $('.score').remove();
+    }
   }
 
   _storeDate(date) {
     this.card.setDue(date);
   }
   
-  _storeTargetScore(targetScore) {
-    this.card.setTargetScore(targetScore);
+  _storeScore(score) {
+    this.card.setTargetScore(score);
     this.card.reloadHistoricScoreChart();
   }
 
   _deleteDate() {
     this.card.setDue(null);
+  }
+  
+  _deleteScore() {
+    this.card.setTargetScore(null);
   }
 }).register('editCardDueDatePopup');
 
@@ -171,6 +216,7 @@ Template.dateBadge.helpers({
   onCreated() {
     super.onCreated();
     this.data().getEnd() && this.date.set(moment(this.data().getEnd()));
+    this.data().getEndScore() && this.score.set(this.data().getEndScore());
   }
 
   onRendered() {
@@ -178,15 +224,25 @@ Template.dateBadge.helpers({
     if (moment.isDate(this.card.getStart())) {
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
     }
-    $('.target-score').remove();
+    if (!this.data().isPropertyVisible('card-end-score-title')) {
+      $('.score').remove();
+    }
   }
 
   _storeDate(date) {
     this.card.setEnd(date);
   }
+  
+  _storeScore(score) {
+    this.card.setEndScore(score);
+  }
 
   _deleteDate() {
     this.card.setEnd(null);
+  }
+  
+  _deleteScore() {
+    this.card.setEndScore(null);
   }
 }).register('editCardEndDatePopup');
 
@@ -242,6 +298,11 @@ class CardReceivedDate extends CardDate {
       classes += 'long-overdue';
     else
       classes += 'current';
+    //Overridden by Invessel
+    let property = this.data().list().getProperty('card-received');
+    if (property !== null && !property.useDateWarnings) {
+      return 'received-date card-label-' + property.color + ' date';
+    }
     return classes;
   }
 
@@ -280,6 +341,11 @@ class CardStartDate extends CardDate {
       classes += 'almost-due';
     else
       classes += 'current';
+    //Overridden by Invessel
+    let property = this.data().list().getProperty('card-start');
+    if (property !== null && !property.useDateWarnings) {
+      return 'start-date card-label-' + property.color + ' date';
+    }
     return classes;
   }
 
@@ -321,6 +387,11 @@ class CardDueDate extends CardDate {
       classes += 'due';
     else if (now.diff(theDate, 'days') >= -1)
       classes += 'almost-due';
+    //Overridden by Invessel
+    let property = this.data().list().getProperty('card-due');
+    if (property !== null && (!property.useDateWarnings || classes.trim() === 'due-date')) {
+      return 'due-date card-label-' + property.color + ' date';
+    }
     return classes;
   }
 
@@ -355,6 +426,11 @@ class CardEndDate extends CardDate {
       classes += 'due';
     else if (theDate.diff(dueAt, 'days') >= -2)
       classes += 'almost-due';
+    //Overridden by Invessel
+    let property = this.data().list().getProperty('card-end');
+    if (property !== null && !property.useDateWarnings) {
+      return 'end-date card-label-' + property.color + ' date';
+    }
     return classes;
   }
 
@@ -372,24 +448,24 @@ CardEndDate.register('cardEndDate');
 
 (class extends CardReceivedDate {
   showDate() {
-    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
+    return this.date.get().format('DD/MM')
   }
 }).register('minicardReceivedDate');
 
 (class extends CardStartDate {
   showDate() {
-    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
+    return this.date.get().format('DD/MM');
   }
 }).register('minicardStartDate');
 
 (class extends CardDueDate {
   showDate() {
-    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
+    return this.date.get().format('DD/MM');
   }
 }).register('minicardDueDate');
 
 (class extends CardEndDate {
   showDate() {
-    return this.date.get().format('l').replace(new RegExp('[^\.]?' + moment().format('YYYY') + '.?'), '');
+    return this.date.get().format('DD/MM');
   }
 }).register('minicardEndDate');

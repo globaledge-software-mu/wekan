@@ -8,7 +8,7 @@ CardScores.attachSchema(new SimpleSchema({
     type: String
   },
   score: {
-    type: Number
+    type: String
   },
   type: {
     type: String

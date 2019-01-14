@@ -8,6 +8,7 @@ DatePicker = BlazeComponent.extendComponent({
     this.error = new ReactiveVar('');
     this.card = this.data();
     this.date = new ReactiveVar(moment.invalid());
+    this.score = new ReactiveVar('');
   },
 
   onRendered() {
@@ -37,6 +38,13 @@ DatePicker = BlazeComponent.extendComponent({
     if (this.date.get().isValid())
       return this.date.get().format('LT');
     return '';
+  },
+  showScore() {
+    let score = '';
+    if (this.score.get()) {
+       score = this.score.get();
+    }
+    return score;
   },
   dateFormat() {
     return moment.localeData().longDateFormat('L');
@@ -76,20 +84,31 @@ DatePicker = BlazeComponent.extendComponent({
           evt.target.date.focus();
           return false;
         }
-        if (typeof evt.target.targetScore != 'undefined' && evt.target.targetScore.value == '') {
+        if (typeof evt.target.score != 'undefined' && evt.target.score.value == '') {
             this.error.set('invalid-score');
-            evt.target.targetScore.focus();
+            evt.target.score.focus();
             return false;
         }
+        if (typeof evt.target.score != 'undefined') {
+          let score = evt.target.score.value;
+          score = score.replace('%', '').trim();
+          if (isNaN(score)) {
+            this.error.set('invalid-score');
+            return false;
+          }
+        }
+        
         this._storeDate(newDate.toDate());
-        if (typeof evt.target.targetScore != 'undefined') {
-          this._storeTargetScore(evt.target.targetScore.value);
+        this._storeScore(evt.target.score.value);
+        if (this.error.get() !== '') {
+          return false;
         }
         Popup.close();
       },
       'click .js-delete-date'(evt) {
         evt.preventDefault();
         this._deleteDate();
+        this._deleteScore();
         Popup.close();
       },
     }];

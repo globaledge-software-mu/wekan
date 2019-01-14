@@ -76,6 +76,7 @@ Meteor.publishRelations('board', function(boardId) {
     this.cursor(Swimlanes.find({ boardId }));
     this.cursor(Integrations.find({ boardId }));
     this.cursor(CustomFields.find({ boardId }, { sort: { name: 1 } }));
+    this.cursor(ListProperties.find({ boardId }));
 
     // Cards and cards comments
     // XXX Originally we were publishing the card documents as a child of the
