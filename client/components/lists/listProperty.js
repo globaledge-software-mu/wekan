@@ -323,8 +323,6 @@ Template.propertyAlias.helpers({
       if (listProperty !== null) {
         self.color.set(listProperty.color);
         self.dateWarnings.set(listProperty.useDateWarnings);
-      } else {
-        return null;
       }
     });
   }
@@ -346,8 +344,6 @@ Template.propertyAlias.helpers({
       if (listProperty !== null) {
         self.color.set(listProperty.color);
         self.dateWarnings.set(listProperty.useDateWarnings);
-      } else {
-        return null;
       }
     });
   }
@@ -369,8 +365,6 @@ Template.propertyAlias.helpers({
       if (listProperty !== null) {
         self.color.set(listProperty.color);
         self.dateWarnings.set(listProperty.useDateWarnings);
-      } else {
-        return null;
       }
     });
   }
@@ -392,8 +386,6 @@ Template.propertyAlias.helpers({
         if (listProperty !== null) {
           self.color.set(listProperty.color);
           self.dateWarnings.set(listProperty.useDateWarnings);
-        } else {
-          return null;
         }
     });
   }
