@@ -283,15 +283,27 @@ const PropertyAliasForm = BlazeComponent.extendComponent({
   },
 
   showPropertyAlias() {
-    return this.property.get();
+    if (this.property !== null) {
+      return this.property.get();
+    } else {
+      return null;
+    }
   },
   
   showDateWarning() {
-    return this.dateWarnings.get();
+    if (this.dateWarnings !== null) {
+      return this.dateWarnings.get();
+    } else {
+      return null;
+    }
   },
   
   showColor() {
-    return this.color.get();
+    if (this.color !== null) {
+      return this.color.get();
+    } else {
+      return null;
+    }
   }
 });
 
@@ -308,8 +320,10 @@ Template.propertyAlias.helpers({
     self.autorun(() => {
       self.property.set(self.data().getPropertyAlias('card-received'));
       let listProperty = self.data().getProperty('card-received');
-      self.color.set(listProperty.color);
-      self.dateWarnings.set(listProperty.useDateWarnings);
+      if (listProperty !== null) {
+        self.color.set(listProperty.color);
+        self.dateWarnings.set(listProperty.useDateWarnings);
+      }
     });
   }
     
@@ -327,8 +341,10 @@ Template.propertyAlias.helpers({
     self.autorun(() => {
       self.property.set(self.data().getPropertyAlias('card-start'));
       let listProperty = self.data().getProperty('card-start');
-      self.color.set(listProperty.color);
-      self.dateWarnings.set(listProperty.useDateWarnings);
+      if (listProperty !== null) {
+        self.color.set(listProperty.color);
+        self.dateWarnings.set(listProperty.useDateWarnings);
+      }
     });
   }
     
@@ -346,8 +362,10 @@ Template.propertyAlias.helpers({
     self.autorun(() => {
       self.property.set(self.data().getPropertyAlias('card-due'));
       let listProperty = self.data().getProperty('card-due');
-      self.color.set(listProperty.color);
-      self.dateWarnings.set(listProperty.useDateWarnings);
+      if (listProperty !== null) {
+        self.color.set(listProperty.color);
+        self.dateWarnings.set(listProperty.useDateWarnings);
+      }
     });
   }
     
@@ -365,8 +383,10 @@ Template.propertyAlias.helpers({
       self.autorun(() => {
         self.property.set(self.data().getPropertyAlias('card-end'));
         let listProperty = self.data().getProperty('card-end');
-        self.color.set(listProperty.color);
-        self.dateWarnings.set(listProperty.useDateWarnings);
+        if (listProperty !== null) {
+          self.color.set(listProperty.color);
+          self.dateWarnings.set(listProperty.useDateWarnings);
+        }
     });
   }
     
