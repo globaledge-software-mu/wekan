@@ -1,0 +1,70 @@
+template(name='sidebarFolder')
+  .sidebar-folder.sidebar(class="{{#if isOpen}}is-open{{/if}}")
+    a.sidebar-folder-tongue.js-toggle-sidebar(
+      class='{{#if isTongueHidden}}is-hidden{{/if}}',
+      title='{{showTongueTitle}}')
+      i.fa.fa-angle-right
+    .sidebar-shadow
+      .sidebar-content.js-board-sidebar-content.js-perfect-scrollbar
+        a.hide-btn.js-hide-sidebar
+          i.fa.fa-angle-right
+        +Template.dynamic(template=getViewTemplate)
+        
+template(name='homeSidebarFolder')
+  +foldersWidget
+        
+template(name='foldersWidget')
+  .board-widget.board-widget-folders
+    div.col-lg-12
+      div.col-lg-3
+        button.create-first-level-folder.btn.fa.fa-plus.pull-right(type='button')
+      div.col-lg-9
+        h2.panelTitle
+          i.fa.fa-folder
+          | {{_ 'folders'}}
+      div.clearfix
+    div.col-lg-12.createFirstLevelFolderDiv.hide
+      form#createFirstLevelFolderForm
+        div
+          h3.formHeader Create folder
+            i.fa.fa-times-thin.pull-right.close-form
+          hr
+          h3 Title
+          input#title.form-control.input-md(type='text' name='name' required='required')
+          button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
+    hr
+    ul.nav.metismenu#side-menu
+      li.nav.sub-root
+        a 
+          i.fa.fa-caret-right 
+          i.fa.fa-folder.hidden
+            span.nav-label
+            | AAA
+        
+        ul.nav.nav-second-level.collapse
+          li
+            a 
+              i.hidden.fa.fa-file-o
+              | AAA 111
+          li
+            a 
+              i.hidden.fa.fa-file-o
+              | AAA 222
+      each folders
+        li.nav.sub-root
+          a 
+            i.fa.fa-caret-right 
+            i.fa.fa-folder
+              span.nav-label
+              = name
+            i.fa.fa-trash.pull-right.deleteFolder
+      each boards
+        li.nav.sub-root
+          a(href="{{pathFor 'board' id=_id slug=slug}}")
+            i.hidden.fa.fa-file-o
+              span.nav-label
+              = title
+ 
+ 
+ 
+ 

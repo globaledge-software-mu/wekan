@@ -1,0 +1,107 @@
+.sidebar-folder-tongue
+  display: block
+  width: 30px
+  height: @width
+  right: -@width
+  position: absolute
+  top: 0px
+  z-index: 10
+  background: darken(white, 3%)
+  border-bottom-left-radius: 3px
+  box-shadow: -4px 0px 7px -4px darken(white, 30%)
+  color: darken(white, 50%)
+  transition: left .1s
+
+  i.fa
+    padding: 3px 9px
+    font-size: 24px
+    transition: transform 0.5s
+
+  .sidebar-folder.is-open &
+    right: -@width + 2px
+
+    // XXX Bug: we should add a padding left
+    &:hover
+      right: -@width + 5px
+
+    i.fa
+      transform: rotate(180deg)
+
+  &.is-hidden,
+  .board-sidebar.is-open &.is-hidden
+    z-index: 0
+    left: 5px
+    
+.sidebar-folder
+  width: 300px
+  left: -@width
+  transition: top .1s, right .1s, width .1s
+
+  &.is-open
+    left: 0
+
+#side-menu
+  li
+    padding: 10px
+    a
+      color: #808080
+      padding: 10px
+
+.nav.nav-second-level.collapse
+  padding-left: 10px;
+  padding-top: 10px;
+
+.create-first-level-folder
+  cursor: pointer;
+
+.createFirstLevelFolderDiv
+  background-color: white;
+  border: solid 2px #faf0e6;
+  box-shadow: 1px 1px 1px #faf0e6;
+  margin: 15px;
+  padding: 10px;
+
+.btn-submit-create-folder
+  margin-top: 0px;
+  background-color: #004766;
+  color: white;
+
+.formHeader
+  font-style: Arial;
+  font-weight: bold;
+  color: #666;
+  font-size: 15px;
+
+.formTitle
+  font-style: Arial;
+  color: #666;
+  font-size: 15px;
+
+.panelTitle
+  padding-top: 9px;
+  line-height: 35px;
+  margin-bottom: 0px;
+
+.successStatus
+  text-align: center;
+  background-color: #e5fee5;
+  color: green;
+  padding: 10px;
+
+.errorStatus
+  text-align: center;
+  background-color: #ffe5e5;
+  color: #800000;
+  padding: 10px;
+
+.closeStatus
+  padding-right: 15px;
+  
+
+
+
+
+
+
+
+
