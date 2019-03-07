@@ -33,31 +33,26 @@ template(name='foldersWidget')
           input#title.form-control.input-md(type='text' name='name' required='required')
           button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
     hr
-    ul.nav.metismenu#side-menu
-      li.nav.sub-root
-        a 
-          i.fa.fa-caret-right 
-          i.fa.fa-folder.hidden
-            span.nav-label
-            | AAA
-        
-        ul.nav.nav-second-level.collapse
-          li
-            a 
-              i.hidden.fa.fa-file-o
-              | AAA 111
-          li
-            a 
-              i.hidden.fa.fa-file-o
-              | AAA 222
+    ul.nav.metismenu#side-menu.folders
       each folders
-        li.nav.sub-root
-          a 
-            i.fa.fa-caret-right 
+        li.nav.sub-root.myFolder
+          a
+            if containsBoard
+              i.fa.fa-caret-down 
+            else
+              i.fa.fa-caret-right 
             i.fa.fa-folder
               span.nav-label
               = name
             i.fa.fa-trash.pull-right.deleteFolder
+          if containsBoard
+            ul.nav.nav-second-level.collapse
+              each folderBoards
+                li
+                  a 
+                    i.hidden.fa.fa-file-o
+                    = title
+    ul.nav.metismenu#side-menu.unorganised-boards
       each boards
         li.nav.sub-root
           a(href="{{pathFor 'board' id=_id slug=slug}}")

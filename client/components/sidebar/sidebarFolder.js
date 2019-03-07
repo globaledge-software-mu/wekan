@@ -7,6 +7,31 @@ BlazeComponent.extendComponent({
     return [Mixins.InfiniteScrolling, Mixins.PerfectScrollbar];
   },
 
+  onRendered() {
+	$('ul.nav.metismenu#side-menu.folders').droppable({
+      accept: 'li.board-color-belize',
+      tolerance: 'pointer',
+	  drop: function( event, ui ) {
+        var folderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
+        var boardIdentifier = $(ui.draggable).find('a').data('id');
+
+        var folderContents = (Folders.findOne({_id: folderId})).contents;
+        var key = 0;
+        if(typeof(folderContents) != 'undefined' && folderContents !== null) {
+          key = _.keys(folderContents).length;
+        }
+        var keyName = 'contents.'+key+'.boardId';
+
+        Folders.update(
+          { _id: folderId },
+          { $set: { [keyName] : boardIdentifier } }
+        );
+        
+        $(ui.draggable).remove();
+	  }
+	});
+  },
+
   onCreated() {
     const initOpen = Utils.isMiniScreen() ? false : (!Session.get('currentCard'));
     this._isOpen = new ReactiveVar(initOpen);
@@ -112,6 +137,7 @@ Template.foldersWidget.events({
   'click .create-first-level-folder': function() {
     if ($('.createFirstLevelFolderDiv').hasClass('hide')) {
       $('.createFirstLevelFolderDiv').removeClass('hide');
+      $('#createFirstLevelFolderForm').find('#title').focus();
     } else {
       $('.createFirstLevelFolderDiv').addClass('hide');
       $('#createFirstLevelFolderForm').trigger('reset');
@@ -125,7 +151,11 @@ Template.foldersWidget.events({
 
   'submit #createFirstLevelFolderForm': function(e) {
     e.preventDefault();
-    Folders.insert({ name: $('input[name=name]').val(), level: "first", userId: Meteor.userId() }, function(error, result) {
+    Folders.insert({ 
+      name: $('input[name=name]').val(), 
+      level: "first", 
+      userId: Meteor.userId()
+    }, function(error, result) {
       if (result) {
         var $successMessage = $('<div class="successStatus">' + 
           '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
@@ -184,6 +214,16 @@ Template.foldersWidget.events({
       }
     });
   },
+
+  'mouseover .myFolder': function(event) {
+    $('i.fa-folder:contains("'+ this.name +'")').parents('.myFolder').css('background-color', '#f0f0f0');
+    $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + this._id + '"> </span><b> Drop in ' + this.name + '</b>');
+  },
+
+  'mouseout .myFolder': function(event) {
+	$('i.fa-folder:contains("'+ this.name +'")').parents('.myFolder').css('background-color', '#f7f7f7');
+    $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
+  }
 });
 
 

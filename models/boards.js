@@ -62,10 +62,6 @@ Boards.attachSchema(new SimpleSchema({
       }
     },
   },
-  folderId: {
-    type: String,
-    optional: true
-  },
   // De-normalized label system
   'labels': {
     type: [Object],

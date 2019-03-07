@@ -5,6 +5,24 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('setting');
   },
 
+  onRendered() {
+	$('ul.board-list.clearfix').sortable();
+	$('li.board-color-belize').draggable({
+	  revert: 'invalid',
+	  start: function(event) {
+        $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+        $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+	  },
+	  drag: function() {
+		//
+	  },
+	  stop: function() {
+	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+        $('p#actionTitle').remove();
+	  }
+	});
+  },
+
   boards() {
     return Boards.find({
       archived: false,

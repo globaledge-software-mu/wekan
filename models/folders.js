@@ -11,6 +11,14 @@ Folders.attachSchema(new SimpleSchema({
   userId: {
     type: String
   },
+  'contents': {
+    type: [Object],
+    optional: true,
+  },
+  'contents.$.boardId': {
+    type: String,
+    optional: true,
+  },
   createdAt: {
     type: Date,
     optional: true,

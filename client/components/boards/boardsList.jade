@@ -17,7 +17,7 @@ template(name="boardList")
                 button.js-accept-invite.primary {{_ 'accept'}}
                 button.js-decline-invite {{_ 'decline'}}
           else
-            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}")
+            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
               span.details
                 span.board-list-item-name= title
                 i.fa.js-star-board(

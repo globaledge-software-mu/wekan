@@ -17,7 +17,3 @@ Meteor.publish('user-admin', function() {
     },
   });
 });
-
-Meteor.publish('folders', function() {
-  return Folders.find();
-});
