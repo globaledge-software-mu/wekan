@@ -12,10 +12,10 @@ BlazeComponent.extendComponent({
       accept: 'li.board-color-belize',
       tolerance: 'pointer',
 	  drop: function( event, ui ) {
-        var folderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
+        var folderIdentifier = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).find('a').data('id');
 
-        var folderContents = (Folders.findOne({_id: folderId})).contents;
+        var folderContents = (Folders.findOne({_id: folderIdentifier})).contents;
         var key = 0;
         if(typeof(folderContents) != 'undefined' && folderContents !== null) {
           key = _.keys(folderContents).length;
@@ -23,10 +23,15 @@ BlazeComponent.extendComponent({
         var keyName = 'contents.'+key+'.boardId';
 
         Folders.update(
-          { _id: folderId },
+          { _id: folderIdentifier },
           { $set: { [keyName] : boardIdentifier } }
         );
-        
+
+        Boards.update(
+          { _id: boardIdentifier },
+          { $set: { folderId: folderIdentifier } }
+        );
+
         $(ui.draggable).remove();
 	  }
 	});
@@ -187,6 +192,15 @@ Template.foldersWidget.events({
   },
 
   'click .deleteFolder': function() {
+    if(typeof(this.contents) != 'undefined' && this.contents !== null) {
+	  for (var i = 0; i < _.keys(this.contents).length; i++) {
+        Boards.update(
+	      { _id: this.contents[i].boardId },
+	      { $set: { folderId: 'null' } }
+	    );
+	  }
+    }
+
     Folders.remove({ _id: this._id }, function(error, result) {
       if (result) {
         var $successMessage = $('<div class="successStatus">' + 

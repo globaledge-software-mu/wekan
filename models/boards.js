@@ -23,6 +23,14 @@ Boards.attachSchema(new SimpleSchema({
       }
     },
   },
+  folderId: {
+    type: String,
+    autoValue() {
+      if (this.isInsert && !this.isSet) {
+        return 'null';
+      }
+    },
+  },
   archived: {
     type: Boolean,
     autoValue() { // eslint-disable-line consistent-return
@@ -574,7 +582,7 @@ Boards.mutations({
 if (Meteor.isServer) {
   Boards.allow({
     insert: Meteor.userId,
-    update: allowIsBoardAdmin,
+    update: Meteor.userId,
     remove: allowIsBoardAdmin,
     fetch: ['members'],
   });
