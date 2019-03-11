@@ -250,13 +250,16 @@ Template.foldersWidget.events({
   },
 
   'click a.folderOpener': function(event) {
-	if ($(event.target).hasClass('fa-caret-right')) {
-      $(event.target).removeClass('fa-caret-right');
-      $(event.target).addClass('fa-caret-down');
+	  
+	  console.log($(event.target));
+	  
+	if ($(event.target).siblings().hasClass('fa-caret-right')) {
+      $(event.target).siblings().removeClass('fa-caret-right');
+      $(event.target).siblings().addClass('fa-caret-down');
       $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').removeClass('hide');
 	} else {
-	  $(event.target).removeClass('fa-caret-down');
-	  $(event.target).addClass('fa-caret-right');
+	  $(event.target).siblings().removeClass('fa-caret-down');
+	  $(event.target).siblings().addClass('fa-caret-right');
 	  $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').addClass('hide');
 	}
   },

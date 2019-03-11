@@ -37,14 +37,16 @@ template(name='foldersWidget')
       each folders
         li.nav.sub-root.myFolder
           a.folderOpener
-            i.fa.fa-caret-right.fa-folder
-              span.nav-label
+            i.fa.fa-caret-right
+              | &nbsp;
+              span.fa.fa-folder
+            span.nav-label.generalFont
               = name
             i.fa.fa-trash.pull-right.deleteFolder
           ul.nav.nav-second-level.collapse.hide
             each folderBoards
               li
-                a(href="{{pathFor 'board' id=_id slug=slug}}")
+                a.generalFont(href="{{pathFor 'board' id=_id slug=slug}}")
                   i.hidden.fa.fa-file-o
                   = title
     ul.nav.metismenu#side-menu
@@ -52,8 +54,9 @@ template(name='foldersWidget')
         li.nav.sub-root
           a(href="{{pathFor 'board' id=_id slug=slug}}")
             i.hidden.fa.fa-file-o
-              span.nav-label
-              = title
+              | &nbsp;
+              span.nav-label.generalFont
+                = title
  
  
  
