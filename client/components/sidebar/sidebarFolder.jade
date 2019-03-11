@@ -36,30 +36,24 @@ template(name='foldersWidget')
     ul.nav.metismenu#side-menu.folders
       each folders
         li.nav.sub-root.myFolder
-          a
-            if containsBoard
-              i.fa.fa-caret-down 
-            else
-              i.fa.fa-caret-right 
-            i.fa.fa-folder
+          a.folderOpener
+            i.fa.fa-caret-right.fa-folder
               span.nav-label
               = name
             i.fa.fa-trash.pull-right.deleteFolder
-          if containsBoard
-            ul.nav.nav-second-level.collapse
-              each folderBoards
-                li
-                  a 
-                    i.hidden.fa.fa-file-o
-                    = title
-    ul.nav.metismenu#side-menu.unorganised-boards
-      each boards
+          ul.nav.nav-second-level.collapse.hide
+            each folderBoards
+              li
+                a(href="{{pathFor 'board' id=_id slug=slug}}")
+                  i.hidden.fa.fa-file-o
+                  = title
+    ul.nav.metismenu#side-menu
+      each uncategorisedBoards
         li.nav.sub-root
           a(href="{{pathFor 'board' id=_id slug=slug}}")
             i.hidden.fa.fa-file-o
               span.nav-label
               = title
- 
  
  
  

@@ -4,7 +4,7 @@ template(name="boardList")
     ul.board-list.clearfix
       li.js-add-board
         a.board-list-item.label {{_ 'add-board'}}
-      each boards
+      each uncategorisedBoards
         li(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
           if isInvited
             .board-list-item

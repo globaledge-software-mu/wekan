@@ -128,6 +128,26 @@ BlazeComponent.extendComponent({
 	return Boards.find({'members.userId': Meteor.userId()});
   },
 
+  folderBoards() {
+    return Boards.find({
+      folderId: this.currentData()._id,
+      archived: false,
+      'members.userId': Meteor.userId(),
+    }, {
+      sort: ['title'],
+    });
+  },
+
+  uncategorisedBoards() {
+    return Boards.find({
+      $or: [{folderId: null},{folderId: 'null'}],
+      archived: false,
+      'members.userId': Meteor.userId(),
+    }, {
+      sort: ['title'],
+    });
+  },
+
   events() {
     return [{
       'click .js-hide-sidebar': this.hide,
@@ -229,15 +249,27 @@ Template.foldersWidget.events({
     });
   },
 
+  'click a.folderOpener': function(event) {
+	if ($(event.target).hasClass('fa-caret-right')) {
+      $(event.target).removeClass('fa-caret-right');
+      $(event.target).addClass('fa-caret-down');
+      $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').removeClass('hide');
+	} else {
+	  $(event.target).removeClass('fa-caret-down');
+	  $(event.target).addClass('fa-caret-right');
+	  $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').addClass('hide');
+	}
+  },
+
   'mouseover .myFolder': function(event) {
-    $('i.fa-folder:contains("'+ this.name +'")').parents('.myFolder').css('background-color', '#f0f0f0');
+    $('i.fa-folder:contains("'+ this.name +'")').closest('li.myFolder').css('background-color', '#f0f0f0');
     $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + this._id + '"> </span><b> Drop in ' + this.name + '</b>');
   },
 
   'mouseout .myFolder': function(event) {
-	$('i.fa-folder:contains("'+ this.name +'")').parents('.myFolder').css('background-color', '#f7f7f7');
+	$('i.fa-folder:contains("'+ this.name +'")').closest('li.myFolder').css('background-color', '#f7f7f7');
     $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
-  }
+  },
 });
 
 

@@ -32,6 +32,16 @@ BlazeComponent.extendComponent({
     });
   },
 
+  uncategorisedBoards() {
+    return Boards.find({
+      $or: [{folderId: null},{folderId: 'null'}],
+      archived: false,
+      'members.userId': Meteor.userId(),
+    }, {
+      sort: ['title'],
+    });
+  },
+
   isStarred() {
     const user = Meteor.user();
     return user && user.hasStarred(this.currentData()._id);
