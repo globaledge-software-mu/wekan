@@ -116,7 +116,10 @@ BlazeComponent.extendComponent({
   },
   
   folders() {
-	return Folders.find({userId: Meteor.userId()});
+	return Folders.find(
+	  { userId: Meteor.userId() }, 
+	  { sort: ['name'] }
+	);
   },
   
   boards() {
