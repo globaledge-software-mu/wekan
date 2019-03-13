@@ -27,11 +27,6 @@ BlazeComponent.extendComponent({
           { $set: { [keyName] : boardIdentifier } }
         );
 
-        Boards.update(
-          { _id: boardIdentifier },
-          { $set: { folderId: folderIdentifier } }
-        );
-
         $(ui.draggable).remove();
 	  }
 	});
@@ -129,23 +124,62 @@ BlazeComponent.extendComponent({
   },
 
   folderBoards() {
-    return Boards.find({
-      folderId: this.currentData()._id,
+	var currentFolder = Folders.find({ _id: this.currentData()._id }).fetch();
+	var folderBoardsIds = new Array;
+
+	if (currentFolder.length > 0) {
+	  var folderContents = currentFolder[0].contents;
+	  if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+		for (var j=0; j < _.keys(folderContents).length; j++) {
+	      folderBoardsIds.push(folderContents[j].boardId);
+		}
+	  }
+	}
+
+	if (folderBoardsIds.length > 0) {
+	  return Boards.find({
+      _id: { $in: folderBoardsIds },
       archived: false,
       'members.userId': Meteor.userId(),
     }, {
       sort: ['title'],
     });
+	} else {
+	  return null
+	}
   },
 
   uncategorisedBoards() {
-    return Boards.find({
-      $or: [{folderId: null},{folderId: 'null'}],
-      archived: false,
-      'members.userId': Meteor.userId(),
-    }, {
-      sort: ['title'],
-    });
+	var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
+	var categorisedBoardIds = new Array;
+
+	if (userFolders.length > 0) {
+	  for (var i=0; i < userFolders.length; i++) {
+	    var folderContents = userFolders[i].contents;
+	    if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+		  for (var j=0; j < _.keys(folderContents).length; j++) {
+	        categorisedBoardIds.push(folderContents[j].boardId);
+		  }
+	    }
+	  }
+	}
+
+	if (categorisedBoardIds.length > 0) {
+	  return Boards.find({
+        _id: { $nin: categorisedBoardIds },
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, {
+        sort: ['title'],
+      });
+	} else {
+	  return Boards.find({
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, {
+        sort: ['title'],
+      });
+	}
   },
 
   events() {
@@ -212,15 +246,6 @@ Template.foldersWidget.events({
   },
 
   'click .deleteFolder': function() {
-    if(typeof(this.contents) != 'undefined' && this.contents !== null) {
-	  for (var i = 0; i < _.keys(this.contents).length; i++) {
-        Boards.update(
-	      { _id: this.contents[i].boardId },
-	      { $set: { folderId: 'null' } }
-	    );
-	  }
-    }
-
     Folders.remove({ _id: this._id }, function(error, result) {
       if (result) {
         var $successMessage = $('<div class="successStatus">' + 
@@ -250,9 +275,6 @@ Template.foldersWidget.events({
   },
 
   'click a.folderOpener': function(event) {
-	  
-	  console.log($(event.target));
-	  
 	if ($(event.target).siblings().hasClass('fa-caret-right')) {
       $(event.target).siblings().removeClass('fa-caret-right');
       $(event.target).siblings().addClass('fa-caret-down');

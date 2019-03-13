@@ -3,6 +3,7 @@ const subManager = new SubsManager();
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
+    Meteor.subscribe('folders');
   },
 
   onRendered() {
@@ -33,13 +34,36 @@ BlazeComponent.extendComponent({
   },
 
   uncategorisedBoards() {
-    return Boards.find({
-      $or: [{folderId: null},{folderId: 'null'}],
-      archived: false,
-      'members.userId': Meteor.userId(),
-    }, {
-      sort: ['title'],
-    });
+	var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
+	var categorisedBoardIds = new Array;
+
+	if (userFolders.length > 0) {
+	  for (var i=0; i < userFolders.length; i++) {
+	    var folderContents = userFolders[i].contents;
+	    if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+		  for (var j=0; j < _.keys(folderContents).length; j++) {
+	        categorisedBoardIds.push(folderContents[j].boardId);
+		  }
+	    }
+	  }
+	}
+
+	if (categorisedBoardIds.length > 0) {
+	  return Boards.find({
+        _id: { $nin: categorisedBoardIds },
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, {
+        sort: ['title'],
+      });
+	} else {
+	  return Boards.find({
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, {
+        sort: ['title'],
+      });
+	}
   },
 
   isStarred() {
