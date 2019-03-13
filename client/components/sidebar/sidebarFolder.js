@@ -138,12 +138,12 @@ BlazeComponent.extendComponent({
 
 	if (folderBoardsIds.length > 0) {
 	  return Boards.find({
-      _id: { $in: folderBoardsIds },
-      archived: false,
-      'members.userId': Meteor.userId(),
-    }, {
-      sort: ['title'],
-    });
+        _id: { $in: folderBoardsIds },
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, {
+        sort: ['title'],
+      });
 	} else {
 	  return null
 	}
@@ -275,14 +275,15 @@ Template.foldersWidget.events({
   },
 
   'click a.folderOpener': function(event) {
-	if ($(event.target).siblings().hasClass('fa-caret-right')) {
-      $(event.target).siblings().removeClass('fa-caret-right');
-      $(event.target).siblings().addClass('fa-caret-down');
-      $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').removeClass('hide');
-	} else {
-	  $(event.target).siblings().removeClass('fa-caret-down');
-	  $(event.target).siblings().addClass('fa-caret-right');
-	  $(event.target).closest('a.folderOpener').siblings('ul.nav.nav-second-level.collapse').addClass('hide');
+	var selector = $(event.target).closest('li.myFolder').find('.folderHandle');
+	if (selector.hasClass('fa-caret-right')) {
+      selector.removeClass('fa-caret-right');
+	  selector.addClass('fa-caret-down');
+      $(event.target).parents('li.myFolder').find('ul.nav.nav-second-level.collapse').removeClass('hide');
+	} else if (selector.hasClass('fa-caret-down')) {
+	  selector.removeClass('fa-caret-down');
+	  selector.addClass('fa-caret-right');
+	  $(event.target).parents('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
 	}
   },
 
