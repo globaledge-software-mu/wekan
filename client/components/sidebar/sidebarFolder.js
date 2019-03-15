@@ -117,72 +117,30 @@ BlazeComponent.extendComponent({
   
   folders() {
 	return Folders.find(
-	  { userId: Meteor.userId() }, 
-	  { sort: ['name'] }
+	  { 
+		userId: Meteor.userId(),
+		parentId: null
+	  }, 
+	  { 
+		sort: ['name'] 
+	  }
+	);
+  },
+  
+  subFolders() {
+	return Folders.find(
+	  { 
+		userId: Meteor.userId(),
+		parentId: this.currentData()._id
+	  }, 
+	  { 
+		sort: ['name'] 
+	  }
 	);
   },
   
   boards() {
 	return Boards.find({'members.userId': Meteor.userId()});
-  },
-
-  folderBoards() {
-	var currentFolder = Folders.find({ _id: this.currentData()._id }).fetch();
-	var folderBoardsIds = new Array;
-
-	if (currentFolder.length > 0) {
-	  var folderContents = currentFolder[0].contents;
-	  if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
-		for (var j=0; j < _.keys(folderContents).length; j++) {
-	      folderBoardsIds.push(folderContents[j].boardId);
-		}
-	  }
-	}
-
-	if (folderBoardsIds.length > 0) {
-	  return Boards.find({
-        _id: { $in: folderBoardsIds },
-        archived: false,
-        'members.userId': Meteor.userId(),
-      }, {
-        sort: ['title'],
-      });
-	} else {
-	  return null
-	}
-  },
-
-  uncategorisedBoards() {
-	var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
-	var categorisedBoardIds = new Array;
-
-	if (userFolders.length > 0) {
-	  for (var i=0; i < userFolders.length; i++) {
-	    var folderContents = userFolders[i].contents;
-	    if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
-		  for (var j=0; j < _.keys(folderContents).length; j++) {
-	        categorisedBoardIds.push(folderContents[j].boardId);
-		  }
-	    }
-	  }
-	}
-
-	if (categorisedBoardIds.length > 0) {
-	  return Boards.find({
-        _id: { $nin: categorisedBoardIds },
-        archived: false,
-        'members.userId': Meteor.userId(),
-      }, {
-        sort: ['title'],
-      });
-	} else {
-	  return Boards.find({
-        archived: false,
-        'members.userId': Meteor.userId(),
-      }, {
-        sort: ['title'],
-      });
-	}
   },
 
   events() {
@@ -206,7 +164,7 @@ Template.foldersWidget.events({
     }
   },
 
-  'click .close-form': function() {
+  'click .close-first-level-form': function() {
     $('.createFirstLevelFolderDiv').addClass('hide');
     $('#createFirstLevelFolderForm').trigger('reset');
   },
@@ -248,12 +206,34 @@ Template.foldersWidget.events({
     $('#createFirstLevelFolderForm').trigger('reset');
   },
 
-  'click .deleteFolder': function() {
-    Folders.remove({ _id: this._id }, function(error, result) {
+  'click .addSubFolderTAGli, .addSubFolderTAGi, .addSubFolderLink': function(e) {
+	var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
+    if (selector.find('.createSubFolderFormTAGli').hasClass('hide')) {
+      selector.find('.createSubFolderFormTAGli').removeClass('hide');
+      selector.find('#createSubFolderForm').find('#title').focus();
+    } else {
+      selector.find('.createSubFolderFormTAGli').addClass('hide');
+      selector.find('#createSubFolderForm').trigger('reset');
+    }
+  },
+
+  'click .close-sub-folder-form': function(e) {
+    $(e.target).closest('.createSubFolderFormTAGli').addClass('hide');
+    $(e.target).closest('#createSubFolderForm').trigger('reset');
+  },
+
+  'submit #createSubFolderForm': function(e) {
+    e.preventDefault();
+    Folders.insert({ 
+      name: $(e.target).find('input[name=name]').val(), 
+      level: "second", 
+      userId: Meteor.userId(),
+      parentId: $(e.target).data('parent-id')
+    }, function(error, result) {
       if (result) {
         var $successMessage = $('<div class="successStatus">' + 
           '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-          '<p><b>Deleted folder!</b></p>' + 
+          '<p><b>Folder succesfully created!</b></p>' + 
           '</div>'
         );
 
@@ -265,7 +245,7 @@ Template.foldersWidget.events({
       } else if (error) {
         var $errorMessage = $('<div class="errorStatus">' +
           '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-          '<p><b>Error! Folder could not be deleted!</b></p>' +
+          '<p><b>Error! Folder was not created!</b></p>' +
           '</div>'
         );
 
@@ -275,28 +255,66 @@ Template.foldersWidget.events({
         });
       }
     });
+
+    $(e.target).closest('.createSubFolderFormTAGli').addClass('hide');
+    $(e.target).trigger('reset');
   },
 
-  'click a.folderOpener': function(event) {
-	var selector = $(event.target).closest('li.myFolder').find('.folderHandle');
+  'click .deleteFolder': function() {
+	var folderIds = new Array;
+	folderIds.push(this._id);
+
+	var subFolders = Folders.find({parentId: this._id}).fetch();
+    if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
+	  for (var i=0; i < subFolders.length; i++) {
+	    folderIds.push(subFolders[i]._id);
+	  }
+    }
+
+    for (var k=0; k < folderIds.length; k++) {
+      Folders.remove(folderIds[k]);
+    }
+  },
+
+  'click a.folderOpener': function(e) {
+	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
+
 	if (selector.hasClass('fa-caret-right')) {
       selector.removeClass('fa-caret-right');
 	  selector.addClass('fa-caret-down');
-      $(event.target).parents('li.myFolder').find('ul.nav.nav-second-level.collapse').removeClass('hide');
+      $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').removeClass('hide');
 	} else if (selector.hasClass('fa-caret-down')) {
 	  selector.removeClass('fa-caret-down');
 	  selector.addClass('fa-caret-right');
-	  $(event.target).parents('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
+	  $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
 	}
+
+	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
+		$('.myFolder').removeClass('selected');
+		$(e.target).closest('li.myFolder').addClass('selected');
+
+		//
+	}
+	
+	
   },
 
-  'mouseover .myFolder': function(event) {
-    $('i.fa-folder:contains("'+ this.name +'")').closest('li.myFolder').css('background-color', '#f0f0f0');
-    $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + this._id + '"> </span><b> Drop in ' + this.name + '</b>');
+  'mouseover .myFolder': function(e) {
+	var folderId;
+	var folderName;
+
+	if ($(e.target).hasClass('myFolder')) {
+      folderId = $(e.target).data('id');
+	  folderName = $(e.target).data('name');
+	} else {
+	  folderId = $(e.target).closest('.myFolder').data('id');
+	  folderName = $(e.target).closest('.myFolder').data('name');
+	}
+
+    $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + folderId + '"> </span><b> Drop in ' + folderName + '</b>');
   },
 
-  'mouseout .myFolder': function(event) {
-	$('i.fa-folder:contains("'+ this.name +'")').closest('li.myFolder').css('background-color', '#f7f7f7');
+  'mouseout .myFolder': function(e) {
     $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
   },
 });

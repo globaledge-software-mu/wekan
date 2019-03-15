@@ -5,11 +5,14 @@ Folders.attachSchema(new SimpleSchema({
     type: String
   },
   level: {
-    type: String,
-    defaultValue: 'first'
+    type: String
   },
   userId: {
     type: String
+  },
+  parentId: {
+    type: String,
+    optional: true,
   },
   'contents': {
     type: [Object],

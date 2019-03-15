@@ -33,6 +33,37 @@ BlazeComponent.extendComponent({
     });
   },
 
+  folderBoards() {
+    var folderId = $('li.myFolder.selected').data('id');
+    if (folderId !== null) {
+      var currentFolder = Folders.find({ _id: folderId }).fetch();
+      var folderBoardsIds = new Array;
+
+      if (currentFolder.length > 0) {
+    	var folderContents = currentFolder[0].contents;
+    	if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+    	  for (var j=0; j < _.keys(folderContents).length; j++) {
+    	    folderBoardsIds.push(folderContents[j].boardId);
+          }
+    	}
+      }
+
+      if (folderBoardsIds.length > 0) {
+    	return Boards.find({
+          _id: { $in: folderBoardsIds },
+          archived: false,
+          'members.userId': Meteor.userId(),
+        }, {
+          sort: ['title'],
+        });
+      } else {
+        return null
+      }
+    } else {
+        return null
+    }
+  },
+
   uncategorisedBoards() {
 	var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
 	var categorisedBoardIds = new Array;
