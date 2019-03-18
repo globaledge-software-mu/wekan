@@ -32,9 +32,21 @@ BlazeComponent.extendComponent({
       sort: ['title'],
     });
   },
+  
+  folders() {
+	return Folders.find(
+	  { 
+		userId: Meteor.userId()
+	  }, 
+	  { 
+		sort: ['name'] 
+	  }
+	);
+  },
 
   folderBoards() {
-    var folderId = $('li.myFolder.selected').data('id');
+    var folderId = this.currentData()._id;
+
     if (folderId !== null) {
       var currentFolder = Folders.find({ _id: folderId }).fetch();
       var folderBoardsIds = new Array;

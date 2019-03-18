@@ -8,6 +8,10 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
+	if (!$('li.myFolder').hasClass('.selected')) {
+	  $('li.uncategorised_boards').show();
+	}
+
 	$('ul.nav.metismenu#side-menu.folders').droppable({
       accept: 'li.board-color-belize',
       tolerance: 'pointer',
@@ -278,6 +282,7 @@ Template.foldersWidget.events({
 
   'click a.folderOpener': function(e) {
 	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
+	var folderId = $(e.target).closest('li.myFolder').data('id');
 
 	if (selector.hasClass('fa-caret-right')) {
       selector.removeClass('fa-caret-right');
@@ -292,11 +297,18 @@ Template.foldersWidget.events({
 	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
 		$('.myFolder').removeClass('selected');
 		$(e.target).closest('li.myFolder').addClass('selected');
+	} 
 
-		//
+	if ($(e.target).closest('li.myFolder').hasClass('selected')) {
+	    $('li.uncategorised_boards, div.categorised_boards').hide();
+	    $('div.categorised_boards[data-id="' + folderId + '"]').show();
 	}
-	
-	
+  },
+
+  'click a.viewUncategorised': function() {
+	$('li.myFolder').removeClass('selected');
+    $('div.categorised_boards').hide();
+    $('li.uncategorised_boards').show();
   },
 
   'mouseover .myFolder': function(e) {

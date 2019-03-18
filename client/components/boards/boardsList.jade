@@ -4,34 +4,37 @@ template(name="boardList")
     ul.board-list.clearfix
       li.js-add-board
         a.board-list-item.label {{_ 'add-board'}}
-      each folderBoards
-        li.categorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
-          if isInvited
-            .board-list-item
-              span.details
-                span.board-list-item-name= title
-                i.fa.js-star-board(
-                  class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
-                  title="{{_ 'star-board-title'}}")
-                p.board-list-item-desc {{_ 'just-invited'}}
-                button.js-accept-invite.primary {{_ 'accept'}}
-                button.js-decline-invite {{_ 'decline'}}
-          else
-            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
-              span.details
-                span.board-list-item-name= title
-                i.fa.js-star-board(
-                  class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
-                  title="{{_ 'star-board-title'}}")
+      each folders
+        div.categorised_boards.hide(data-id="{{_id}}")
+          each folderBoards
+            li(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
+              if isInvited
+                .board-list-item
+                  span.details
+                    span.board-list-item-name= title
+                    i.fa.js-star-board(
+                      class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                      title="{{_ 'star-board-title'}}")
+                    p.board-list-item-desc {{_ 'just-invited'}}
+                    button.js-accept-invite.primary {{_ 'accept'}}
+                    button.js-decline-invite {{_ 'decline'}}
+              else
+                a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+                  span.details
+                    span.board-list-item-name= title
+                    i.fa.js-star-board(
+                      class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                      title="{{_ 'star-board-title'}}")
 
-                if hasSpentTimeCards
-                  i.fa.js-has-spenttime-cards(
-                    class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
-                    title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
+                    if hasSpentTimeCards
+                      i.fa.js-has-spenttime-cards(
+                        class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
+                        title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
 
-                p.board-list-item-desc= description
+                    p.board-list-item-desc= description
+
       each uncategorisedBoards
-        li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
+        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
           if isInvited
             .board-list-item
               span.details
