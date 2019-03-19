@@ -5,9 +5,9 @@ template(name="boardList")
       li.js-add-board
         a.board-list-item.label {{_ 'add-board'}}
       each folders
-        div.categorised_boards.hide(data-id="{{_id}}")
+        div.folderDetails(data-folder-id="{{_id}}")
           each folderBoards
-            li(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
+            li.categorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
               if isInvited
                 .board-list-item
                   span.details
@@ -34,7 +34,7 @@ template(name="boardList")
                     p.board-list-item-desc= description
 
       each uncategorisedBoards
-        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
+        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
           if isInvited
             .board-list-item
               span.details

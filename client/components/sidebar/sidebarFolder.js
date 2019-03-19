@@ -16,20 +16,80 @@ BlazeComponent.extendComponent({
       accept: 'li.board-color-belize',
       tolerance: 'pointer',
 	  drop: function( event, ui ) {
-        var folderIdentifier = $('p#actionTitle').find('.fa-arrow-left').data('id');
-        var boardIdentifier = $(ui.draggable).find('a').data('id');
+        var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
+        var boardIdentifier = $(ui.draggable).data('id');
+        var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
 
-        var folderContents = (Folders.findOne({_id: folderIdentifier})).contents;
+        if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
+          // update old folder's record
+          var fromFolder = Folders.findOne(fromFolderId);
+          var folderContents = fromFolder.contents;
+          var boardIds = new Array;
+
+          for (var m = 0; m < _.keys(folderContents).length; m++) {
+            if (folderContents[m].boardId !== boardIdentifier) {
+              boardIds.push(folderContents[m].boardId);
+            }
+          }
+
+          Folders.update(
+      	    { _id : fromFolderId }, 
+      		{ $unset: { contents : '' } }
+          );
+
+          for (var n = 0; n < boardIds.length; n++) {
+            var keyName = 'contents.' + n + '.boardId';
+        	Folders.update(
+    	      { _id: fromFolderId },
+              { $set: { [keyName] : boardIds[n] } }
+    		);
+          }
+        }
+
+        var folderContents = (Folders.findOne({_id: droppedInFolderId})).contents;
         var key = 0;
         if(typeof(folderContents) != 'undefined' && folderContents !== null) {
           key = _.keys(folderContents).length;
         }
         var keyName = 'contents.'+key+'.boardId';
-
         Folders.update(
-          { _id: folderIdentifier },
+          { _id: droppedInFolderId },
           { $set: { [keyName] : boardIdentifier } }
         );
+
+        $(ui.draggable).remove();
+	  }
+	});
+
+	$('a.viewUncategorised').droppable({
+      accept: 'li.categorised_boards',
+      tolerance: 'pointer',
+	  drop: function( event, ui ) {
+        var boardIdentifier = $(ui.draggable).data('id').trim();
+        var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+
+        var fromFolder = Folders.findOne(fromFolderId);
+        var folderContents = fromFolder.contents;
+        var boardIds = new Array;
+        
+        for (var v = 0; v < _.keys(folderContents).length; v++) {
+          if (folderContents[v].boardId !== boardIdentifier) {
+          	boardIds.push(folderContents[v].boardId);
+          }
+        }
+
+    	Folders.update(
+		  { _id : fromFolderId }, 
+		  { $unset: { contents : '' } }
+		);
+
+    	for (var z = 0; z < boardIds.length; z++) {
+          var keyName = 'contents.' + z + '.boardId';
+      	  Folders.update(
+  			{ _id: fromFolderId },
+            { $set: { [keyName] : boardIds[z] } }
+  		  );
+    	}
 
         $(ui.draggable).remove();
 	  }
@@ -265,24 +325,29 @@ Template.foldersWidget.events({
   },
 
   'click .deleteFolder': function() {
-	var folderIds = new Array;
-	folderIds.push(this._id);
+	if (this._id != 'undefined' && this._id !== null) {
+      var folderIds = new Array;
+      folderIds.push(this._id);
 
-	var subFolders = Folders.find({parentId: this._id}).fetch();
-    if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
-	  for (var i=0; i < subFolders.length; i++) {
-	    folderIds.push(subFolders[i]._id);
+      var subFolders = Folders.find({parentId: this._id}).fetch();
+	  if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
+        for (var i=0; i < subFolders.length; i++) {
+		  folderIds.push(subFolders[i]._id);
+		}
 	  }
-    }
 
-    for (var k=0; k < folderIds.length; k++) {
-      Folders.remove(folderIds[k]);
+	  for (var k=0; k < folderIds.length; k++) {
+	    Folders.remove(folderIds[k]);
+      }
+	}
+
+    if (!$('li.myFolder').hasClass('selected')) {
+      $('a.viewUncategorised').trigger('click');
     }
   },
 
   'click a.folderOpener': function(e) {
 	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
-	var folderId = $(e.target).closest('li.myFolder').data('id');
 
 	if (selector.hasClass('fa-caret-right')) {
       selector.removeClass('fa-caret-right');
@@ -295,20 +360,65 @@ Template.foldersWidget.events({
 	}
 
 	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
-		$('.myFolder').removeClass('selected');
-		$(e.target).closest('li.myFolder').addClass('selected');
-	} 
+	  $('.myFolder').removeClass('selected');
+	  $(e.target).closest('li.myFolder').addClass('selected');
+	}
 
 	if ($(e.target).closest('li.myFolder').hasClass('selected')) {
-	    $('li.uncategorised_boards, div.categorised_boards').hide();
-	    $('div.categorised_boards[data-id="' + folderId + '"]').show();
-	}
+	  var folderId = $(e.target).closest('li.myFolder').data('id');
+	  var boardIds = new Array();
+	  var selectedFolder = Folders.findOne({ _id:folderId }); 
+      var folderContents = selectedFolder.contents;
+
+	  if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+		for (var i=0; i < _.keys(folderContents).length; i++) {
+		  boardIds.push(folderContents[i].boardId);
+		}
+	  } else {
+        $('li.uncategorised_boards, li.categorised_boards').hide();
+        return false;
+	  }
+
+      $('li.uncategorised_boards, li.categorised_boards').hide();
+	  for (var k=0; k < boardIds.length; k++) {
+      	$('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
+	  }
+
+	  $('li.categorised_boards').draggable({
+		revert: 'invalid',
+		start: function(event) {
+	      $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+	      $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+		},
+		drag: function() {
+	      //
+		},
+		stop: function() {
+		  $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+	      $('p#actionTitle').remove();
+		}
+      });
+  	}
   },
 
   'click a.viewUncategorised': function() {
 	$('li.myFolder').removeClass('selected');
-    $('div.categorised_boards').hide();
+    $('li.categorised_boards').hide();
     $('li.uncategorised_boards').show();
+  },
+
+  'mouseover a.viewUncategorised': function(e) {
+	if ($('li.categorised_boards').is(':visible')) {
+	  $('p#actionTitle').addClass('pull-right');
+      $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Remove from folder</b>');
+	} else {
+		return false;
+	}
+  },
+
+  'mouseout a.viewUncategorised': function(e) {
+	$('p#actionTitle').removeClass('pull-right');
+    $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
   },
 
   'mouseover .myFolder': function(e) {

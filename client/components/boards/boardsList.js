@@ -8,7 +8,7 @@ BlazeComponent.extendComponent({
 
   onRendered() {
 	$('ul.board-list.clearfix').sortable();
-	$('li.board-color-belize').draggable({
+	$('li.uncategorised_boards').draggable({
 	  revert: 'invalid',
 	  start: function(event) {
         $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
