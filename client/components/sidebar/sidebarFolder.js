@@ -13,15 +13,15 @@ BlazeComponent.extendComponent({
 	}
 
 	$('ul.nav.metismenu#side-menu.folders').droppable({
-      accept: 'li.board-color-belize',
+      accept: 'li.board-color-belize', // accepts both categorised and uncategorised boards
       tolerance: 'pointer',
 	  drop: function( event, ui ) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
 
+        // update old folder's record
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
-          // update old folder's record
           var fromFolder = Folders.findOne(fromFolderId);
           var folderContents = fromFolder.contents;
           var boardIds = new Array;
@@ -62,7 +62,7 @@ BlazeComponent.extendComponent({
 	});
 
 	$('a.viewUncategorised').droppable({
-      accept: 'li.categorised_boards',
+      accept: 'li.categorised_boards', // accepts only categorised boards
       tolerance: 'pointer',
 	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();

@@ -8,6 +8,7 @@ BlazeComponent.extendComponent({
 
   onRendered() {
 	$('ul.board-list.clearfix').sortable();
+
 	$('li.uncategorised_boards').draggable({
 	  revert: 'invalid',
 	  start: function(event) {
@@ -20,6 +21,21 @@ BlazeComponent.extendComponent({
 	  stop: function() {
 	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
         $('p#actionTitle').remove();
+	  }
+	});
+
+	// part of the codes for the functionality of dragging boards onto boards
+	$('li.board-color-belize').droppable({ 
+      accept: 'li.board-color-belize', 
+      tolerance: 'pointer',
+	  drop: function( event, ui ) {
+		var draggedBoardId = $(ui.draggable).data('id');
+		var droppedOnBoardId = $(this).data('id');
+
+	    Modal.open('createNewFolder');
+
+	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
+	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
 	  }
 	});
   },
@@ -153,3 +169,51 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('boardList');
+
+Template.createNewFolder.events({
+  'submit #createFolderForBoardsDroppedOnEachOther': function(e) {
+    e.preventDefault();
+
+    var draggedBoardId = sessionStorage.getItem('draggedBoardId');
+    var droppedOnBoardId = sessionStorage.getItem('droppedOnBoardId');
+    var firstKey = 'contents.0.boardId';
+    var SecondKey = 'contents.1.boardId';
+
+    Modal.close('createNewFolder');
+
+    Folders.insert({ 
+      name: $(e.target).find('input[name=name]').val(), 
+      level: 'first', 
+      userId: Meteor.userId(),
+      contents : [ { boardId : draggedBoardId }, { boardId : droppedOnBoardId } ]
+    }, function(error, result) {
+      if (result) {
+        var $successMessage = $('<div class="successStatus">' + 
+          '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
+          '<p><b>Folder was succesfully created and the boards have been moved into it!</b></p>' + 
+          '</div>'
+        );
+
+        $('#header-main-bar').before($successMessage);
+        $successMessage.delay(10000).slideUp(500, function() {
+          $(this).remove();
+        });
+        return false;
+      } else if (error) {
+        var $errorMessage = $('<div class="errorStatus">' +
+          '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
+          '<p><b>Error! Folder could not be created!</b></p>' +
+          '</div>'
+        );
+
+        $('#header-main-bar').before($errorMessage);
+        $errorMessage.delay(10000).slideUp(500, function() {
+          $(this).remove();
+        });
+      }
+    });
+
+    sessionStorage.removeItem('draggedBoardId');
+    sessionStorage.removeItem('droppedOnBoardId');
+  },
+});
