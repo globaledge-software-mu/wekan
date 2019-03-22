@@ -174,32 +174,14 @@ Template.createNewFolder.events({
   'submit #createFolderForBoardsDroppedOnEachOther': function(e) {
     e.preventDefault();
 
-    var draggedBoardId = sessionStorage.getItem('draggedBoardId');
-    var droppedOnBoardId = sessionStorage.getItem('droppedOnBoardId');
-    var firstKey = 'contents.0.boardId';
-    var SecondKey = 'contents.1.boardId';
-
     Modal.close('createNewFolder');
 
-    Folders.insert({ 
+    var newDoc = Folders.insert({ 
       name: $(e.target).find('input[name=name]').val(), 
       level: 'first', 
-      userId: Meteor.userId(),
-      contents : [ { boardId : draggedBoardId }, { boardId : droppedOnBoardId } ]
-    }, function(error, result) {
-      if (result) {
-        var $successMessage = $('<div class="successStatus">' + 
-          '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-          '<p><b>Folder was succesfully created and the boards have been moved into it!</b></p>' + 
-          '</div>'
-        );
-
-        $('#header-main-bar').before($successMessage);
-        $successMessage.delay(10000).slideUp(500, function() {
-          $(this).remove();
-        });
-        return false;
-      } else if (error) {
+      userId: Meteor.userId()
+    }, function(error) {
+      if (error) {
         var $errorMessage = $('<div class="errorStatus">' +
           '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
           '<p><b>Error! Folder could not be created!</b></p>' +
@@ -210,10 +192,43 @@ Template.createNewFolder.events({
         $errorMessage.delay(10000).slideUp(500, function() {
           $(this).remove();
         });
+
+        return false;
       }
     });
-
+    
+    var folderId = newDoc;
+    var boardIds = new Array;
+    boardIds.push(sessionStorage.getItem('draggedBoardId'));
+    boardIds.push(sessionStorage.getItem('droppedOnBoardId'));
     sessionStorage.removeItem('draggedBoardId');
     sessionStorage.removeItem('droppedOnBoardId');
+
+    for (var i = 0; i < boardIds.length; i++) {
+      var keyName = 'contents.' + i + '.boardId';
+      Folders.update(
+  	    { _id: folderId },
+        { $set: { [keyName] : boardIds[i] } }
+  	  );
+    }
+
+    var $successMessage = $('<div class="successStatus">' + 
+      '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
+      '<p><b>Folder was succesfully created and the boards have been moved into it!</b></p>' + 
+      '</div>'
+    );
+
+    $('#header-main-bar').before($successMessage);
+    $successMessage.delay(10000).slideUp(500, function() {
+      $(this).remove();
+    });
+  },
+
+  'click #cancelCreateFolderForBoardsDraggedOnEachOther': function(e) {
+	Modal.close('createNewFolder');
+    $('#'+draggedBoardId).animate({
+        top: "0px",
+        left: "0px"
+    });
   },
 });

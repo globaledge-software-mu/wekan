@@ -34,7 +34,7 @@ template(name="boardList")
                     p.board-list-item-desc= description
 
       each uncategorisedBoards
-        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
+        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
           if isInvited
             .board-list-item
               span.details
@@ -73,5 +73,6 @@ template(name="createNewFolder")
       h3.formHeader {{_ 'create-folder'}}
       hr.headerSeperator
       h3 Title
-      input#title.form-control.input-md(type='text' name='name' required='required')
-      button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
+      input#title.form-control.input-md(type='text' name='name' required='required' autofocus)
+      button.btn(type='submit') {{_ 'Submit'}}
+      button#cancelCreateFolderForBoardsDraggedOnEachOther.btn.pull-right(type='button') {{_ 'cancel'}}
