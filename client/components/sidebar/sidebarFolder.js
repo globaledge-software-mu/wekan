@@ -46,10 +46,13 @@ BlazeComponent.extendComponent({
           }
         }
 
-        var folderContents = (Folders.findOne({_id: droppedInFolderId})).contents;
+        var droppedInFolder = Folders.findOne({_id: droppedInFolderId});
         var key = 0;
-        if(typeof(folderContents) != 'undefined' && folderContents !== null) {
-          key = _.keys(folderContents).length;
+        if(typeof(droppedInFolder) != 'undefined' && droppedInFolder !== null) {
+          var folderContents = droppedInFolder.contents;
+          if(typeof(folderContents) != 'undefined' && folderContents !== null) {
+            key = _.keys(folderContents).length;
+          }
         }
         var keyName = 'contents.'+key+'.boardId';
         Folders.update(
@@ -61,14 +64,14 @@ BlazeComponent.extendComponent({
 	  }
 	});
 
-	$('a.viewUncategorised').droppable({
+	$('a#uncategorisedBoardsFolder').droppable({
       accept: 'li.categorised_boards', // accepts only categorised boards
       tolerance: 'pointer',
 	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
 
-        var fromFolder = Folders.findOne(fromFolderId);
+        var fromFolder = Folders.findOne({ _id:fromFolderId });
         var folderContents = fromFolder.contents;
         var boardIds = new Array;
         
@@ -342,7 +345,7 @@ Template.foldersWidget.events({
 	}
 
     if (!$('li.myFolder').hasClass('selected')) {
-      $('a.viewUncategorised').trigger('click');
+      $('a#uncategorisedBoardsFolder').trigger('click');
     }
   },
 
@@ -360,6 +363,7 @@ Template.foldersWidget.events({
 	}
 
 	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
+	  $('a#uncategorisedBoardsFolder').closest('li').removeClass('selected');
 	  $('.myFolder').removeClass('selected');
 	  $(e.target).closest('li.myFolder').addClass('selected');
 	}
@@ -370,53 +374,58 @@ Template.foldersWidget.events({
 	  var selectedFolder = Folders.findOne({ _id:folderId }); 
       var folderContents = selectedFolder.contents;
 
+      $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+	  $('.emptyFolderMessage').remove();
+
 	  if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
 		for (var i=0; i < _.keys(folderContents).length; i++) {
 		  boardIds.push(folderContents[i].boardId);
 		}
-	  } else {
-        $('li.uncategorised_boards, li.categorised_boards').hide();
-        return false;
-	  }
 
-      $('li.uncategorised_boards, li.categorised_boards').hide();
-	  for (var k=0; k < boardIds.length; k++) {
-      	$('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
-	  }
-
-	  $('li.categorised_boards').draggable({
-		revert: 'invalid',
-		start: function(event) {
-	      $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-	      $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-		},
-		drag: function() {
-	      //
-		},
-		stop: function() {
-		  $(this).css({'opacity': '1', 'pointer-events': 'auto'});
-	      $('p#actionTitle').remove();
+		for (var k=0; k < boardIds.length; k++) {
+	      $('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
 		}
-      });
+
+		$('li.categorised_boards').draggable({
+		  revert: 'invalid',
+	      start: function(event) {
+		    $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+		    $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+	      },
+	      drag: function() {
+		    //
+		  },
+		  stop: function() {
+			$(this).css({'opacity': '1', 'pointer-events': 'auto'});
+		    $('p#actionTitle').remove();
+	      }
+	    });
+	  } else {
+		$('.board-list.clearfix.ui-sortable').append(
+		  '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+		);
+	  }
   	}
   },
 
-  'click a.viewUncategorised': function() {
+  'click a#uncategorisedBoardsFolder': function() {
 	$('li.myFolder').removeClass('selected');
+	$('a#uncategorisedBoardsFolder').closest('li').addClass('selected');
+	$('.emptyFolderMessage').remove();
     $('li.categorised_boards').hide();
-    $('li.uncategorised_boards').show();
+    $('li.js-add-board, li.uncategorised_boards').show();
   },
 
-  'mouseover a.viewUncategorised': function(e) {
+  'mouseover a#uncategorisedBoardsFolder': function(e) {
 	if ($('li.categorised_boards').is(':visible')) {
 	  $('p#actionTitle').addClass('pull-right');
       $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Remove from folder</b>');
 	} else {
-		return false;
+	  return false;
 	}
   },
 
-  'mouseout a.viewUncategorised': function(e) {
+  'mouseout a#uncategorisedBoardsFolder': function(e) {
 	$('p#actionTitle').removeClass('pull-right');
     $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
   },

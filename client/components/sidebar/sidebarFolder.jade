@@ -16,9 +16,6 @@ template(name='homeSidebarFolder')
 template(name='foldersWidget')
   .board-widget.board-widget-folders
     div.col-lg-12
-      a.center.viewUncategorised(type='text' data-toggle="tooltip" data-placement="top" title="{{_ 'uncategorised-boards'}}") 
-        span.fa.fa-bars.fa-lg
-    div.col-lg-12
       div.col-lg-3
         button.create-first-level-folder.btn.fa.fa-plus.pull-right(type='button')
       div.col-lg-9
@@ -36,6 +33,11 @@ template(name='foldersWidget')
           input#title.form-control.input-md(type='text' name='name' required='required')
           button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
     hr
+    ul.nav.metismenu#uncategorised-folder-ul-tag
+      li.nav.sub-root
+        a#uncategorisedBoardsFolder.fa.fa-folder
+          | &nbsp;
+          span.nav-label.generalFont {{_ 'uncategorised'}}
     ul.nav.metismenu#side-menu.folders
       each folders
         li.nav.sub-root.myFolder(data-id="{{_id}}" data-name="{{name}}")
