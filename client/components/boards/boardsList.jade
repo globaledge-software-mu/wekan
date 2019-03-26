@@ -1,10 +1,40 @@
 template(name="boardList")
   .wrapper
+    +sidebarFolder
     ul.board-list.clearfix
       li.js-add-board
         a.board-list-item.label {{_ 'add-board'}}
-      each boards
-        li(class="{{#if isStarred}}starred{{/if}}" class=colorClass)
+      each folders
+        div.folderDetails(data-folder-id="{{_id}}")
+          each folderBoards
+            li.categorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
+              if isInvited
+                .board-list-item
+                  span.details
+                    span.board-list-item-name= title
+                    i.fa.js-star-board(
+                      class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                      title="{{_ 'star-board-title'}}")
+                    p.board-list-item-desc {{_ 'just-invited'}}
+                    button.js-accept-invite.primary {{_ 'accept'}}
+                    button.js-decline-invite {{_ 'decline'}}
+              else
+                a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+                  span.details
+                    span.board-list-item-name= title
+                    i.fa.js-star-board(
+                      class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                      title="{{_ 'star-board-title'}}")
+
+                    if hasSpentTimeCards
+                      i.fa.js-has-spenttime-cards(
+                        class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
+                        title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
+
+                    p.board-list-item-desc= description
+
+      each uncategorisedBoards
+        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
           if isInvited
             .board-list-item
               span.details
@@ -16,7 +46,7 @@ template(name="boardList")
                 button.js-accept-invite.primary {{_ 'accept'}}
                 button.js-decline-invite {{_ 'decline'}}
           else
-            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}")
+            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
               span.details
                 span.board-list-item-name= title
                 i.fa.js-star-board(
@@ -36,3 +66,13 @@ template(name="boardListHeaderBar")
     a.board-header-btn.js-open-archived-board
       i.fa.fa-archive
       span {{_ 'archives'}}
+
+template(name="createNewFolder") 
+  form#createFolderForBoardsDroppedOnEachOther.modal-form
+    div
+      h3.formHeader {{_ 'create-folder'}}
+      hr.headerSeperator
+      h3 Title
+      input#title.form-control.input-md(type='text' name='name' required='required' autofocus)
+      button.btn(type='submit') {{_ 'Submit'}}
+      button#cancelCreateFolderForBoardsDraggedOnEachOther.btn.pull-right(type='button') {{_ 'cancel'}}

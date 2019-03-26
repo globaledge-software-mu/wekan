@@ -35,4 +35,7 @@ Template.header.events({
     Session.set('currentList', this._id);
     Session.set('currentCard', null);
   },
+  'click .closeStatus': function() {
+	  $('.closeStatus').parent('div').remove();
+  },
 });
