@@ -1,0 +1,75 @@
+template(name='sidebarFolder')
+  .sidebar-folder.sidebar(class="{{#if isOpen}}is-open{{/if}}")
+    a.sidebar-folder-tongue.js-toggle-sidebar(
+      class='{{#if isTongueHidden}}is-hidden{{/if}}',
+      title='{{showTongueTitle}}')
+      i.fa.fa-angle-right
+    .sidebar-shadow
+      .sidebar-content.js-board-sidebar-content.js-perfect-scrollbar
+        a.hide-btn.js-hide-sidebar
+          i.fa.fa-angle-right
+        +Template.dynamic(template=getViewTemplate)
+        
+template(name='homeSidebarFolder')
+  +foldersWidget
+        
+template(name='foldersWidget')
+  .board-widget.board-widget-folders
+    div.col-lg-12
+      div.col-lg-3
+        button.create-first-level-folder.btn.fa.fa-plus.pull-right(type='button')
+      div.col-lg-9
+        h2.panelTitle
+          i.fa.fa-folder
+          | {{_ 'folders'}}
+      div.clearfix
+    div.col-lg-12.createFirstLevelFolderDiv.hide
+      form#createFirstLevelFolderForm
+        div
+          h3.formHeader {{_ 'create-folder'}}
+            i.fa.fa-times-thin.pull-right.close-first-level-form
+          hr
+          h3 Title
+          input#title.form-control.input-md(type='text' name='name' required='required')
+          button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
+    hr
+    ul.nav.metismenu#uncategorised-folder-ul-tag
+      li.nav.sub-root.selected
+        a#uncategorisedBoardsFolder.fa.fa-folder
+          | &nbsp;
+          span.nav-label.generalFont {{_ 'uncategorised'}}
+    ul.nav.metismenu#side-menu.folders
+      each folders
+        li.nav.sub-root.myFolder(data-id="{{_id}}" data-name="{{name}}")
+          a.folderOpener
+            i.fa.fa-caret-right.folderHandle
+              | &nbsp;
+              span.fa.fa-folder
+            span.nav-label.generalFont
+              = name
+            i.fa.fa-trash.pull-right.deleteFolder.parentFolderBinTag
+          ul.nav.nav-second-level.collapse.hide
+            li.addSubFolderTAGli
+              a.addSubFolderLink
+                i.fa.fa-plus.addSubFolderTAGi
+                | {{_ 'add-subfolder'}}
+            li.createSubFolderFormTAGli.hide
+              div.col-lg-12.createSubFolderDiv
+                form#createSubFolderForm(data-parent-id="{{_id}}")
+                  div
+                    h3.formHeader {{_ 'create-sub-folder'}}
+                      i.fa.fa-times-thin.pull-right.close-sub-folder-form
+                    hr
+                    h3 Title
+                    input#title.form-control.input-md(type='text' name='name' required='required')
+                    button.btn.btn-submit-create-sub-folder(type='submit') {{_ 'Submit'}}
+            each subFolders
+              li.nav.sub-root.myFolder.subFolderTAGli(data-id="{{_id}}" data-name="{{name}}")
+                a.folderOpener
+                  i.fa.fa-folder
+                  span.nav-label.generalFont
+                    = name
+                  i.fa.fa-trash.pull-right.deleteFolder
+ 
+ 
+ 

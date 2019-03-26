@@ -574,7 +574,7 @@ Boards.mutations({
 if (Meteor.isServer) {
   Boards.allow({
     insert: Meteor.userId,
-    update: allowIsBoardAdmin,
+    update: Meteor.userId,
     remove: allowIsBoardAdmin,
     fetch: ['members'],
   });
