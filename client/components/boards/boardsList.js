@@ -7,57 +7,49 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
-	$('ul.board-list.clearfix').sortable();
+  	$('ul.board-list.clearfix').sortable();
 
-	$('li.uncategorised_boards').draggable({
-	  revert: 'invalid',
-	  start: function(event) {
-        $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-        $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-	  },
-	  drag: function() {
-		//
-	  },
-	  stop: function() {
-	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+  	$('li.uncategorised_boards').draggable({
+  	  revert: 'invalid',
+  	  start: function(event) {
+          $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+          $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+  	  },
+  	  drag: function() {},
+  	  stop: function() {
+  	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
         $('p#actionTitle').remove();
-	  }
-	});
+  	  }
+  	});
 
-	// part of the codes for the functionality of dragging boards onto boards
-	$('li.board-color-belize').droppable({ 
+  	// part of the codes for the functionality of dragging boards onto boards
+  	$('li.board-color-belize').droppable({
       accept: 'li.board-color-belize', 
       tolerance: 'pointer',
-	  drop: function( event, ui ) {
-		var draggedBoardId = $(ui.draggable).data('id');
-		var droppedOnBoardId = $(this).data('id');
+      drop: function( event, ui ) {
+    		var draggedBoardId = $(ui.draggable).data('id');
+    		var droppedOnBoardId = $(this).data('id');
 
-	    Modal.open('createNewFolder');
+  	    Modal.open('createNewFolder');
 
-	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
-	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
-	  }
-	});
+  	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
+  	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
+  	  }
+  	});
   },
 
   boards() {
-    return Boards.find({
-      archived: false,
-      'members.userId': Meteor.userId(),
-    }, {
-      sort: ['title'],
-    });
+    return Boards.find(
+      { archived: false, 'members.userId': Meteor.userId(), }, 
+      { sort: ['title'], }
+    );
   },
-  
+
   folders() {
-	return Folders.find(
-	  { 
-		userId: Meteor.userId()
-	  }, 
-	  { 
-		sort: ['name'] 
-	  }
-	);
+  	return Folders.find(
+  	  { userId: Meteor.userId() }, 
+  	  { sort: ['name'] }
+  	);
   },
 
   folderBoards() {
@@ -68,22 +60,19 @@ BlazeComponent.extendComponent({
       var folderBoardsIds = new Array;
 
       if (currentFolder.length > 0) {
-    	var folderContents = currentFolder[0].contents;
-    	if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
-    	  for (var j=0; j < _.keys(folderContents).length; j++) {
-    	    folderBoardsIds.push(folderContents[j].boardId);
+      	var folderContents = currentFolder[0].contents;
+      	if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+      	  for (var j=0; j < _.keys(folderContents).length; j++) {
+      	    folderBoardsIds.push(folderContents[j].boardId);
           }
-    	}
+      	}
       }
 
       if (folderBoardsIds.length > 0) {
-    	return Boards.find({
-          _id: { $in: folderBoardsIds },
-          archived: false,
-          'members.userId': Meteor.userId(),
-        }, {
-          sort: ['title'],
-        });
+        return Boards.find(
+          { _id: { $in: folderBoardsIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+          { sort: ['title'], }
+        );
       } else {
         return null
       }
@@ -93,36 +82,35 @@ BlazeComponent.extendComponent({
   },
 
   uncategorisedBoards() {
-	var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
-	var categorisedBoardIds = new Array;
+    $('a#uncategorisedBoardsFolder').trigger('click');
+    var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
+    var categorisedBoardIds = new Array;
 
-	if (userFolders.length > 0) {
-	  for (var i=0; i < userFolders.length; i++) {
-	    var folderContents = userFolders[i].contents;
-	    if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
-		  for (var j=0; j < _.keys(folderContents).length; j++) {
-	        categorisedBoardIds.push(folderContents[j].boardId);
-		  }
-	    }
-	  }
-	}
+    if (userFolders.length > 0) {
+      for (var i=0; i < userFolders.length; i++) {
+        var folderContents = userFolders[i].contents;
+        if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+          for (var j=0; j < _.keys(folderContents).length; j++) {
+              categorisedBoardIds.push(folderContents[j].boardId);
+          }
+        }
+      }
+    }
 
-	if (categorisedBoardIds.length > 0) {
-	  return Boards.find({
-        _id: { $nin: categorisedBoardIds },
-        archived: false,
-        'members.userId': Meteor.userId(),
-      }, {
-        sort: ['title'],
-      });
-	} else {
-	  return Boards.find({
-        archived: false,
-        'members.userId': Meteor.userId(),
-      }, {
-        sort: ['title'],
-      });
-	}
+    var uncategorisedBoardsDetails = Boards.find(
+      { _id: { $nin: categorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+      {fields: {'_id': 1}}
+    ).fetch();
+    var uncategorisedBoardIds = new Array();
+
+    for (var i=0; i < uncategorisedBoardsDetails.length; i++) {
+      uncategorisedBoardIds.push(uncategorisedBoardsDetails[i]._id);
+    }
+
+    return Boards.find(
+      { _id: { $in: uncategorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+      { sort: ['title'], }
+    );
   },
 
   isStarred() {
@@ -225,10 +213,10 @@ Template.createNewFolder.events({
   },
 
   'click #cancelCreateFolderForBoardsDraggedOnEachOther': function(e) {
-	Modal.close('createNewFolder');
+    Modal.close('createNewFolder');
     $('#'+draggedBoardId).animate({
-        top: "0px",
-        left: "0px"
+      top: "0px",
+      left: "0px"
     });
   },
 });

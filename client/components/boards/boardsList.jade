@@ -7,7 +7,7 @@ template(name="boardList")
       each folders
         div.folderDetails(data-folder-id="{{_id}}")
           each folderBoards
-            li.categorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
+            li.categorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
               if isInvited
                 .board-list-item
                   span.details
@@ -34,7 +34,7 @@ template(name="boardList")
                     p.board-list-item-desc= description
 
       each uncategorisedBoards
-        li.uncategorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
+        li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
           if isInvited
             .board-list-item
               span.details

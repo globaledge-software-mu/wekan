@@ -8,18 +8,14 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
-	if (!$('li.myFolder').hasClass('.selected')) {
-	  $('li.uncategorised_boards').show();
-	}
-
-	$('ul.nav.metismenu#side-menu.folders').droppable({
+  	$('ul.nav.metismenu#side-menu.folders').droppable({
       accept: 'li.board-color-belize', // accepts both categorised and uncategorised boards
       tolerance: 'pointer',
-	  drop: function( event, ui ) {
+      drop: function( event, ui ) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
-
+  
         // update old folder's record
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
           var fromFolder = Folders.findOne(fromFolderId);
@@ -34,15 +30,15 @@ BlazeComponent.extendComponent({
 
           Folders.update(
       	    { _id : fromFolderId }, 
-      		{ $unset: { contents : '' } }
+      		  { $unset: { contents : '' } }
           );
-
+  
           for (var n = 0; n < boardIds.length; n++) {
             var keyName = 'contents.' + n + '.boardId';
-        	Folders.update(
-    	      { _id: fromFolderId },
+        	  Folders.update(
+    	        { _id: fromFolderId },
               { $set: { [keyName] : boardIds[n] } }
-    		);
+    		    );
           }
         }
 
@@ -59,44 +55,44 @@ BlazeComponent.extendComponent({
           { _id: droppedInFolderId },
           { $set: { [keyName] : boardIdentifier } }
         );
-
+  
         $(ui.draggable).remove();
-	  }
-	});
-
-	$('a#uncategorisedBoardsFolder').droppable({
+  	  }
+  	});
+  
+  	$('a#uncategorisedBoardsFolder').droppable({
       accept: 'li.categorised_boards', // accepts only categorised boards
       tolerance: 'pointer',
-	  drop: function( event, ui ) {
+  	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
 
         var fromFolder = Folders.findOne({ _id:fromFolderId });
         var folderContents = fromFolder.contents;
         var boardIds = new Array;
-        
+
         for (var v = 0; v < _.keys(folderContents).length; v++) {
           if (folderContents[v].boardId !== boardIdentifier) {
           	boardIds.push(folderContents[v].boardId);
           }
         }
 
-    	Folders.update(
-		  { _id : fromFolderId }, 
-		  { $unset: { contents : '' } }
-		);
+      	Folders.update(
+    		  { _id : fromFolderId }, 
+    		  { $unset: { contents : '' } }
+    		);
 
-    	for (var z = 0; z < boardIds.length; z++) {
+      	for (var z = 0; z < boardIds.length; z++) {
           var keyName = 'contents.' + z + '.boardId';
       	  Folders.update(
-  			{ _id: fromFolderId },
+    	      { _id: fromFolderId },
             { $set: { [keyName] : boardIds[z] } }
-  		  );
-    	}
+      	  );
+      	}
 
         $(ui.draggable).remove();
-	  }
-	});
+  	  }
+  	});
   },
 
   onCreated() {
@@ -183,31 +179,21 @@ BlazeComponent.extendComponent({
   },
   
   folders() {
-	return Folders.find(
-	  { 
-		userId: Meteor.userId(),
-		parentId: null
-	  }, 
-	  { 
-		sort: ['name'] 
-	  }
-	);
+  	return Folders.find(
+  	  { userId: Meteor.userId(), parentId: null }, 
+  	  { sort: ['name'] }
+  	);
   },
   
   subFolders() {
-	return Folders.find(
-	  { 
-		userId: Meteor.userId(),
-		parentId: this.currentData()._id
-	  }, 
-	  { 
-		sort: ['name'] 
-	  }
-	);
+  	return Folders.find(
+  	  { userId: Meteor.userId(), parentId: this.currentData()._id }, 
+  	  { sort: ['name'] }
+  	);
   },
   
   boards() {
-	return Boards.find({'members.userId': Meteor.userId()});
+    return Boards.find({'members.userId': Meteor.userId()});
   },
 
   events() {
@@ -274,7 +260,7 @@ Template.foldersWidget.events({
   },
 
   'click .addSubFolderTAGli, .addSubFolderTAGi, .addSubFolderLink': function(e) {
-	var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
+    var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
     if (selector.find('.createSubFolderFormTAGli').hasClass('hide')) {
       selector.find('.createSubFolderFormTAGli').removeClass('hide');
       selector.find('#createSubFolderForm').find('#title').focus();
@@ -328,21 +314,21 @@ Template.foldersWidget.events({
   },
 
   'click .deleteFolder': function() {
-	if (this._id != 'undefined' && this._id !== null) {
+  	if (this._id != 'undefined' && this._id !== null) {
       var folderIds = new Array;
       folderIds.push(this._id);
 
       var subFolders = Folders.find({parentId: this._id}).fetch();
-	  if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
+  	  if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
         for (var i=0; i < subFolders.length; i++) {
-		  folderIds.push(subFolders[i]._id);
-		}
-	  }
-
-	  for (var k=0; k < folderIds.length; k++) {
-	    Folders.remove(folderIds[k]);
+    		  folderIds.push(subFolders[i]._id);
+    		}
+  	  }
+  
+  	  for (var k=0; k < folderIds.length; k++) {
+  	    Folders.remove(folderIds[k]);
       }
-	}
+  	}
 
     if (!$('li.myFolder').hasClass('selected')) {
       $('a#uncategorisedBoardsFolder').trigger('click');
@@ -350,97 +336,95 @@ Template.foldersWidget.events({
   },
 
   'click a.folderOpener': function(e) {
-	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
+  	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
 
-	if (selector.hasClass('fa-caret-right')) {
+  	if (selector.hasClass('fa-caret-right')) {
       selector.removeClass('fa-caret-right');
-	  selector.addClass('fa-caret-down');
+  	  selector.addClass('fa-caret-down');
       $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').removeClass('hide');
-	} else if (selector.hasClass('fa-caret-down')) {
-	  selector.removeClass('fa-caret-down');
-	  selector.addClass('fa-caret-right');
-	  $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
-	}
+  	} else if (selector.hasClass('fa-caret-down')) {
+  	  selector.removeClass('fa-caret-down');
+  	  selector.addClass('fa-caret-right');
+  	  $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
+  	}
 
-	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
-	  $('a#uncategorisedBoardsFolder').closest('li').removeClass('selected');
-	  $('.myFolder').removeClass('selected');
-	  $(e.target).closest('li.myFolder').addClass('selected');
-	}
+  	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
+  	  $('a#uncategorisedBoardsFolder').closest('li').removeClass('selected');
+  	  $('.myFolder').removeClass('selected');
+  	  $(e.target).closest('li.myFolder').addClass('selected');
+  	}
 
-	if ($(e.target).closest('li.myFolder').hasClass('selected')) {
-	  var folderId = $(e.target).closest('li.myFolder').data('id');
-	  var boardIds = new Array();
-	  var selectedFolder = Folders.findOne({ _id:folderId }); 
+  	if ($(e.target).closest('li.myFolder').hasClass('selected')) {
+  	  var folderId = $(e.target).closest('li.myFolder').data('id');
+  	  var boardIds = new Array();
+  	  var selectedFolder = Folders.findOne({ _id:folderId }); 
       var folderContents = selectedFolder.contents;
 
       $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
-	  $('.emptyFolderMessage').remove();
-
-	  if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
-		for (var i=0; i < _.keys(folderContents).length; i++) {
-		  boardIds.push(folderContents[i].boardId);
-		}
-
-		for (var k=0; k < boardIds.length; k++) {
-	      $('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
-		}
-
-		$('li.categorised_boards').draggable({
-		  revert: 'invalid',
-	      start: function(event) {
-		    $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-		    $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-	      },
-	      drag: function() {
-		    //
-		  },
-		  stop: function() {
-			$(this).css({'opacity': '1', 'pointer-events': 'auto'});
-		    $('p#actionTitle').remove();
-	      }
-	    });
-	  } else {
-		$('.board-list.clearfix.ui-sortable').append(
-		  '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
-		);
-	  }
+  	  $('.emptyFolderMessage').remove();
+  
+  	  if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+    		for (var i=0; i < _.keys(folderContents).length; i++) {
+    		  boardIds.push(folderContents[i].boardId);
+    		}
+    
+    		for (var k=0; k < boardIds.length; k++) {
+    	      $('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
+    		}
+  
+  		  $('li.categorised_boards').draggable({
+  		    revert: 'invalid',
+  	      start: function(event) {
+    		    $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+    		    $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+  	      },
+  	      drag: function() {},
+  	      stop: function() {
+  	        $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+  	        $('p#actionTitle').remove();
+  	      }
+  	    });
+  	  } else {
+    		$('.board-list.clearfix.ui-sortable').append(
+    		  '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+    		);
+  	  }
   	}
   },
 
   'click a#uncategorisedBoardsFolder': function() {
-	$('li.myFolder').removeClass('selected');
-	$('a#uncategorisedBoardsFolder').closest('li').addClass('selected');
-	$('.emptyFolderMessage').remove();
+  	$('li.myFolder').removeClass('selected');
+  	$('a#uncategorisedBoardsFolder').closest('li').addClass('selected');
+  	$('.emptyFolderMessage').remove();
     $('li.categorised_boards').hide();
     $('li.js-add-board, li.uncategorised_boards').show();
   },
 
   'mouseover a#uncategorisedBoardsFolder': function(e) {
-	if ($('li.categorised_boards').is(':visible')) {
-	  $('p#actionTitle').addClass('pull-right');
+  	if ($('li.categorised_boards').is(':visible')) {
+  	  $('p#actionTitle').addClass('pull-right');
       $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Remove from folder</b>');
-	} else {
-	  return false;
-	}
+  	} else {
+  	  return false;
+  	}
   },
 
   'mouseout a#uncategorisedBoardsFolder': function(e) {
-	$('p#actionTitle').removeClass('pull-right');
+    $('p#actionTitle').removeClass('pull-right');
     $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
   },
 
   'mouseover .myFolder': function(e) {
-	var folderId;
-	var folderName;
+  	var folderId;
+  	var folderName;
 
-	if ($(e.target).hasClass('myFolder')) {
-      folderId = $(e.target).data('id');
-	  folderName = $(e.target).data('name');
-	} else {
-	  folderId = $(e.target).closest('.myFolder').data('id');
-	  folderName = $(e.target).closest('.myFolder').data('name');
-	}
+  	if ($(e.target).hasClass('myFolder')) {
+        folderId = $(e.target).data('id');
+  	  folderName = $(e.target).data('name');
+  	} else {
+  	  folderId = $(e.target).closest('.myFolder').data('id');
+  	  folderName = $(e.target).closest('.myFolder').data('name');
+  	}
 
     $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + folderId + '"> </span><b> Drop in ' + folderName + '</b>');
   },
