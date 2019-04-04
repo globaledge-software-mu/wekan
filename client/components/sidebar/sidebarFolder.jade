@@ -17,7 +17,7 @@ template(name='foldersWidget')
   .board-widget.board-widget-folders
     div.col-lg-12
       div.col-lg-3
-        button.create-first-level-folder.btn.fa.fa-plus.pull-right(type='button')
+        button.create-first-level-folder.btn.fa.fa-plus.pull-right(type='button' title="Create new folder")
       div.col-lg-9
         h2.panelTitle
           i.fa.fa-folder
@@ -34,8 +34,8 @@ template(name='foldersWidget')
           button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
     hr
     ul.nav.metismenu#uncategorised-folder-ul-tag
-      li.nav.sub-root.selected
-        a#uncategorisedBoardsFolder.fa.fa-folder
+      li.nav.sub-root
+        a#uncategorisedBoardsFolder.fa.fa-folder.selected
           | &nbsp;
           span.nav-label.generalFont {{_ 'uncategorised'}}
     ul.nav.metismenu#side-menu.folders
@@ -47,7 +47,7 @@ template(name='foldersWidget')
               span.fa.fa-folder
             span.nav-label.generalFont
               = name
-            i.fa.fa-trash.pull-right.deleteFolder.parentFolderBinTag
+              i.fa.fa-trash.pull-right.deleteFolder(title="Delete folder {{name}}")
           ul.nav.nav-second-level.collapse.hide
             li.addSubFolderTAGli
               a.addSubFolderLink
@@ -67,9 +67,9 @@ template(name='foldersWidget')
               li.nav.sub-root.myFolder.subFolderTAGli(data-id="{{_id}}" data-name="{{name}}")
                 a.folderOpener
                   i.fa.fa-folder
-                  span.nav-label.generalFont
+                  span.nav-label.generalFont.subfolderLabel
                     = name
-                  i.fa.fa-trash.pull-right.deleteFolder
+                    i.fa.fa-trash.pull-right.deleteFolder(title="Delete folder {{name}}")
  
  
  
