@@ -259,7 +259,7 @@ Template.foldersWidget.events({
     $('#createFirstLevelFolderForm').trigger('reset');
   },
 
-  'click .addSubFolderTAGli, .addSubFolderTAGi, .addSubFolderLink': function(e) {
+  'click .addSubFolderLink': function(e) {
     var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
     if (selector.find('.createSubFolderFormTAGli').hasClass('hide')) {
       selector.find('.createSubFolderFormTAGli').removeClass('hide');
@@ -330,31 +330,33 @@ Template.foldersWidget.events({
       }
   	}
 
-    if (!$('li.myFolder').hasClass('selected')) {
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
       $('a#uncategorisedBoardsFolder').trigger('click');
     }
   },
 
-  'click a.folderOpener': function(e) {
-  	var selector = $(e.target).closest('li.myFolder').find('.folderHandle');
-
-  	if (selector.hasClass('fa-caret-right')) {
-      selector.removeClass('fa-caret-right');
-  	  selector.addClass('fa-caret-down');
+  // toggles caret icon & expands parent folder
+  'click i.folderHandle': function(e) {
+    if ($(e.target).hasClass('fa-caret-right')) {
+      $(e.target).removeClass('fa-caret-right');
+      $(e.target).addClass('fa-caret-down');
       $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').removeClass('hide');
-  	} else if (selector.hasClass('fa-caret-down')) {
-  	  selector.removeClass('fa-caret-down');
-  	  selector.addClass('fa-caret-right');
-  	  $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
-  	}
+    } else if ($(e.target).hasClass('fa-caret-down')) {
+      $(e.target).removeClass('fa-caret-down');
+      $(e.target).addClass('fa-caret-right');
+      $(e.target).closest('li.myFolder').find('ul.nav.nav-second-level.collapse').addClass('hide');
+    }
+  },
 
-  	if (!$(e.target).closest('li.myFolder').hasClass('selected')) {
-  	  $('a#uncategorisedBoardsFolder').closest('li').removeClass('selected');
-  	  $('.myFolder').removeClass('selected');
-  	  $(e.target).closest('li.myFolder').addClass('selected');
-  	}
+  // selecting folder & displaying its boards
+  'click a.folderOpener': function(e) {
+    if (!$(e.target).closest('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+      $('a#uncategorisedBoardsFolder').removeClass('selected');
+      $('a.folderOpener').removeClass('selected');
+      $(e.target).closest('li.myFolder').children('a.folderOpener').addClass('selected');
+    }
 
-  	if ($(e.target).closest('li.myFolder').hasClass('selected')) {
+  	if ($(e.target).closest('li.myFolder').children('a.folderOpener').hasClass('selected')) {
   	  var folderId = $(e.target).closest('li.myFolder').data('id');
   	  var boardIds = new Array();
   	  var selectedFolder = Folders.findOne({ _id:folderId }); 
@@ -362,16 +364,17 @@ Template.foldersWidget.events({
 
       $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
   	  $('.emptyFolderMessage').remove();
-  
+
   	  if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
     		for (var i=0; i < _.keys(folderContents).length; i++) {
     		  boardIds.push(folderContents[i].boardId);
     		}
-    
+
     		for (var k=0; k < boardIds.length; k++) {
     	      $('li.categorised_boards[data-id="' + boardIds[k] + '"]').show();
     		}
-  
+
+    		// making the selected folder's displayed boards draggable
   		  $('li.categorised_boards').draggable({
   		    revert: 'invalid',
   	      start: function(event) {
@@ -393,8 +396,8 @@ Template.foldersWidget.events({
   },
 
   'click a#uncategorisedBoardsFolder': function() {
-  	$('li.myFolder').removeClass('selected');
-  	$('a#uncategorisedBoardsFolder').closest('li').addClass('selected');
+  	$('a.folderOpener').removeClass('selected');
+  	$('a#uncategorisedBoardsFolder').addClass('selected');
   	$('.emptyFolderMessage').remove();
     $('li.categorised_boards').hide();
     $('li.js-add-board, li.uncategorised_boards').show();
@@ -419,7 +422,7 @@ Template.foldersWidget.events({
   	var folderName;
 
   	if ($(e.target).hasClass('myFolder')) {
-        folderId = $(e.target).data('id');
+      folderId = $(e.target).data('id');
   	  folderName = $(e.target).data('name');
   	} else {
   	  folderId = $(e.target).closest('.myFolder').data('id');

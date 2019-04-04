@@ -42,10 +42,26 @@
 
 #side-menu
   li
-    padding: 10px
     a
       color: #808080
-      padding: 10px
+      padding-right: 10px;
+      padding-left: 10px;
+    li
+      padding: 10px 0 10px 15px
+
+i.folderHandle
+  width: 29px
+  text-align: right
+
+a.folderOpener
+  span.generalFont
+    width: 79%;
+    display: inline-block;
+
+ul
+  li.myFolder
+    padding: 10px 0px 10px 0px
+    margin: 0px
 
 .nav.nav-second-level.collapse
   padding-left: 10px;
@@ -53,6 +69,9 @@
 
 .create-first-level-folder
   cursor: pointer;
+  margin-top: 0px;
+  padding-right: 15px;
+  padding-left: 15px;
 
 .createFirstLevelFolderDiv
   background-color: white;
@@ -66,6 +85,55 @@
   background-color: #004766;
   color: white;
 
+ul#side-menu
+  li.sub-root
+    padding-top: 5px
+    padding-bottom: 5px
+    a.folderOpener
+      padding-top: 5px
+      padding-bottom: 5px
+
+ul#uncategorised-folder-ul-tag
+  li.sub-root
+    padding-left: 0px
+    padding-top: 0px
+    padding-bottom: 0px
+    a#uncategorisedBoardsFolder
+      width: 94.5%
+      height: 20px
+      line-height: 20px
+      padding-top: 5px
+      padding-bottom: 5px
+      padding-left: 10px
+
+ul#side-menu
+  li.sub-root.myFolder
+    ul.nav-second-level
+      padding-left: 0px
+      li.addSubFolderTAGli
+        padding-top: 5px
+        padding-bottom: 5px
+        padding-left: 0px
+        a.addSubFolderLink
+          padding-top: 0px
+          padding-bottom: 0px
+          padding-left: 35px
+
+ul#side-menu.folders
+  li.sub-root.myFolder
+    ul.nav-second-level
+      li.subFolderTAGli
+        padding-left: 0px
+        a.folderOpener
+          padding-left: 35px
+          .subfolderLabel
+            width: 76%
+
+div.board-widget.board-widget-folders
+  div.createFirstLevelFolderDiv
+    hr
+      margin-top: 5px;
+
 .formHeader
   font-style: Arial;
   font-weight: bold;
@@ -78,9 +146,9 @@
   font-size: 15px;
 
 .panelTitle
-  padding-top: 9px;
   line-height: 35px;
   margin-bottom: 0px;
+  padding-top: 5px;
 
 .successStatus
   text-align: center;
@@ -100,19 +168,18 @@
 .generalFont
   font-family: Roboto, "Helvetica Neue", Arial, Helvetica, sans-serif;
   font-size: 16px;
+  word-wrap: break-word;
  
- .createSubFolderDiv
-   background-color: white;
-   border: solid 2px #faf0e6;
-   box-shadow: 1px 1px 1px #faf0e6;
-   margin: 15px;
-   padding: 10px;
+ li.createSubFolderFormTAGli
+   .createSubFolderDiv
+     background-color: white;
+     border: solid 2px #faf0e6;
+     box-shadow: 1px 1px 1px #faf0e6;
+     margin-right: 15px;
+     padding: 10px;
 
 .createSubFolderDiv
   margin: 0px;
-
-.parentFolderBinTag
-  margin-right: 10px;
 
 .selected
   background-color: #e4e4e4;
