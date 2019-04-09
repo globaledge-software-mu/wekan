@@ -337,30 +337,32 @@ Cards.helpers({
     }).fetch();
 
     // match right definition to each field
-    if (!this.customFields) return [];
-    return this.customFields.map((customField) => {
-      const definition = definitions.find((definition) => {
-        return definition._id === customField._id;
-      });
-      //search for "True Value" which is for DropDowns other then the Value (which is the id)
-      let trueValue = customField.value;
-      if (definition.settings.dropdownItems && definition.settings.dropdownItems.length > 0)
-      {
-        for (let i = 0; i < definition.settings.dropdownItems.length; i++)
-        {
-          if (definition.settings.dropdownItems[i]._id === customField.value)
-          {
-            trueValue = definition.settings.dropdownItems[i].name;
+    if (!this.customFields) {
+      return [];
+    } else {
+      return this.customFields.map((customField) => {
+        const definition = definitions.find((definition) => {
+          return definition._id === customField._id;
+        });
+        //search for "True Value" which is for DropDowns other then the Value (which is the id)
+        let trueValue = customField.value;
+
+        if (definition && definition.settings && definition.settings.dropdownItems && definition.settings.dropdownItems.length > 0) {
+          for (let i = 0; i < definition.settings.dropdownItems.length; i++) {
+            if (definition.settings.dropdownItems[i]._id === customField.value) {
+              trueValue = definition.settings.dropdownItems[i].name;
+            }
           }
         }
-      }
-      return {
-        _id: customField._id,
-        value: customField.value,
-        trueValue,
-        definition,
-      };
-    });
+
+        return {
+          _id: customField._id,
+          value: customField.value,
+          trueValue,
+          definition,
+        };
+      });
+    }
 
   },
 
