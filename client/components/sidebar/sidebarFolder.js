@@ -93,6 +93,10 @@ BlazeComponent.extendComponent({
         $(ui.draggable).remove();
   	  }
   	});
+
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+    }
   },
 
   onCreated() {

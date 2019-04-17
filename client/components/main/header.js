@@ -28,14 +28,21 @@ Template.header.helpers({
 
 Template.header.events({
   'click .js-create-board': Popup.open('headerBarCreateBoard'),
+
   'click .js-close-announcement'() {
     $('.announcement').hide();
   },
+
   'click .js-select-list'() {
     Session.set('currentList', this._id);
     Session.set('currentCard', null);
   },
+
   'click .closeStatus': function() {
 	  $('.closeStatus').parent('div').remove();
+  },
+
+  'click a.goToAllBoards': function(e) {
+    $('a#uncategorisedBoardsFolder').trigger('click');
   },
 });

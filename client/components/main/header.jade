@@ -10,7 +10,7 @@ template(name="header")
         if isMiniScreen
           ul
             li
-              a(href="{{pathFor 'home'}}")
+              a.goToAllBoards(href="{{pathFor 'home'}}")
                 span.fa.fa-home
 
             if currentList
@@ -22,7 +22,7 @@ template(name="header")
         else
           ul
             li
-              a(href="{{pathFor 'home'}}")
+              a.goToAllBoards(href="{{pathFor 'home'}}")
                 span.fa.fa-home
                 | {{_ 'all-boards'}}
             each currentUser.starredBoards
