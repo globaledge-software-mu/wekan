@@ -151,6 +151,10 @@ Lists.helpers({
       return property.color;
     }
     return null;
+  },
+  
+  properties() {
+    return ListProperties.find({ listId: this._id });
   }
 });
 
