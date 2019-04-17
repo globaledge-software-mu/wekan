@@ -682,10 +682,20 @@ if (Meteor.isServer) {
       // copy lists
       const listMap = {};
       fromBoard.lists().forEach((list) => {
+
         const newList = _.omit(list, ['_id', 'boardId', 'createdAt', 'updatedAt']);
         newList.boardId = toId;
         newList.createdAt = new Date();
         listMap[list._id] = Lists.insert(newList);
+
+        // copy list properties
+        list.properties().forEach((property)=> {
+          const newListProperty = _.omit(property, ['_id', 'boardId', 'createdAt', 'updatedAt']);
+          newListProperty.boardId = toId;
+          newListProperty.listId = listMap[list._id];
+          ListProperties.insert(newListProperty);
+        });
+
       });
       
       // copy cards
@@ -696,7 +706,15 @@ if (Meteor.isServer) {
         newCard.listId = listMap[card.listId];
         newCard.swimlaneId = swimlanesMap[card.swimlaneId];
         const newCardId = Cards.insert(newCard);
-        
+
+        // copy scores
+        card.scores().forEach((score) => {
+          const newScore = _.omit(score, ['_id', 'boardId', 'cardId', 'createdAt', 'updatedAt']);
+          newScore.boardId = toId;
+          newScore.cardId = newCardId;
+          CardScores.insert(newScore);
+        });
+
         //copy checklists
         card.checklists().forEach((checklist) => {
           const newChecklist = _.omit(checklist, ['_id', 'cardId', 'createdAt', 'finishedAt']);
