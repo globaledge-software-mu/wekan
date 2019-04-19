@@ -358,17 +358,18 @@ BlazeComponent.extendComponent({
 
     Meteor.call('cloneBoard', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
       if (!err && ret) {
-        Popup.close();
-        Utils.goBoardId(this.boardId.get());
-        }
-      });
-    },
-    events() {
-      return [{
-        submit: this.onSubmit
-      }];
-    },
-  }).register('cloneBoardPopup');
+        //
+      }
+    });
+    Popup.close()
+    Utils.goBoardId(this.boardId.get());
+  },
+  events() {
+    return [{
+      submit: this.onSubmit
+    }];
+  },
+}).register('cloneBoardPopup');
 
 BlazeComponent.extendComponent({
   watchLevel() {
