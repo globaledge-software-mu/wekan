@@ -1229,14 +1229,14 @@ function cardCreation(userId, doc) {
 function cardRemover(userId, doc) {
   Activities.remove({
     cardId: doc._id,
-  });
+  });  
   Checklists.remove({
     cardId: doc._id,
   });
-  Subtasks.remove({
+  CardComments.remove({
     cardId: doc._id,
   });
-  CardComments.remove({
+  CardScores.remove({
     cardId: doc._id,
   });
   Attachments.remove({
