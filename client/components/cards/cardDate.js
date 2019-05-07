@@ -130,7 +130,13 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    this.date.set(moment());
+    // The following if condition distinguishes whether the edit button was clicked directly 
+    // or it was triggered from the click event of the historical chart's datapoint 
+    if (!this.data().dataPointDate) {
+      this.date.set(moment());
+    } else {
+      this.data().getStart() && this.date.set(moment(this.data().getStart()));
+    }
     this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
   }
 

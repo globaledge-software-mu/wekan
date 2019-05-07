@@ -591,6 +591,9 @@ Cards.helpers({
     if (lastScores.length > 0 && startAt) {
       startAt = lastScores[0].date;
     }
+    if (card.dataPointDate) {
+      startAt = card.dataPointDate;
+    }
     return startAt;
   },
 
@@ -620,6 +623,8 @@ Cards.helpers({
     } else if (this.isLinkedBoard()) {
       const board = Boards.findOne({_id: this.linkedId});
       return board.dueAt;
+    } else if (this.dataPointDate) {
+      return this.dataPointDate;
     } else {
       return this.dueAt;
     }
@@ -855,11 +860,21 @@ Cards.helpers({
       {$set: {'currentScore': currentScore}}
     );
     
-    //If currentScore is null it can be deleted from card and it should not affect historic scores
-    if (currentScore === null) {
+    // If currentScore is null it can be deleted from card and it should not affect historic scores
+    // because it was this action was triggered directly from the button
+    if (currentScore === null && !this.dataPointDate) {
       return true;
     }
-    
+
+    // If currentScore is null and the action was carried out from the popup that opened from 
+    // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
+    if (currentScore === null && this.dataPointDate) {
+      cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'current', cardId: this._id });
+      return CardScores.remove({ _id: cardScoreDoc._id });
+    }
+
+    // The following parts are for when there is any edit for the currentScore (to a real value)
+    // or just creating a new currentScore (Keeping it in history too - by default)
     let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$gte: lastDateStart, $lte: lastDateEnd}}, {limit: 1}).fetch();
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
@@ -888,6 +903,9 @@ Cards.helpers({
         if (lastScores.length > 0) {
           lastScore = lastScores[0].score
         }
+        if (card.dataPointScore) {
+          lastScore = card.dataPointScore;
+        }
       return lastScore;
     } else {
       return null;
@@ -904,11 +922,22 @@ Cards.helpers({
       {_id: card._id},
       {$set: {'targetScore': targetScore}}
     );
-    
-    if (targetScore === null) {
+
+    // If targetScore is null it can be deleted from card and it should not affect historic scores
+    // because it was this action was triggered directly from the button
+    if (targetScore === null && !this.dataPointDate) {
       return true;
     }
-    
+
+    // If targetScore is null and the action was carried out from the popup that opened from 
+    // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
+    if (targetScore === null && this.dataPointDate) {
+      cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'target', cardId: this._id });
+      return CardScores.remove({ _id: cardScoreDoc._id });
+    }
+
+    // The following parts are for when there is any edit for the targetScore (to a real value)
+    // or just creating a new targetScore (Keeping it in history too - by default)
     let dueDateStart = new Date(card.dueAt);
     let dueDateEnd = new Date(card.dueAt);
     dueDateStart.setHours(0, 0, 0, 0);
@@ -932,6 +961,9 @@ Cards.helpers({
       card = Cards.findOne({ _id: this.linkedId });
     }
     if (card.targetScore  && this.isPropertyVisible('card-due-score-title')) {
+      if (card.dataPointScore) {
+        return card.dataPointScore;
+      }
       return card.targetScore;
     } else {
       return null;
@@ -952,7 +984,7 @@ Cards.helpers({
       if (typeof score === 'number') {
         score = score.toString();
       }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim()})
+      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), scoreType: cardScore.type})
     });
     if (cardScores.count() > 0 && scoreChart !== null) {
       scoreChart.data.labels = labels;
