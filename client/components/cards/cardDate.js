@@ -134,10 +134,11 @@ Template.dateBadge.helpers({
     // or it was triggered from the click event of the historical chart's datapoint 
     if (!this.data().dataPointDate) {
       this.date.set(moment());
+      this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
     } else {
       this.data().getStart() && this.date.set(moment(this.data().getStart()));
+      this.data().dataPointScore && this.score.set(this.data().dataPointScore);
     }
-    this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
   }
 
   onRendered() {
@@ -186,7 +187,13 @@ Template.dateBadge.helpers({
   onCreated() {
     super.onCreated();
     this.data().getDue() && this.date.set(moment(this.data().getDue()));
-    this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
+    // The following if condition distinguishes whether the edit button was clicked directly 
+    // or it was triggered from the click event of the historical chart's datapoint 
+    if (!this.data().dataPointDate) {
+      this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
+    } else {
+      this.data().dataPointScore && this.score.set(this.data().dataPointScore);
+    }
   }
 
   onRendered() {
