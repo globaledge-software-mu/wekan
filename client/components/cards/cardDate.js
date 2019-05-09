@@ -143,9 +143,16 @@ Template.dateBadge.helpers({
 
   onRendered() {
     super.onRendered();
+    // Set Upper Date Limit
     this.$('.js-datepicker').datepicker('setEndDate', '+0d');
     if (moment.isDate(this.card.getReceived())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getReceived());
+    }
+    if (this.data().dataPointDate) {
+      this.$('.js-datepicker').datepicker('setDate', this.card.getStart());
+    } else {
+      this.$('.js-datepicker').datepicker('setDate', new Date());
     }
     if (!this.data().isPropertyVisible('card-start-score-title')) {
       $('.score').remove();
@@ -199,7 +206,11 @@ Template.dateBadge.helpers({
   onRendered() {
     super.onRendered();
     if (moment.isDate(this.card.getStart())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
+    }
+    if (this.data().dataPointDate) {
+      this.$('.js-datepicker').datepicker('setDate', this.card.getDue());
     }
     if (!this.data().isPropertyVisible('card-due-score-title')) {
       $('.score').remove();
@@ -235,6 +246,7 @@ Template.dateBadge.helpers({
   onRendered() {
     super.onRendered();
     if (moment.isDate(this.card.getStart())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
     }
     if (!this.data().isPropertyVisible('card-end-score-title')) {
