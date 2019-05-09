@@ -170,6 +170,13 @@ Template.dateBadge.helpers({
        return false;
     }
     this.card.setStart(date);
+    var oldDate = this.data().dataPointDate;
+    var oldScore = this.data().dataPointScore;
+    // if clicked from chart && date changed
+    if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
+      cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'current', score: oldScore, date: oldDate});
+      CardScores.remove(cardScoreDoc._id);
+    }
   }
   
   _storeScore(score) {
@@ -219,6 +226,13 @@ Template.dateBadge.helpers({
 
   _storeDate(date) {
     this.card.setDue(date);
+    var oldDate = this.data().dataPointDate;
+    var oldScore = this.data().dataPointScore;
+    // if clicked from chart && date changed
+    if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
+      cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'target', score: oldScore, date: oldDate});
+      CardScores.remove(cardScoreDoc._id);
+    }
   }
   
   _storeScore(score) {
