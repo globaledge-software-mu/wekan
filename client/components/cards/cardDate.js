@@ -192,7 +192,19 @@ Template.dateBadge.helpers({
   }
   
   _deleteScore() {
-    this.card.setCurrentScore(null);
+    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+      this.card.setCurrentScore(null);
+    } else {
+      // from chart datapoint 
+      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
+      CardScores.remove({ _id: cardScoreDoc._id });
+      lastPastDoc = CardScores.find({ date: {$lte: new Date()}, type: 'current', cardId: this.card._id }, { sort: { date: -1 } }).fetch();
+      lastPastStart = lastPastDoc[0].date;
+      lastPastCurrentScore = lastPastDoc[0].score;
+      this.card.setStart(lastPastStart);
+      this.card.setCurrentScore(lastPastCurrentScore);
+    }
+    
   }
 }).register('editCardStartDatePopup');
 
