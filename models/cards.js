@@ -870,7 +870,10 @@ Cards.helpers({
     // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
     if (currentScore === null && this.dataPointDate) {
       cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'current', cardId: this._id });
-      return CardScores.remove({ _id: cardScoreDoc._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({ _id: cardScoreDoc._id });
+      }
+      return true;
     }
 
     // The following parts are for when there is any edit for the currentScore (to a real value)
@@ -917,11 +920,16 @@ Cards.helpers({
     if (this.isLinkedCard()) {
       card = Cards.findOne(this.linkedId);
     }
-    
-    Cards.update(
-      {_id: card._id},
-      {$set: {'targetScore': targetScore}}
-    );
+
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let futureScores = CardScores.find({type: 'target', 'cardId': this._id, 'date': {$gte: today}}, {sort:{date: 1}, limit: 1}).fetch();
+    // If tried to delete from datapoint, replace the badge with the First Future Target Datapoint Details
+    if (this.dataPointDate && futureScores.length > 0) {
+      Cards.update({_id: card._id}, {$set: {'targetScore': futureScores[0].score}});
+    } else {
+      Cards.update({_id: card._id}, {$set: {'targetScore': targetScore}});
+    }
 
     // If targetScore is null it can be deleted from card and it should not affect historic scores
     // because it was this action was triggered directly from the button
@@ -933,11 +941,15 @@ Cards.helpers({
     // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
     if (targetScore === null && this.dataPointDate) {
       cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'target', cardId: this._id });
-      return CardScores.remove({ _id: cardScoreDoc._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({ _id: cardScoreDoc._id });
+      }
+      return true;
     }
 
-    // The following parts are for when there is any edit for the targetScore (to a real value)
-    // or just creating a new targetScore (Keeping it in history too - by default)
+    // The following parts are for when there is any edit for the targetScore (to a real value) 
+    // or just creating a new targetScore (Keeping it in history). If we already have a card_scores document(record) for 
+    // the specific date for this card then we update it, and if we did not have it, then we create we create a new one
     let dueDateStart = new Date(card.dueAt);
     let dueDateEnd = new Date(card.dueAt);
     dueDateStart.setHours(0, 0, 0, 0);

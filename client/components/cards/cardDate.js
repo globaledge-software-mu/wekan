@@ -199,12 +199,15 @@ Template.dateBadge.helpers({
       cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
       CardScores.remove({ _id: cardScoreDoc._id });
       lastPastDoc = CardScores.find({ date: {$lte: new Date()}, type: 'current', cardId: this.card._id }, { sort: { date: -1 } }).fetch();
-      lastPastStart = lastPastDoc[0].date;
-      lastPastCurrentScore = lastPastDoc[0].score;
-      this.card.setStart(lastPastStart);
-      this.card.setCurrentScore(lastPastCurrentScore);
+      if (lastPastDoc.length > 0) {
+        lastPastStart = lastPastDoc[0].date;
+        lastPastCurrentScore = lastPastDoc[0].score;
+        this.card.setStart(lastPastStart);
+        this.card.setCurrentScore(lastPastCurrentScore);
+      } else {
+        this.card.setCurrentScore(null);
+      }
     }
-    
   }
 }).register('editCardStartDatePopup');
 
@@ -212,12 +215,12 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    this.data().getDue() && this.date.set(moment(this.data().getDue()));
     // The following if condition distinguishes whether the edit button was clicked directly 
     // or it was triggered from the click event of the historical chart's datapoint 
     if (!this.data().dataPointDate) {
       this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
     } else {
+      this.data().getDue() && this.date.set(moment(this.data().getDue()));
       this.data().dataPointScore && this.score.set(this.data().dataPointScore);
     }
   }
@@ -257,7 +260,22 @@ Template.dateBadge.helpers({
   }
   
   _deleteScore() {
-    this.card.setTargetScore(null);
+    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+      this.card.setTargetScore(null);
+    } else {
+      // from chart datapoint 
+      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'target', cardId: this.card._id });
+      CardScores.remove({ _id: cardScoreDoc._id });
+      firstFutureDoc = CardScores.find({ date: {$gte: new Date(new Date().getDate()-1)}, type: 'target', cardId: this.card._id }, { sort: { date: 1 } }).fetch();
+      if (firstFutureDoc.length > 0) {
+        firstFutureDue = firstFutureDoc[0].date;
+        firstFutureTargetScore = firstFutureDoc[0].score;
+        this.card.setDue(firstFutureDue);
+        this.card.setTargetScore(firstFutureTargetScore);
+      } else {
+        this.card.setTargetScore(null);
+      }
+    }
   }
 }).register('editCardDueDatePopup');
 
