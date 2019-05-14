@@ -378,10 +378,10 @@ BlazeComponent.extendComponent({
           this.currentData()['dataPointScore'] = score;
           var selector = null;
           if (type == 'current') {
-            selector = $('.card-details-item-start a.js-edit-date.card-date.start-date.date').not('.card-score');
+            selector = $('.card-details-item-start a.js-edit-date.card-date.start-date').not('.card-score');
             addNewDate = $('.js-start-date');
           } else if (type == 'target') {
-            selector = $('.card-details-item-due a.js-edit-date.card-date.due-date.date').not('.card-score');
+            selector = $('.card-details-item-due a.js-edit-date.card-date.due-date').not('.card-score');
             addNewDate = $('.js-due-date');
           }
           if (selector[0]) {
