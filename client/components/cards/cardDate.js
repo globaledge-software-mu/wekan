@@ -175,7 +175,7 @@ Template.dateBadge.helpers({
     // if clicked from chart && date changed
     if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
       cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'current', score: oldScore, date: oldDate});
-      CardScores.remove(cardScoreDoc._id);
+      CardScores.remove({_id: cardScoreDoc._id});
     }
   }
   
@@ -246,7 +246,7 @@ Template.dateBadge.helpers({
     // if clicked from chart && date changed
     if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
       cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'target', score: oldScore, date: oldDate});
-      CardScores.remove(cardScoreDoc._id);
+      CardScores.remove({_id: cardScoreDoc._id});
     }
   }
   
