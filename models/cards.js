@@ -585,9 +585,7 @@ Cards.helpers({
       const board = Boards.findOne({_id: this.linkedId});
       startAt = board.startAt;
     }
-    let today = new Date();
-    today.setHours(23,59,59,999);
-    let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: today}}, {sort:{date: -1}, limit: 1}).fetch();
+    let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
     if (lastScores.length > 0 && startAt) {
       startAt = lastScores[0].date;
     }
@@ -626,8 +624,15 @@ Cards.helpers({
     } else if (this.dataPointDate) {
       return this.dataPointDate;
     } else {
-      return this.dueAt;
+      var dueDate = null;
+      let futureScores = CardScores.find({type: 'target', cardId: this._id, date: {$gte: new Date(new Date().setHours(0,0,0,0))}}, {sort:{date: 1}, limit: 1}).fetch();
+      if (futureScores.length > 0) {
+        return dueDate = futureScores[0].date;
+      } else {
+        return this.dueAt;
+      }
     }
+    
   },
 
   setDue(dueAt) {
@@ -900,9 +905,7 @@ Cards.helpers({
     if (card.currentScore && this.isPropertyVisible('card-start-score-title')) {
         let lastScore = card.currentScore;
         let startAt = card.startAt;
-        let today = new Date();
-        today.setHours(23,59,59,999);
-        let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: today}}, {sort:{date: -1}, limit: 1}).fetch();
+        let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
         if (lastScores.length > 0) {
           lastScore = lastScores[0].score
         }
@@ -921,9 +924,7 @@ Cards.helpers({
       card = Cards.findOne(this.linkedId);
     }
 
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let futureScores = CardScores.find({type: 'target', 'cardId': this._id, 'date': {$gte: today}}, {sort:{date: 1}, limit: 1}).fetch();
+    let futureScores = CardScores.find({type: 'target', 'cardId': this._id, 'date': {$gte: new Date(new Date().setHours(0,0,0,0))}}, {sort:{date: 1}, limit: 1}).fetch();
     // If tried to delete from datapoint, replace the badge with the First Future Target Datapoint Details
     if (this.dataPointDate && futureScores.length > 0) {
       Cards.update({_id: card._id}, {$set: {'targetScore': futureScores[0].score}});
