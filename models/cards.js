@@ -903,15 +903,15 @@ Cards.helpers({
       card = Cards.findOne({ _id: this.linkedId });
     }
     if (card.currentScore && this.isPropertyVisible('card-start-score-title')) {
-        let lastScore = card.currentScore;
-        let startAt = card.startAt;
-        let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
-        if (lastScores.length > 0) {
-          lastScore = lastScores[0].score
-        }
-        if (card.dataPointScore) {
-          lastScore = card.dataPointScore;
-        }
+      let lastScore = card.currentScore;
+      let startAt = card.startAt;
+      let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastScores.length > 0) {
+        lastScore = lastScores[0].score
+      }
+      if (card.dataPointScore) {
+        lastScore = card.dataPointScore;
+      }
       return lastScore;
     } else {
       return null;

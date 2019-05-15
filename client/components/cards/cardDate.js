@@ -175,7 +175,9 @@ Template.dateBadge.helpers({
     // if clicked from chart && date changed
     if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
       cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'current', score: oldScore, date: oldDate});
-      CardScores.remove({_id: cardScoreDoc._id});
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
     }
   }
   
@@ -197,7 +199,9 @@ Template.dateBadge.helpers({
     } else {
       // from chart datapoint 
       cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
-      CardScores.remove({ _id: cardScoreDoc._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
       lastPastDoc = CardScores.find({ date: {$lte: new Date()}, type: 'current', cardId: this.card._id }, { sort: { date: -1 } }).fetch();
       if (lastPastDoc.length > 0) {
         lastPastStart = lastPastDoc[0].date;
@@ -246,7 +250,9 @@ Template.dateBadge.helpers({
     // if clicked from chart && date changed
     if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
       cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'target', score: oldScore, date: oldDate});
-      CardScores.remove({_id: cardScoreDoc._id});
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
     }
   }
   
@@ -265,7 +271,9 @@ Template.dateBadge.helpers({
     } else {
       // from chart datapoint 
       cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'target', cardId: this.card._id });
-      CardScores.remove({ _id: cardScoreDoc._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
       firstFutureDoc = CardScores.find({ date: {$gte: new Date(new Date().getDate()-1)}, type: 'target', cardId: this.card._id }, { sort: { date: 1 } }).fetch();
       if (firstFutureDoc.length > 0) {
         firstFutureDue = firstFutureDoc[0].date;
