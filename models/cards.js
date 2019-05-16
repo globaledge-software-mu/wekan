@@ -997,7 +997,7 @@ Cards.helpers({
       if (typeof score === 'number') {
         score = score.toString();
       }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), scoreType: cardScore.type})
+      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
     });
     if (cardScores.count() > 0 && scoreChart !== null) {
       scoreChart.data.labels = labels;

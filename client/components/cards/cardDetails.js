@@ -215,7 +215,7 @@ BlazeComponent.extendComponent({
       if (typeof score === 'number') {
         score = score.toString();
       }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), scoreType: cardScore.type})
+      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
     });
     
     $('#historicScores').hide();
@@ -371,9 +371,10 @@ BlazeComponent.extendComponent({
         var activePoints = scoreChart.getElementAtEvent(evt);
         if (activePoints.length > 0) {
           var theElement = scoreChart.config.data.datasets[activePoints[0]._datasetIndex].data[activePoints[0]._index];
-          var date = theElement.x;
-          var score = theElement.y;
-          var type = theElement.scoreType;
+          var cardScoreDoc = CardScores.findOne({_id: theElement.pointId})
+          var date = cardScoreDoc.date;
+          var score = cardScoreDoc.score;
+          var type = cardScoreDoc.type;
           this.currentData()['dataPointDate'] = date;
           this.currentData()['dataPointScore'] = score;
           var selector = null;
