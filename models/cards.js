@@ -1272,6 +1272,13 @@ function cardCreation(userId, doc) {
 }
 
 function cardRemover(userId, doc) {
+  const items = ChecklistItems.find({ cardId: doc._id });
+  if (items) {
+    items.forEach((item) => {
+      ChecklistItems.remove(item._id);
+    });
+  }
+
   Activities.remove({
     cardId: doc._id,
   });  
@@ -1284,6 +1291,8 @@ function cardRemover(userId, doc) {
   CardScores.remove({
     cardId: doc._id,
   });
+
+  // The following cleans the collections: cfs.attachments.filerecord, cfs_gridfs.attachments.files, cfs_gridfs.attachments.chunks
   Attachments.remove({
     cardId: doc._id,
   });
