@@ -889,6 +889,59 @@ if (Meteor.isServer) {
       });
     }
   });
+
+  // Method executed before deleting a board from the database
+  Boards.before.remove((userId, doc) => {
+    // CardScores, CardComments, Checklists, Activities and attachment gets removed 
+    // in post card deletion method (cardRemover())
+    Cards.remove({
+      boardId: doc._id
+    });
+    ListProperties.remove({
+      boardId: doc._id
+    });
+    Lists.remove({
+      boardId: doc._id
+    });
+    Swimlanes.remove({
+      boardId: doc._id
+    });
+    Activities.remove({
+      cardId: doc._id,
+    });
+    CustomFields.remove({
+      boardId: doc._id
+    });
+    Integrations.remove({
+      boardId: doc._id
+    });
+
+    // If the board was a categorised one, we remove its trace from the folder to which it belonged
+    var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
+    for (var i = 0; i < userFolders.length; i++) {
+      var boardIds = new Array;
+      var folderContents = userFolders[i].contents;
+      if (typeof folderContents !== 'undefined' && folderContents !== null) {
+        for (var k = 0; k < _.keys(folderContents).length; k++) {
+          if (folderContents[k].boardId !== doc._id) {
+            boardIds.push(folderContents[k].boardId);
+          }
+        }
+      }
+      Folders.update(
+        { _id : userFolders[i]._id }, 
+        { $unset: { contents : '' } }
+      );
+      for (var n = 0; n < boardIds.length; n++) {
+        var keyName = 'contents.' + n + '.boardId';
+        Folders.update(
+          { _id: userFolders[i]._id },
+          { $set: { [keyName] : boardIds[n] } }
+        );
+      }
+    }
+
+  });
 }
 
 //BOARDS REST API

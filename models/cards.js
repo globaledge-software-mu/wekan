@@ -585,11 +585,12 @@ Cards.helpers({
       const board = Boards.findOne({_id: this.linkedId});
       startAt = board.startAt;
     }
-    let today = new Date();
-    today.setHours(23,59,59,999);
-    let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: today}}, {sort:{date: -1}, limit: 1}).fetch();
+    let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
     if (lastScores.length > 0 && startAt) {
       startAt = lastScores[0].date;
+    }
+    if (card.dataPointDate) {
+      startAt = card.dataPointDate;
     }
     return startAt;
   },
@@ -620,9 +621,18 @@ Cards.helpers({
     } else if (this.isLinkedBoard()) {
       const board = Boards.findOne({_id: this.linkedId});
       return board.dueAt;
+    } else if (this.dataPointDate) {
+      return this.dataPointDate;
     } else {
-      return this.dueAt;
+      var dueDate = null;
+      let futureScores = CardScores.find({type: 'target', cardId: this._id, date: {$gte: new Date(new Date().setHours(0,0,0,0))}}, {sort:{date: 1}, limit: 1}).fetch();
+      if (futureScores.length > 0) {
+        return dueDate = futureScores[0].date;
+      } else {
+        return this.dueAt;
+      }
     }
+    
   },
 
   setDue(dueAt) {
@@ -855,11 +865,24 @@ Cards.helpers({
       {$set: {'currentScore': currentScore}}
     );
     
-    //If currentScore is null it can be deleted from card and it should not affect historic scores
-    if (currentScore === null) {
+    // If currentScore is null it can be deleted from card and it should not affect historic scores
+    // because it was this action was triggered directly from the button
+    if (currentScore === null && !this.dataPointDate) {
       return true;
     }
-    
+
+    // If currentScore is null and the action was carried out from the popup that opened from 
+    // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
+    if (currentScore === null && this.dataPointDate) {
+      cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'current', cardId: this._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({ _id: cardScoreDoc._id });
+      }
+      return true;
+    }
+
+    // The following parts are for when there is any edit for the currentScore (to a real value)
+    // or just creating a new currentScore (Keeping it in history too - by default)
     let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$gte: lastDateStart, $lte: lastDateEnd}}, {limit: 1}).fetch();
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
@@ -880,14 +903,15 @@ Cards.helpers({
       card = Cards.findOne({ _id: this.linkedId });
     }
     if (card.currentScore && this.isPropertyVisible('card-start-score-title')) {
-        let lastScore = card.currentScore;
-        let startAt = card.startAt;
-        let today = new Date();
-        today.setHours(23,59,59,999);
-        let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: today}}, {sort:{date: -1}, limit: 1}).fetch();
-        if (lastScores.length > 0) {
-          lastScore = lastScores[0].score
-        }
+      let lastScore = card.currentScore;
+      let startAt = card.startAt;
+      let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$lte: new Date(new Date().setHours(23,59,59,999))}}, {sort:{date: -1}, limit: 1}).fetch();
+      if (lastScores.length > 0) {
+        lastScore = lastScores[0].score
+      }
+      if (card.dataPointScore) {
+        lastScore = card.dataPointScore;
+      }
       return lastScore;
     } else {
       return null;
@@ -899,16 +923,34 @@ Cards.helpers({
     if (this.isLinkedCard()) {
       card = Cards.findOne(this.linkedId);
     }
-    
-    Cards.update(
-      {_id: card._id},
-      {$set: {'targetScore': targetScore}}
-    );
-    
-    if (targetScore === null) {
+
+    let futureScores = CardScores.find({type: 'target', 'cardId': this._id, 'date': {$gte: new Date(new Date().setHours(0,0,0,0))}}, {sort:{date: 1}, limit: 1}).fetch();
+    // If tried to delete from datapoint, replace the badge with the First Future Target Datapoint Details
+    if (this.dataPointDate && futureScores.length > 0) {
+      Cards.update({_id: card._id}, {$set: {'targetScore': futureScores[0].score}});
+    } else {
+      Cards.update({_id: card._id}, {$set: {'targetScore': targetScore}});
+    }
+
+    // If targetScore is null it can be deleted from card and it should not affect historic scores
+    // because it was this action was triggered directly from the button
+    if (targetScore === null && !this.dataPointDate) {
       return true;
     }
-    
+
+    // If targetScore is null and the action was carried out from the popup that opened from 
+    // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
+    if (targetScore === null && this.dataPointDate) {
+      cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'target', cardId: this._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({ _id: cardScoreDoc._id });
+      }
+      return true;
+    }
+
+    // The following parts are for when there is any edit for the targetScore (to a real value) 
+    // or just creating a new targetScore (Keeping it in history). If we already have a card_scores document(record) for 
+    // the specific date for this card then we update it, and if we did not have it, then we create we create a new one
     let dueDateStart = new Date(card.dueAt);
     let dueDateEnd = new Date(card.dueAt);
     dueDateStart.setHours(0, 0, 0, 0);
@@ -932,6 +974,9 @@ Cards.helpers({
       card = Cards.findOne({ _id: this.linkedId });
     }
     if (card.targetScore  && this.isPropertyVisible('card-due-score-title')) {
+      if (card.dataPointScore) {
+        return card.dataPointScore;
+      }
       return card.targetScore;
     } else {
       return null;
@@ -952,7 +997,7 @@ Cards.helpers({
       if (typeof score === 'number') {
         score = score.toString();
       }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim()})
+      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
     });
     if (cardScores.count() > 0 && scoreChart !== null) {
       scoreChart.data.labels = labels;
@@ -1227,18 +1272,27 @@ function cardCreation(userId, doc) {
 }
 
 function cardRemover(userId, doc) {
+  const items = ChecklistItems.find({ cardId: doc._id });
+  if (items) {
+    items.forEach((item) => {
+      ChecklistItems.remove(item._id);
+    });
+  }
+
   Activities.remove({
     cardId: doc._id,
-  });
+  });  
   Checklists.remove({
-    cardId: doc._id,
-  });
-  Subtasks.remove({
     cardId: doc._id,
   });
   CardComments.remove({
     cardId: doc._id,
   });
+  CardScores.remove({
+    cardId: doc._id,
+  });
+
+  // The following cleans the collections: cfs.attachments.filerecord, cfs_gridfs.attachments.files, cfs_gridfs.attachments.chunks
   Attachments.remove({
     cardId: doc._id,
   });

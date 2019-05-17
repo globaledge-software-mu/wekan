@@ -130,15 +130,29 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    this.date.set(moment());
-    this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
+    // The following if condition distinguishes whether the edit button was clicked directly 
+    // or it was triggered from the click event of the historical chart's datapoint 
+    if (!this.data().dataPointDate) {
+      this.date.set(moment());
+      this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
+    } else {
+      this.data().getStart() && this.date.set(moment(this.data().getStart()));
+      this.data().dataPointScore && this.score.set(this.data().dataPointScore);
+    }
   }
 
   onRendered() {
     super.onRendered();
+    // Set Upper Date Limit
     this.$('.js-datepicker').datepicker('setEndDate', '+0d');
     if (moment.isDate(this.card.getReceived())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getReceived());
+    }
+    if (this.data().dataPointDate) {
+      this.$('.js-datepicker').datepicker('setDate', this.card.getStart());
+    } else {
+      this.$('.js-datepicker').datepicker('setDate', new Date());
     }
     if (!this.data().isPropertyVisible('card-start-score-title')) {
       $('.score').remove();
@@ -156,6 +170,15 @@ Template.dateBadge.helpers({
        return false;
     }
     this.card.setStart(date);
+    var oldDate = this.data().dataPointDate;
+    var oldScore = this.data().dataPointScore;
+    // if clicked from chart && date changed
+    if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
+      cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'current', score: oldScore, date: oldDate});
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
+    }
   }
   
   _storeScore(score) {
@@ -171,7 +194,24 @@ Template.dateBadge.helpers({
   }
   
   _deleteScore() {
-    this.card.setCurrentScore(null);
+    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+      this.card.setCurrentScore(null);
+    } else {
+      // from chart datapoint 
+      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
+      lastPastDoc = CardScores.find({ date: {$lte: new Date()}, type: 'current', cardId: this.card._id }, { sort: { date: -1 } }).fetch();
+      if (lastPastDoc.length > 0) {
+        lastPastStart = lastPastDoc[0].date;
+        lastPastCurrentScore = lastPastDoc[0].score;
+        this.card.setStart(lastPastStart);
+        this.card.setCurrentScore(lastPastCurrentScore);
+      } else {
+        this.card.setCurrentScore(null);
+      }
+    }
   }
 }).register('editCardStartDatePopup');
 
@@ -179,14 +219,24 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    this.data().getDue() && this.date.set(moment(this.data().getDue()));
-    this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
+    // The following if condition distinguishes whether the edit button was clicked directly 
+    // or it was triggered from the click event of the historical chart's datapoint 
+    if (!this.data().dataPointDate) {
+      this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
+    } else {
+      this.data().getDue() && this.date.set(moment(this.data().getDue()));
+      this.data().dataPointScore && this.score.set(this.data().dataPointScore);
+    }
   }
 
   onRendered() {
     super.onRendered();
     if (moment.isDate(this.card.getStart())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
+    }
+    if (this.data().dataPointDate) {
+      this.$('.js-datepicker').datepicker('setDate', this.card.getDue());
     }
     if (!this.data().isPropertyVisible('card-due-score-title')) {
       $('.score').remove();
@@ -195,6 +245,15 @@ Template.dateBadge.helpers({
 
   _storeDate(date) {
     this.card.setDue(date);
+    var oldDate = this.data().dataPointDate;
+    var oldScore = this.data().dataPointScore;
+    // if clicked from chart && date changed
+    if (this.data().dataPointDate && oldDate.getTime() !== date.getTime()) {
+      cardScoreDoc = CardScores.findOne({cardId: this.card._id, type: 'target', score: oldScore, date: oldDate});
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
+    }
   }
   
   _storeScore(score) {
@@ -207,7 +266,24 @@ Template.dateBadge.helpers({
   }
   
   _deleteScore() {
-    this.card.setTargetScore(null);
+    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+      this.card.setTargetScore(null);
+    } else {
+      // from chart datapoint 
+      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'target', cardId: this.card._id });
+      if (typeof cardScoreDoc !== 'undefined') {
+        CardScores.remove({_id: cardScoreDoc._id});
+      }
+      firstFutureDoc = CardScores.find({ date: {$gte: new Date(new Date().getDate()-1)}, type: 'target', cardId: this.card._id }, { sort: { date: 1 } }).fetch();
+      if (firstFutureDoc.length > 0) {
+        firstFutureDue = firstFutureDoc[0].date;
+        firstFutureTargetScore = firstFutureDoc[0].score;
+        this.card.setDue(firstFutureDue);
+        this.card.setTargetScore(firstFutureTargetScore);
+      } else {
+        this.card.setTargetScore(null);
+      }
+    }
   }
 }).register('editCardDueDatePopup');
 
@@ -222,6 +298,7 @@ Template.dateBadge.helpers({
   onRendered() {
     super.onRendered();
     if (moment.isDate(this.card.getStart())) {
+      // Set Lower Date Limit
       this.$('.js-datepicker').datepicker('setStartDate', this.card.getStart());
     }
     if (!this.data().isPropertyVisible('card-end-score-title')) {
