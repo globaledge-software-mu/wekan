@@ -99,7 +99,9 @@ DatePicker = BlazeComponent.extendComponent({
         }
         
         this._storeDate(newDate.toDate());
-        this._storeScore(evt.target.score.value);
+        if (typeof evt.target.score != 'undefined') {
+          this._storeScore(evt.target.score.value);
+        }
         if (this.error.get() !== '') {
           return false;
         }

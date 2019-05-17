@@ -133,7 +133,7 @@ window.Popup = new class {
   /// Close the current opened popup.
   close() {
     // The following four lines have been added specifically for Historic Scores chart's datapoints click events 
-    if (this._getTopStack().dataContext && this._getTopStack().dataContext.dataPointDate) {
+    if (this._getTopStack() && this._getTopStack().dataContext && this._getTopStack().dataContext.dataPointDate) {
       this._getTopStack().dataContext.dataPointDate = null;
       this._getTopStack().dataContext.dataPointScore = null;
     }

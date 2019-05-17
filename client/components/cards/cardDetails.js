@@ -250,7 +250,11 @@ BlazeComponent.extendComponent({
             backgroundColor: cardDueColor,
             borderColor: cardDueColor,
             data: scores['target'],
-            fill: false
+            fill: false,
+            showLine: false,
+            pointStyle: 'rectRot',
+            pointRadius: 6,
+            pointHoverRadius: 8
         }]
       },
       options: {
