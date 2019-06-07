@@ -21,3 +21,4 @@ snap/.snapcraft/
 .pydevproject
 .tern-project
 .DS_Store
+.settings/
