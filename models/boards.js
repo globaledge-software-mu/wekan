@@ -867,7 +867,7 @@ if (Meteor.isServer) {
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
     
-    cloneBoard(toId, fromId) {
+    cloneBoard2(toId, fromId) {
       check(toId, String);
       check(fromId, String);
       const toBoard = Boards.findOne(toId);

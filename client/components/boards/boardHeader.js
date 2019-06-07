@@ -241,7 +241,7 @@ BlazeComponent.extendComponent({
       permission: this.visibility.get(),
     }));
 
-    Meteor.call('cloneBoard', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
+    Meteor.call('cloneBoard2', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
       if (!err && ret) {
         //
       }
