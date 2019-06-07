@@ -2,7 +2,7 @@ BlazeComponent.extendComponent({
 
   customFields() {
     return CustomFields.find({
-      boardId: Session.get('currentBoard'),
+      boardIds: {$in: [Session.get('currentBoard')]},
     });
   },
 
@@ -83,19 +83,37 @@ const CreateCustomFieldPopup = BlazeComponent.extendComponent({
         $target.find('.materialCheckBox').toggleClass('is-checked');
         $target.toggleClass('is-checked');
       },
+      'click .js-field-automatically-on-card'(evt) {
+        let $target = $(evt.target);
+        if(!$target.hasClass('js-field-automatically-on-card')){
+          $target = $target.parent();
+        }
+        $target.find('.materialCheckBox').toggleClass('is-checked');
+        $target.toggleClass('is-checked');
+      },
+      'click .js-field-showLabel-on-card'(evt) {
+        let $target = $(evt.target);
+        if(!$target.hasClass('js-field-showLabel-on-card')){
+          $target = $target.parent();
+        }
+        $target.find('.materialCheckBox').toggleClass('is-checked');
+        $target.toggleClass('is-checked');
+      },
       'click .primary'(evt) {
         evt.preventDefault();
 
         const data = {
-          boardId: Session.get('currentBoard'),
           name: this.find('.js-field-name').value.trim(),
           type: this.type.get(),
           settings: this.getSettings(),
           showOnCard: this.find('.js-field-show-on-card.is-checked') !== null,
+          showLabelOnMiniCard: this.find('.js-field-showLabel-on-card.is-checked') !== null,
+          automaticallyOnCard: this.find('.js-field-automatically-on-card.is-checked') !== null,
         };
 
         // insert or update
         if (!this.data()._id) {
+          data.boardIds = [Session.get('currentBoard')];
           CustomFields.insert(data);
         } else {
           CustomFields.update(this.data()._id, {$set: data});
@@ -104,8 +122,16 @@ const CreateCustomFieldPopup = BlazeComponent.extendComponent({
         Popup.back();
       },
       'click .js-delete-custom-field': Popup.afterConfirm('deleteCustomField', function() {
-        const customFieldId = this._id;
-        CustomFields.remove(customFieldId);
+        const customField = CustomFields.findOne(this._id);
+        if (customField.boardIds.length > 1) {
+          CustomFields.update(customField._id, {
+            $pull: {
+              boardIds: Session.get('currentBoard'),
+            },
+          });
+        } else {
+          CustomFields.remove(customField._id);
+        }
         Popup.close();
       }),
     }];

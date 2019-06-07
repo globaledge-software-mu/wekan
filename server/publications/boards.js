@@ -10,7 +10,7 @@ Meteor.publish('boards', function() {
 
   // Defensive programming to verify that starredBoards has the expected
   // format -- since the field is in the `profile` a user can modify it.
-  const {starredBoards = []} = Users.findOne(this.userId).profile;
+  const {starredBoards = []} = Users.findOne(this.userId).profile || {};
   check(starredBoards, [String]);
 
   return Boards.find({
@@ -32,6 +32,7 @@ Meteor.publish('boards', function() {
       color: 1,
       members: 1,
       permission: 1,
+      type: 1,
     },
   });
 });
@@ -58,8 +59,12 @@ Meteor.publish('archivedBoards', function() {
   });
 });
 
-Meteor.publishRelations('board', function(boardId) {
+// If isArchived = false, this will only return board elements which are not archived.
+// If isArchived = true, this will only return board elements which are archived.
+Meteor.publishRelations('board', function(boardId, isArchived) {
+  this.unblock();
   check(boardId, String);
+  check(isArchived, Boolean);
   const thisUserId = this.userId;
 
   this.cursor(Boards.find({
@@ -71,11 +76,12 @@ Meteor.publishRelations('board', function(boardId) {
       { permission: 'public' },
       { members: { $elemMatch: { userId: this.userId, isActive: true }}},
     ],
-  }, { limit: 1 }), function(boardId, board) {
-    this.cursor(Lists.find({ boardId }));
-    this.cursor(Swimlanes.find({ boardId }));
+  // Sort required to ensure oplog usage
+  }, { limit: 1, sort: { _id: 1 } }), function(boardId, board) {
+    this.cursor(Lists.find({ boardId, archived: isArchived }));
+    this.cursor(Swimlanes.find({ boardId,  archived: isArchived  }));
     this.cursor(Integrations.find({ boardId }));
-    this.cursor(CustomFields.find({ boardId }, { sort: { name: 1 } }));
+    this.cursor(CustomFields.find({ boardIds: {$in: [boardId]} }, { sort: { name: 1 } }));
     this.cursor(ListProperties.find({ boardId }));
 
     // Cards and cards comments
@@ -99,26 +105,53 @@ Meteor.publishRelations('board', function(boardId) {
     //
     // And in the meantime our code below works pretty well -- it's not even a
     // hack!
-    this.cursor(Cards.find({ boardId }), function(cardId, card) {
+
+    // Gather queries and send in bulk
+    const cardComments = this.join(CardComments);
+    cardComments.selector = (_ids) => ({ cardId: _ids });
+    const cardScores = this.join(CardScores);
+    cardScores.selector = (_ids) => ({ cardId: _ids });
+    const attachments = this.join(Attachments);
+    attachments.selector = (_ids) => ({ cardId: _ids });
+    const checklists = this.join(Checklists);
+    checklists.selector = (_ids) => ({ cardId: _ids });
+    const checklistItems = this.join(ChecklistItems);
+    checklistItems.selector = (_ids) => ({ cardId: _ids });
+    const parentCards = this.join(Cards);
+    parentCards.selector = (_ids) => ({ parentId: _ids });
+    const boards = this.join(Boards);
+    const subCards = this.join(Cards);
+    subCards.selector = (_ids) => ({ archived: isArchived });
+
+    this.cursor(Cards.find({ boardId: {$in: [boardId,  board.subtasksDefaultBoardId]}, archived: isArchived }), function(cardId, card) {
       if (card.type === 'cardType-linkedCard') {
         const impCardId = card.linkedId;
-        this.cursor(Cards.find({ _id: impCardId }));
-        this.cursor(CardScores.find({ cardId: impCardId }));
-        this.cursor(CardComments.find({ cardId: impCardId }));
-        this.cursor(Attachments.find({ cardId: impCardId }));
-        this.cursor(Checklists.find({ cardId: impCardId }));
-        this.cursor(ChecklistItems.find({ cardId: impCardId }));
+        subCards.push(impCardId);
+        cardComments.push(impCardId);
+        cardScores.push(impCardId);
+        attachments.push(impCardId);
+        checklists.push(impCardId);
+        checklistItems.push(impCardId);
       } else if (card.type === 'cardType-linkedBoard') {
-        this.cursor(Boards.find({ _id: card.linkedId}));
+        boards.push(card.linkedId);
       }
-      this.cursor(Activities.find({ cardId }));
-      this.cursor(CardScores.find({ cardId }));
-      this.cursor(CardComments.find({ cardId }));
-      this.cursor(Attachments.find({ cardId }));
-      this.cursor(Checklists.find({ cardId }));
-      this.cursor(ChecklistItems.find({ cardId }));
-      this.cursor(Cards.find({ parentId: cardId }));
+      cardComments.push(cardId);
+      cardScores.push(cardId);
+      attachments.push(cardId);
+      checklists.push(cardId);
+      checklistItems.push(cardId);
+      parentCards.push(cardId);
     });
+
+    // Send bulk queries for all found ids
+    subCards.send();
+    cardComments.send();
+    cardScores.send();
+    attachments.send();
+    checklists.send();
+    checklistItems.send();
+    boards.send();
+    parentCards.send();
 
     if (board.members) {
       // Board members. This publication also includes former board members that

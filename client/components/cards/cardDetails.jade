@@ -1,6 +1,6 @@
 template(name="cardDetails")
   section.card-details.js-card-details.js-perfect-scrollbar: .card-details-canvas
-    .card-details-header
+    .card-details-header(class='{{#if colorClass}}card-details-{{colorClass}}{{/if}}')
       +inlinedForm(classNames="js-card-details-title")
         +editCardTitleForm
       else
@@ -91,7 +91,9 @@ template(name="cardDetails")
           h3.card-details-item-title {{getPropertyAlias 'labels'}}
           a(class="{{#if canModifyCard}}js-add-labels{{else}}is-disabled{{/if}}" title="{{_ 'card-labels-title'}}")
             each labels
-              span.card-label(class="card-label-{{color}}" title=name)= name
+              span.card-label(class="card-label-{{color}}" title=name)
+                +viewer
+                  = name
           if canModifyCard
             a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
               i.fa.fa-plus
@@ -104,7 +106,8 @@ template(name="cardDetails")
       each customFieldsWD
         .card-details-item.card-details-item-customfield
           h3.card-details-item-title
-            = definition.name
+            +viewer
+              = definition.name
           +cardCustomField
 
     .card-details-items
@@ -221,20 +224,20 @@ template(name="cardDetails")
             +activities(card=this mode="card")
 
 template(name="editCardTitleForm")
-  textarea.js-edit-card-title(rows='1' autofocus)
+  textarea.js-edit-card-title(rows='1' autofocus dir="auto")
     = getTitle
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-title-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
 
 template(name="editCardRequesterForm")
-  input.js-edit-card-requester(type='text' autofocus value=getRequestedBy)
+  input.js-edit-card-requester(type='text' autofocus value=getRequestedBy dir="auto")
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-requester-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
 
 template(name="editCardAssignerForm")
-  input.js-edit-card-assigner(type='text' autofocus value=getAssignedBy)
+  input.js-edit-card-assigner(type='text' autofocus value=getAssignedBy dir="auto")
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-assigner-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
@@ -246,22 +249,23 @@ template(name="cardDetailsActionsPopup")
     hr
     ul.pop-over-list
       if isPropertyVisible 'members'
-        li: a.js-members {{_ 'card-edit-members'}}
+        //li: a.js-members {{_ 'card-edit-members'}}
       if isPropertyVisible 'labels'
-        li: a.js-labels {{_ 'card-edit-labels'}}
+        //li: a.js-labels {{_ 'card-edit-labels'}}
       if isPropertyVisible 'attachments'
-        li: a.js-attachments {{_ 'card-edit-attachments'}}
+        //li: a.js-attachments {{_ 'card-edit-attachments'}}
       li: a.js-custom-fields {{_ 'card-edit-custom-fields'}}
       if isPropertyVisible 'card-received'
-        li: a.js-received-date {{_ 'editCardReceivedDatePopup-title'}}
+        //li: a.js-received-date {{_ 'editCardReceivedDatePopup-title'}}
       if isPropertyVisible 'card-start'
-        li: a.js-start-date {{_ 'editCardStartDatePopup-title'}}
+        //li: a.js-start-date {{_ 'editCardStartDatePopup-title'}}
       if isPropertyVisible 'card-due'
-        li: a.js-due-date {{_ 'editCardDueDatePopup-title'}}
+        //li: a.js-due-date {{_ 'editCardDueDatePopup-title'}}
       if isPropertyVisible 'card-end'
-        li: a.js-end-date {{_ 'editCardEndDatePopup-title'}}
+        //li: a.js-end-date {{_ 'editCardEndDatePopup-title'}}
       if isPropertyVisible 'spent-time-hours'
         li: a.js-spent-time {{_ 'editCardSpentTimePopup-title'}}
+      li: a.js-set-card-color {{_ 'setCardColorPopup-title'}}
     hr
     ul.pop-over-list
       li: a.js-move-card-to-top {{_ 'moveCardToTop-title'}}
@@ -292,7 +296,7 @@ template(name="copyChecklistToManyCardsPopup")
 
 template(name="boardsAndLists")
   label {{_ 'boards'}}:
-  select.js-select-boards
+  select.js-select-boards(autofocus)
     each boards
       if $eq _id currentBoard._id
         option(value="{{_id}}" selected) {{_ 'current'}}
@@ -330,40 +334,48 @@ template(name="cardMorePopup")
       span {{_ 'link-card'}}
       = ' '
       i.fa.colorful(class="{{#if board.isPublic}}fa-globe{{else}}fa-lock{{/if}}")
-      input.inline-input(type="text" id="cardURL" readonly value="{{ absoluteUrl }}")
+      input.inline-input(type="text" id="cardURL" readonly value="{{ absoluteUrl }}" autofocus="autofocus")
       button.js-copy-card-link-to-clipboard(class="btn") {{_ 'copy-card-link-to-clipboard'}}
     span.clearfix
     br
     h2 {{_ 'change-card-parent'}}
     label {{_ 'source-board'}}:
       select.js-field-parent-board
+        if isTopLevel
+          option(value="none" selected) {{_ 'custom-field-dropdown-none'}}
+        else
+          option(value="none") {{_ 'custom-field-dropdown-none'}}
         each boards
           if isParentBoard
             option(value="{{_id}}" selected) {{title}}
           else
             option(value="{{_id}}") {{title}}
-        if isTopLevel
-          option(value="none" selected) {{_ 'custom-field-dropdown-none'}}
-        else
-          option(value="none") {{_ 'custom-field-dropdown-none'}}
 
     label {{_ 'parent-card'}}:
       select.js-field-parent-card
         if isTopLevel
           option(value="none" selected) {{_ 'custom-field-dropdown-none'}}
         else
+          option(value="none") {{_ 'custom-field-dropdown-none'}}
           each cards
             if isParentCard
               option(value="{{_id}}" selected) {{title}}
             else
               option(value="{{_id}}") {{title}}
-          option(value="none") {{_ 'custom-field-dropdown-none'}}
     br
     | {{_ 'added'}}
     span.date(title=card.createdAt) {{ moment createdAt 'LLL' }}
     a.js-delete(title="{{_ 'card-delete-notice'}}") {{_ 'delete'}}
 
-
+template(name="setCardColorPopup")
+  form.edit-label
+    .palette-colors: each colors
+      unless $eq color 'white'
+        span.card-label.palette-color.js-palette-color(class="card-details-{{color}}")
+          if(isSelected color)
+            i.fa.fa-check
+    button.primary.confirm.js-submit {{_ 'save'}}
+    button.js-remove-color.negate.wide.right {{_ 'unset-color'}}
 
 template(name="cardDeletePopup")
   p {{_ "card-delete-pop"}}

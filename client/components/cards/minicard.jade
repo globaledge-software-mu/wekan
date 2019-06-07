@@ -1,7 +1,8 @@
 template(name="minicard")
   .minicard(
     class="{{#if isLinkedCard}}linked-card{{/if}}"
-    class="{{#if isLinkedBoard}}linked-board{{/if}}")
+    class="{{#if isLinkedBoard}}linked-board{{/if}}"
+    class="minicard-{{colorClass}}")
     if cover
       .minicard-cover(style="background-image: url('{{cover.url}}');")
     if labels
@@ -9,6 +10,8 @@ template(name="minicard")
         each labels
           .minicard-label(class="card-label-{{color}}" title="{{name}}")
     .minicard-title
+      .handle
+        .fa.fa-arrows
       if $eq 'prefix-with-full-path' currentBoard.presentParentTask
         .parent-prefix
           | {{ parentString ' > ' }}
@@ -59,8 +62,10 @@ template(name="minicard")
       each customFieldsWD
         if definition.showOnCard
           .minicard-custom-field
-            .minicard-custom-field-item
-              = definition.name
+            if definition.showLabelOnMiniCard
+              .minicard-custom-field-item
+                +viewer
+                  = definition.name
             .minicard-custom-field-item
               +viewer
                 = trueValue
