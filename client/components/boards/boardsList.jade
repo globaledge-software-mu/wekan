@@ -21,17 +21,25 @@ template(name="boardList")
               else
                 a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
                   span.details
-                    span.board-list-item-name= title
+                    span.board-list-item-name
+                      +viewer
+                        = title
                     i.fa.js-star-board(
                       class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
                       title="{{_ 'star-board-title'}}")
-
+                    p.board-list-item-desc
+                      +viewer
+                        = description
                     if hasSpentTimeCards
                       i.fa.js-has-spenttime-cards(
                         class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
                         title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
-
-                    p.board-list-item-desc= description
+                    i.fa.js-clone-board(
+                        class="fa-clone"
+                        title="{{_ 'duplicate-board'}}")
+                    i.fa.js-archive-board(
+                        class="fa-archive"
+                        title="{{_ 'archive-board'}}")
 
       each uncategorisedBoards
         li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
