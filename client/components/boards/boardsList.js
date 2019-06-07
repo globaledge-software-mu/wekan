@@ -39,17 +39,20 @@ BlazeComponent.extendComponent({
   },
 
   boards() {
-    return Boards.find(
-      { archived: false, 'members.userId': Meteor.userId(), }, 
-      { sort: ['title'], }
-    );
+    return Boards.find({
+      archived: false,
+      'members.userId': Meteor.userId(),
+    }, {
+      sort: ['title'],
+    });
   },
 
   folders() {
-  	return Folders.find(
-  	  { userId: Meteor.userId() }, 
-  	  { sort: ['name'] }
-  	);
+  	return Folders.find({
+  	  userId: Meteor.userId()
+	  }, {
+	    sort: ['name']
+	  });
   },
 
   folderBoards() {
