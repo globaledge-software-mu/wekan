@@ -73,18 +73,23 @@ export class Exporter {
       },
     }));
     result.lists = Lists.find(byBoard, noBoardId).fetch();
+    result.listProperties = ListProperties.find(byBoard, noBoardId).fetch();
     result.cards = Cards.find(byBoardNoLinked, noBoardId).fetch();
     result.swimlanes = Swimlanes.find(byBoard, noBoardId).fetch();
     result.customFields = CustomFields.find({boardIds: {$in: [this.boardId]}}, {fields: {boardId: 0}}).fetch();
     result.comments = CardComments.find(byBoard, noBoardId).fetch();
     result.activities = Activities.find(byBoard, noBoardId).fetch();
     result.rules = Rules.find(byBoard, noBoardId).fetch();
+    result.cardScores = [];
     result.checklists = [];
     result.checklistItems = [];
     result.subtaskItems = [];
     result.triggers = [];
     result.actions = [];
     result.cards.forEach((card) => {
+      result.cardScores.push(...CardScores.find({
+        cardId: card._id,
+      }).fetch());
       result.checklists.push(...Checklists.find({
         cardId: card._id,
       }).fetch());

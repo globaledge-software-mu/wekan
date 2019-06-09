@@ -225,6 +225,7 @@ export class WekanCreator {
       slug: getSlug(boardToImport.title) || 'board',
       stars: 0,
       title: boardToImport.title,
+      description: boardToImport.description,
     };
     // now add other members
     if (boardToImport.members) {
@@ -291,6 +292,10 @@ export class WekanCreator {
         swimlaneId: this.swimlanes[card.swimlaneId],
         sort: card.sort,
         title: card.title,
+        initialScore: card.initialScore,
+        endScore: card.endScore,
+        currentScore: card.currentScore,
+        targetScore: card.targetScore,
         // we attribute the card to its creator if available
         userId: this._user(this.createdBy.cards[card._id]),
         isOvertime: card.isOvertime || false,
@@ -474,7 +479,9 @@ export class WekanCreator {
         // we require.
         createdAt: this._now(this.createdAt.lists[list.id]),
         title: list.title,
+        description: list.description,
         sort: list.sort ? list.sort : listIndex,
+        color: list.color,
       };
       const listId = Lists.direct.insert(listToCreate);
       Lists.direct.update(listId, {
@@ -497,6 +504,23 @@ export class WekanCreator {
       //   // not the creator of the original object
       //   userId: this._user(),
       // });
+    });
+  }
+
+  createListProperties(wekanListProperties, boardId) {
+    wekanListProperties.forEach((property, propertiesIndex) => {
+      const propertyToCreate = {
+        i18nKey: property.i18nKey,
+        visible: property.visible,
+        boardId,
+        listId: this.lists[property.listId],
+        alias: property.alias,
+        useDateWarnings: property.useDateWarnings,
+        color: property.color,
+      };
+      // dateLastActivity will be set from activity insert, no need to
+      // update it ourselves
+      const propertyId = ListProperties.direct.insert(propertyToCreate);
     });
   }
 
@@ -524,6 +548,21 @@ export class WekanCreator {
         },
       });
       this.swimlanes[swimlane._id] = swimlaneId;
+    });
+  }
+
+  createCardScores(wekanCardScores, boardId) {
+    wekanCardScores.forEach((cardScore, cardScoreIndex) => {
+      // Create the checklist
+      const cardScoreToCreate = {
+        boardId,
+        cardId: this.cards[cardScore.cardId],
+        score: cardScore.score,
+        type: cardScore.type,
+        date: cardScore.date,
+        userId: cardScore.userId,
+      };
+      const cardScoreId = CardScores.direct.insert(cardScoreToCreate);
     });
   }
 
@@ -816,8 +855,10 @@ export class WekanCreator {
     this.parseActivities(board);
     const boardId = this.createBoardAndLabels(board);
     this.createLists(board.lists, boardId);
+    this.createListProperties(board.listProperties, boardId);
     this.createSwimlanes(board.swimlanes, boardId);
     this.createCards(board.cards, boardId);
+    this.createCardScores(board.cardScores, boardId);
     this.createChecklists(board.checklists);
     this.createChecklistItems(board.checklistItems);
     this.importActivities(board.activities, boardId);

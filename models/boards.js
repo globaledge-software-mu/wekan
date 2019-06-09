@@ -222,6 +222,7 @@ Boards.attachSchema(new SimpleSchema({
      */
     type: String,
     optional: true,
+    defaultValue: null,
   },
   subtasksDefaultBoardId: {
     /**
