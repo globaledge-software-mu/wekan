@@ -376,6 +376,7 @@ if (Meteor.isServer) {
         Cards.remove(card._id);
       });
     }
+    ListProperties.remove({ listId: doc._id });
     Activities.insert({
       userId,
       type: 'list',

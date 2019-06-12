@@ -1165,9 +1165,6 @@ if (Meteor.isServer) {
     Cards.remove({
       boardId: doc._id
     });
-    ListProperties.remove({
-      boardId: doc._id
-    });
     Lists.remove({
       boardId: doc._id
     });
