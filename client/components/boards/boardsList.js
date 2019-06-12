@@ -161,6 +161,7 @@ BlazeComponent.extendComponent({
         Meteor.call('cloneBoard',
           this.currentData()._id,
           Session.get('fromBoard'),
+          {},
           (err, res) => {
             if (err) {
               this.setError(err.error);

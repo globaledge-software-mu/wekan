@@ -31,16 +31,22 @@ Meteor.methods({
 });
 
 Meteor.methods({
-  cloneBoard(sourceBoardId, currentBoardId) {
+  cloneBoard(sourceBoardId, currentBoardId, options) {
     check(sourceBoardId, String);
     check(currentBoardId, Match.Maybe(String));
+    check(options, Match.Maybe(Object));
     const exporter = new Exporter(sourceBoardId);
     const data = exporter.build();
     const addData = {};
     addData.membersMapping = wekanMembersMapper.getMembersToMap(data);
     const creator =  new WekanCreator(addData);
     //data.title = `${data.title  } - ${  TAPi18n.__('copy-tag')}`;
-    data.title = `${data.title}`;
+    if (typeof options !== 'undefined') {
+      // Apply options
+      if (options.hasOwnProperty('title')) {
+        data.title = options.title;
+      }
+    }
     return creator.create(data, currentBoardId);
   },
 });

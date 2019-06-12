@@ -233,21 +233,16 @@ BlazeComponent.extendComponent({
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
-    this.visibility = new ReactiveVar('private');
-    this.boardId = new ReactiveVar('');
 
-    this.boardId.set(Boards.insert({
-      title,
-      permission: this.visibility.get(),
-    }));
-
-    Meteor.call('cloneBoard2', this.boardId.get(), Session.get('currentBoard'), (err, ret) => {
-      if (!err && ret) {
-        //
+    Meteor.call('cloneBoard', Session.get('currentBoard'), null, {title: title}, (err, res) => {
+      Popup.close();
+      if (err) {
+        this.setError(err.error);
+      } else {
+        Session.set('currentBoard', null);
+        Utils.goBoardId(res);
       }
     });
-    Popup.close()
-    Utils.goBoardId(this.boardId.get());
   },
   events() {
     return [{
