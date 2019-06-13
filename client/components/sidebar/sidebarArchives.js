@@ -1,4 +1,26 @@
+const subManager = new SubsManager();
+
 BlazeComponent.extendComponent({
+  onCreated() {
+    this.isArchiveReady = new ReactiveVar(false);
+
+    // The pattern we use to manually handle data loading is described here:
+    // https://kadira.io/academy/meteor-routing-guide/content/subscriptions-and-data-management/using-subs-manager
+    // XXX The boardId should be readed from some sort the component "props",
+    // unfortunatly, Blaze doesn't have this notion.
+    this.autorun(() => {
+      const currentBoardId = Session.get('currentBoard');
+      if (!currentBoardId)
+        return;
+      const handle = subManager.subscribe('board', currentBoardId, true);
+      Tracker.nonreactive(() => {
+        Tracker.autorun(() => {
+          this.isArchiveReady.set( handle.ready() );
+        });
+      });
+    });
+  },
+
   tabs() {
     return [
       { name: TAPi18n.__('cards'), slug: 'cards' },
@@ -44,19 +66,67 @@ BlazeComponent.extendComponent({
           card.restore();
         }
       },
+      'click .js-restore-all-cards'() {
+        this.archivedCards().forEach((card) => {
+          if(card.canBeRestored()){
+            card.restore();
+          }
+        });
+      },
+
       'click .js-delete-card': Popup.afterConfirm('cardDelete', function() {
         const cardId = this._id;
         Cards.remove(cardId);
         Popup.close();
       }),
+      'click .js-delete-all-cards': Popup.afterConfirm('cardDelete', () => {
+        this.archivedCards().forEach((card) => {
+          Cards.remove(card._id);
+        });
+        Popup.close();
+      }),
+
       'click .js-restore-list'() {
         const list = this.currentData();
         list.restore();
       },
+      'click .js-restore-all-lists'() {
+        this.archivedLists().forEach((list) => {
+          list.restore();
+        });
+      },
+
+      'click .js-delete-list': Popup.afterConfirm('listDelete', function() {
+        this.remove();
+        Popup.close();
+      }),
+      'click .js-delete-all-lists': Popup.afterConfirm('listDelete', () => {
+        this.archivedLists().forEach((list) => {
+          list.remove();
+        });
+        Popup.close();
+      }),
+
       'click .js-restore-swimlane'() {
         const swimlane = this.currentData();
         swimlane.restore();
       },
+      'click .js-restore-all-swimlanes'() {
+        this.archivedSwimlanes().forEach((swimlane) => {
+          swimlane.restore();
+        });
+      },
+
+      'click .js-delete-swimlane': Popup.afterConfirm('swimlaneDelete', function() {
+        this.remove();
+        Popup.close();
+      }),
+      'click .js-delete-all-swimlanes': Popup.afterConfirm('swimlaneDelete', () => {
+        this.archivedSwimlanes().forEach((swimlane) => {
+          swimlane.remove();
+        });
+        Popup.close();
+      }),
     }];
   },
 }).register('archivesSidebar');

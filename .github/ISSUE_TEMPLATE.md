@@ -1,5 +1,10 @@
 ## Issue
 
+Add these issues to elsewhere:
+- Snap: https://github.com/wekan/wekan-snap/issues
+
+Other Wekan issues can be added here.
+
 **Server Setup Information**:
 
 * Did you test in newest Wekan?:

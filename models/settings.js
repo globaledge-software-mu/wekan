@@ -28,6 +28,30 @@ Settings.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+  productName: {
+    type: String,
+    optional: true,
+  },
+  customHTMLafterBodyStart: {
+    type: String,
+    optional: true,
+  },
+  customHTMLbeforeBodyEnd: {
+    type: String,
+    optional: true,
+  },
+  displayAuthenticationMethod: {
+    type: Boolean,
+    optional: true,
+  },
+  defaultAuthenticationMethod: {
+    type: String,
+    optional: false,
+  },
+  hideLogo: {
+    type: Boolean,
+    optional: true,
+  },
   createdAt: {
     type: Date,
     denyUpdate: true,
@@ -66,10 +90,11 @@ if (Meteor.isServer) {
     if(!setting){
       const now = new Date();
       const domain = process.env.ROOT_URL.match(/\/\/(?:www\.)?(.*)?(?:\/)?/)[1];
-      const from = `Wekan <wekan@${domain}>`;
+      const from = `Boards Support <support@${domain}>`;
       const defaultSetting = {disableRegistration: false, mailServer: {
         username: '', password: '', host: '', port: '', enableTLS: false, from,
-      }, createdAt: now, modifiedAt: now};
+      }, createdAt: now, modifiedAt: now, displayAuthenticationMethod: true,
+      defaultAuthenticationMethod: 'password'};
       Settings.insert(defaultSetting);
     }
     const newSetting = Settings.findOne();
@@ -127,6 +152,18 @@ if (Meteor.isServer) {
       InvitationCodes.remove(_id);
       throw new Meteor.Error('email-fail', e.message);
     }
+  }
+
+  function isLdapEnabled() {
+    return process.env.LDAP_ENABLE === 'true';
+  }
+
+  function isOauth2Enabled() {
+    return process.env.OAUTH2_ENABLED === 'true';
+  }
+
+  function isCasEnabled() {
+    return process.env.CAS_ENABLED === 'true';
   }
 
   Meteor.methods({
@@ -190,6 +227,19 @@ if (Meteor.isServer) {
       };
     },
 
+    getCustomUI(){
+      const setting = Settings.findOne({});
+      if (!setting.productName) {
+        return {
+          productName: '',
+        };
+      } else {
+        return {
+          productName: `${setting.productName}`,
+        };
+      }
+    },
+
     getMatomoConf(){
       return {
         address: getEnvVar('MATOMO_ADDRESS'),
@@ -197,6 +247,31 @@ if (Meteor.isServer) {
         doNotTrack: process.env.MATOMO_DO_NOT_TRACK || false,
         withUserName: process.env.MATOMO_WITH_USERNAME || false,
       };
+    },
+
+    _isLdapEnabled() {
+      return isLdapEnabled();
+    },
+
+    _isOauth2Enabled() {
+      return isOauth2Enabled();
+    },
+
+    _isCasEnabled() {
+      return isCasEnabled();
+    },
+
+    // Gets all connection methods to use it in the Template
+    getAuthenticationsEnabled() {
+      return {
+        ldap: isLdapEnabled(),
+        oauth2: isOauth2Enabled(),
+        cas: isCasEnabled(),
+      };
+    },
+
+    getDefaultAuthenticationMethod() {
+      return process.env.DEFAULT_AUTHENTICATION_METHOD;
     },
   });
 }

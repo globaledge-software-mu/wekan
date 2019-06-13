@@ -1,5 +1,20 @@
 const subManager = new SubsManager();
 
+Template.boardListHeaderBar.events({
+  'click .js-open-archived-board'() {
+    Modal.open('archivedBoards');
+  },
+});
+
+Template.boardListHeaderBar.helpers({
+  templatesBoardId() {
+    return Meteor.user().getTemplatesBoardId();
+  },
+  templatesBoardSlug() {
+    return Meteor.user().getTemplatesBoardSlug();
+  },
+});
+
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
@@ -17,13 +32,13 @@ BlazeComponent.extendComponent({
   	  },
   	  drag: function() {},
   	  stop: function() {
-  	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
-        $('p#actionTitle').remove();
+  	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
+        $('p#actionTitle', this).remove();
   	  }
   	});
 
   	// part of the codes for the functionality of dragging boards onto boards
-  	$('li.board-color-belize').droppable({
+/*  	$('li.board-color-belize').droppable({
       accept: 'li.board-color-belize', 
       tolerance: 'pointer',
       drop: function( event, ui ) {
@@ -35,18 +50,16 @@ BlazeComponent.extendComponent({
   	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
   	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
   	  }
-  	});
+  	});*/
   },
 
   boards() {
     return Boards.find({
       archived: false,
       'members.userId': Meteor.userId(),
-    }, {
-      sort: ['title'],
-    });
+      type: 'board',
+    }, { sort: ['title'] });
   },
-
   folders() {
   	return Folders.find({
   	  userId: Meteor.userId()
@@ -122,12 +135,12 @@ BlazeComponent.extendComponent({
   },
 
   hasOvertimeCards() {
-    subManager.subscribe('board', this.currentData()._id);
+    subManager.subscribe('board', this.currentData()._id, false);
     return this.currentData().hasOvertimeCards();
   },
 
   hasSpentTimeCards() {
-    subManager.subscribe('board', this.currentData()._id);
+    subManager.subscribe('board', this.currentData()._id, false);
     return this.currentData().hasSpentTimeCards();
   },
 
@@ -142,6 +155,27 @@ BlazeComponent.extendComponent({
       'click .js-star-board'(evt) {
         const boardId = this.currentData()._id;
         Meteor.user().toggleBoardStar(boardId);
+        evt.preventDefault();
+      },
+      'click .js-clone-board'(evt) {
+        Meteor.call('cloneBoard',
+          this.currentData()._id,
+          Session.get('fromBoard'),
+          {},
+          (err, res) => {
+            if (err) {
+              this.setError(err.error);
+            } else {
+              Session.set('fromBoard', null);
+              Utils.goBoardId(res);
+            }
+          }
+        );
+        evt.preventDefault();
+      },
+      'click .js-archive-board'(evt) {
+        const boardId = this.currentData()._id;
+        Meteor.call('archiveBoard', boardId);
         evt.preventDefault();
       },
       'click .js-accept-invite'() {
