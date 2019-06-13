@@ -13,6 +13,8 @@ head
 
 template(name="userFormsLayout")
   section.auth-layout
+    h1.at-form-landing-logo
+      img(src="{{pathFor '/rh-logo.png'}}" alt="Resource Humans")
     section.auth-dialog
       if isLoading
         +loader
