@@ -32,13 +32,13 @@ BlazeComponent.extendComponent({
   	  },
   	  drag: function() {},
   	  stop: function() {
-  	    $(this).css({'opacity': '1', 'pointer-events': 'auto'});
-        $('p#actionTitle').remove();
+  	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
+        $('p#actionTitle', this).remove();
   	  }
   	});
 
   	// part of the codes for the functionality of dragging boards onto boards
-  	$('li.board-color-belize').droppable({
+/*  	$('li.board-color-belize').droppable({
       accept: 'li.board-color-belize', 
       tolerance: 'pointer',
       drop: function( event, ui ) {
@@ -50,7 +50,7 @@ BlazeComponent.extendComponent({
   	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
   	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
   	  }
-  	});
+  	});*/
   },
 
   boards() {
