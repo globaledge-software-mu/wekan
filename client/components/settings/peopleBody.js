@@ -264,6 +264,12 @@ Template.editUserPopup.events({
 
 BlazeComponent.extendComponent({
   onCreated() {
+    Meteor.subscribe('roles');
+  },
+  roles() {
+    return Roles.find({}, {
+      sort: ['name']
+    });
   },
   events() {
     return [{
@@ -272,13 +278,24 @@ BlazeComponent.extendComponent({
   },
 }).register('rolesGeneral');
 
+BlazeComponent.extendComponent({
+  onCreated() {
+  },
+  events() {
+    return [{
+      'click a.edit-role': Popup.open('createRole'),
+    }];
+  },
+}).register('roleRow');
+
+
 Template.createRolePopup.events({
   submit(evt, tpl) {
     evt.preventDefault();
     let permissions = [];
-    $(tpl).find('.js-permission').each(function(id, $elem) {
-      let group = $elem.parents('tr').data('group');
-      let access = $elem.data('access');
+    tpl.$('.js-permission.is-checked').each(function(id, elem) {
+      let group = $(elem).parents('tr').data('group');
+      let access = $(elem).data('access');
       permissions.push({group:group, access:access});
     });
     const name = tpl.find('.js-role-name').value.trim();
@@ -327,5 +344,8 @@ Template.createRolePopup.helpers({
   },
   groups() {
     return Roles.groups;
+  },
+  role() {
+    return Roles.findOne(this.roleId);
   },
 });
