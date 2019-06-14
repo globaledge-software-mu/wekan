@@ -8,7 +8,9 @@ BlazeComponent.extendComponent({
     this.error = new ReactiveVar('');
     this.loading = new ReactiveVar(false);
     this.people = new ReactiveVar(true);
+    this.roles = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
+    this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
 
     this.page = new ReactiveVar(1);
@@ -87,12 +89,41 @@ BlazeComponent.extendComponent({
   peopleNumber() {
     return this.number.get();
   },
+  roleList() {
+    const roles = Roles.find(this.findRolesOptions.get(), {
+      sort: ['name'],
+    });
+    var count = roles.count();
+    this.number.set(roles.count());
+    return roles;
+  },
+  switchMenu(event) {
+    const target = $(event.target);
+    if (!target.hasClass('active')) {
+      $('.side-menu li.active').removeClass('active');
+      target.parent().addClass('active');
+      const targetID = target.data('id');
+      this.people.set('people-setting' === targetID);
+      this.roles.set('roles-setting' === targetID);
+    }
+  },
+  events() {
+    return [{
+      'click a.js-setting-menu': this.switchMenu,
+    }];
+  },
 }).register('people');
 
 Template.peopleRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
+  },
+});
+
+Template.roleRow.helpers({
+  roleData() {
+    return Roles.findOne(this.roleId);
   },
 });
 
@@ -228,5 +259,73 @@ Template.editUserPopup.events({
   'click #deleteButton'() {
     Users.remove(this.userId);
     Popup.close();
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+  },
+  events() {
+    return [{
+      'click button.js-open-create-role': Popup.open('createRole'),
+    }];
+  },
+}).register('rolesGeneral');
+
+Template.createRolePopup.events({
+  submit(evt, tpl) {
+    evt.preventDefault();
+    let permissions = [];
+    $(tpl).find('.js-permission').each(function(id, $elem) {
+      let group = $elem.parents('tr').data('group');
+      let access = $elem.data('access');
+      permissions.push({group:group, access:access});
+    });
+    const name = tpl.find('.js-role-name').value.trim();
+
+    // insert or update
+    if (!this.roleId) {
+      Roles.insert({
+        'name': name,
+        'permissions': permissions,
+      });
+    } else {
+      Roles.update(this.roleId, {
+        $set: {
+          'name': name,
+          'permissions': permissions,
+        },
+      });
+    }
+
+    Popup.close();
+  },
+
+  'click .js-permission'(evt) {
+    let $target = $(evt.target);
+    if(!$target.hasClass('js-permission')){
+      $target = $target.parent();
+    }
+    $target.find('.materialCheckBox').toggleClass('is-checked');
+    $target.toggleClass('is-checked');
+  },
+  'click #deleteButton'() {
+    Roles.remove(this.roleId);
+    Popup.close();
+  },
+});
+Template.createRolePopup.helpers({
+  isEnabled(role, group, access) {
+    if (!role) {
+      return false;
+    }
+    for (var i in role.permissions) {
+      if (role.permissions[i].group == group && role.permissions[i].access == access)
+        return true;
+    }
+    return false;
+  },
+  groups() {
+    return Roles.groups;
   },
 });
