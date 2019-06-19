@@ -32,6 +32,7 @@ template(name="peopleGeneral")
         th {{_ 'username'}}
         th {{_ 'fullname'}}
         th {{_ 'admin'}}
+        th {{_ 'role'}}
         th {{_ 'email'}}
         th {{_ 'verified'}}
         th {{_ 'createdAt'}}
@@ -50,6 +51,7 @@ template(name="peopleRow")
         | {{_ 'yes'}}
       else
         | {{_ 'no'}}
+    td {{ roleName }}
     td {{ userData.emails.[0].address }}
     td
       if userData.emails.[0].verified
@@ -94,6 +96,14 @@ template(name="editUserPopup")
       select.select-role.js-profile-isadmin
         option(value="false") {{_ 'no'}}
         option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
+    label
+      | {{_ 'role'}}
+      select.select-role.js-profile-role
+        each role in roles
+          if currentRole role._id
+            option(value="{{role._id}}" selected) {{role.name}}
+          else
+            option(value="{{role._id}}") {{role.name}}
     label
       | {{_ 'active'}}
       select.select-active.js-profile-isactive

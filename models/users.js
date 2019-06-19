@@ -209,6 +209,10 @@ Users.attachSchema(new SimpleSchema({
     type: Boolean,
     optional: true,
   },
+  roleId: {
+    type: String,
+    optional: true,
+  },
   createdThroughApi: {
     /**
      * was the user created through the API?

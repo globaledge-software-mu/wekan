@@ -28,6 +28,7 @@ BlazeComponent.extendComponent({
           this.callFirstWith(null, 'resetNextPeak');
         }
       });
+      this.subscribe('roles');
     });
   },
   events() {
@@ -119,6 +120,15 @@ Template.peopleRow.helpers({
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
   },
+  roleName() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    let user = userCollection.findOne(this.userId);
+    if (!user.roleId) {
+      return '-';
+    }
+    let role = Roles.findOne(user.roleId);
+    return role.name;
+  }
 });
 
 Template.roleRow.helpers({
@@ -156,6 +166,14 @@ Template.editUserPopup.helpers({
     const selected = Users.findOne(userId).authenticationMethod;
     return selected === match;
   },
+  roles() {
+    return Roles.find({});
+  },
+  currentRole(match) {
+    const userId = Template.instance().data.userId;
+    const selected = Users.findOne(userId).roleId;
+    return selected === match;
+  },
   isLdap() {
     const userId = Template.instance().data.userId;
     const selected = Users.findOne(userId).authenticationMethod;
@@ -187,6 +205,7 @@ Template.editUserPopup.events({
     const username = tpl.find('.js-profile-username').value.trim();
     const password = tpl.find('.js-profile-password').value;
     const isAdmin = tpl.find('.js-profile-isadmin').value.trim();
+    const roleId = tpl.find('.js-profile-role').value;
     const isActive = tpl.find('.js-profile-isactive').value.trim();
     const email = tpl.find('.js-profile-email').value.trim();
     const authentication = tpl.find('.js-authenticationMethod').value.trim();
@@ -199,6 +218,7 @@ Template.editUserPopup.events({
       $set: {
         'profile.fullname': fullname,
         'isAdmin': isAdmin === 'true',
+        'roleId': roleId,
         'loginDisabled': isActive === 'true',
         'authenticationMethod': authentication,
       },
@@ -264,7 +284,6 @@ Template.editUserPopup.events({
 
 BlazeComponent.extendComponent({
   onCreated() {
-    Meteor.subscribe('roles');
   },
   roles() {
     return Roles.find({}, {
