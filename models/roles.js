@@ -1,6 +1,7 @@
 Roles = new Mongo.Collection('roles');
 
-Roles.groups = ['boards', 'lists', 'cards'];
+Roles.groups = ['cards', 'lists', 'boards', 'templates', 'rules'];
+Roles.accessTypes = ['fetch', 'insert', 'update'];
 
 Roles.attachSchema(new SimpleSchema({
   name: {
@@ -23,11 +24,11 @@ Roles.attachSchema(new SimpleSchema({
   },
   'permissions.$.group': {
   	type: String,
-	  allowedValues: ['boards', 'lists', 'cards'],
+	  allowedValues: Roles.groups,
   },
   'permissions.$.access': {
 	type: String,
-	allowedValues: ['fetch', 'insert', 'update'],
+	allowedValues: Roles.accessTypes,
 	defaultValue: 'fetch',
   }
 }));
@@ -47,4 +48,15 @@ Roles.allow({
     return user && Meteor.user().isAdmin && roleUsers == 0;
   },
   fetch: [],
+});
+
+Roles.helpers({
+  hasPermission(group, access) {
+    for (let p in this.permissions) {
+      if (p.group == group && p.access == access) {
+        return true;
+      }
+    }
+    return false;
+  },
 });

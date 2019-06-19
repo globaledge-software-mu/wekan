@@ -10,8 +10,9 @@ Meteor.publish('role', function() {
   if (!Match.test(this.userId, String)) {
     return this.ready();
   }
-  if (!this.user.roleId) {
-    return null;
+  const user = Users.findOne(this.userId);
+  if (!user.roleId) {
+    return this.ready();
   }
-  return Roles.find(this.user.roleId);
+  return Roles.find(user.roleId);
 });
