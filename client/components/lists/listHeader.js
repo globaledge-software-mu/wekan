@@ -9,6 +9,11 @@ BlazeComponent.extendComponent({
     return !list.getWipLimit('enabled') || list.getWipLimit('soft') || !this.reachedWipLimit();
   },
 
+  canEditTitle() {
+    const user = Meteor.user();
+    return user.isBoardMember() && user.hasPermission('lists', 'update');
+  },
+
   editTitle(evt) {
     evt.preventDefault();
     const newTitle = this.childComponents('inlinedForm')[0].getValue().trim();

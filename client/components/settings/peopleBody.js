@@ -8,7 +8,9 @@ BlazeComponent.extendComponent({
     this.error = new ReactiveVar('');
     this.loading = new ReactiveVar(false);
     this.people = new ReactiveVar(true);
+    this.roles = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
+    this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
 
     this.page = new ReactiveVar(1);
@@ -26,6 +28,7 @@ BlazeComponent.extendComponent({
           this.callFirstWith(null, 'resetNextPeak');
         }
       });
+      this.subscribe('roles');
     });
   },
   events() {
@@ -87,12 +90,50 @@ BlazeComponent.extendComponent({
   peopleNumber() {
     return this.number.get();
   },
+  roleList() {
+    const roles = Roles.find(this.findRolesOptions.get(), {
+      sort: ['name'],
+    });
+    var count = roles.count();
+    this.number.set(roles.count());
+    return roles;
+  },
+  switchMenu(event) {
+    const target = $(event.target);
+    if (!target.hasClass('active')) {
+      $('.side-menu li.active').removeClass('active');
+      target.parent().addClass('active');
+      const targetID = target.data('id');
+      this.people.set('people-setting' === targetID);
+      this.roles.set('roles-setting' === targetID);
+    }
+  },
+  events() {
+    return [{
+      'click a.js-setting-menu': this.switchMenu,
+    }];
+  },
 }).register('people');
 
 Template.peopleRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
+  },
+  roleName() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    let user = userCollection.findOne(this.userId);
+    if (!user.roleId) {
+      return '-';
+    }
+    let role = Roles.findOne(user.roleId);
+    return role.name;
+  }
+});
+
+Template.roleRow.helpers({
+  roleData() {
+    return Roles.findOne(this.roleId);
   },
 });
 
@@ -123,6 +164,14 @@ Template.editUserPopup.helpers({
   isSelected(match) {
     const userId = Template.instance().data.userId;
     const selected = Users.findOne(userId).authenticationMethod;
+    return selected === match;
+  },
+  roles() {
+    return Roles.find({});
+  },
+  currentRole(match) {
+    const userId = Template.instance().data.userId;
+    const selected = Users.findOne(userId).roleId;
     return selected === match;
   },
   isLdap() {
@@ -156,6 +205,7 @@ Template.editUserPopup.events({
     const username = tpl.find('.js-profile-username').value.trim();
     const password = tpl.find('.js-profile-password').value;
     const isAdmin = tpl.find('.js-profile-isadmin').value.trim();
+    const roleId = tpl.find('.js-profile-role').value;
     const isActive = tpl.find('.js-profile-isactive').value.trim();
     const email = tpl.find('.js-profile-email').value.trim();
     const authentication = tpl.find('.js-authenticationMethod').value.trim();
@@ -168,6 +218,7 @@ Template.editUserPopup.events({
       $set: {
         'profile.fullname': fullname,
         'isAdmin': isAdmin === 'true',
+        'roleId': roleId,
         'loginDisabled': isActive === 'true',
         'authenticationMethod': authentication,
       },
@@ -228,5 +279,92 @@ Template.editUserPopup.events({
   'click #deleteButton'() {
     Users.remove(this.userId);
     Popup.close();
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+  },
+  roles() {
+    return Roles.find({}, {
+      sort: ['name']
+    });
+  },
+  events() {
+    return [{
+      'click button.js-open-create-role': Popup.open('createRole'),
+    }];
+  },
+}).register('rolesGeneral');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+  },
+  events() {
+    return [{
+      'click a.edit-role': Popup.open('createRole'),
+    }];
+  },
+}).register('roleRow');
+
+
+Template.createRolePopup.events({
+  submit(evt, tpl) {
+    evt.preventDefault();
+    let permissions = [];
+    tpl.$('.js-permission.is-checked').each(function(id, elem) {
+      let group = $(elem).parents('tr').data('group');
+      let access = $(elem).data('access');
+      permissions.push({group:group, access:access});
+    });
+    const name = tpl.find('.js-role-name').value.trim();
+
+    // insert or update
+    if (!this.roleId) {
+      Roles.insert({
+        'name': name,
+        'permissions': permissions,
+      });
+    } else {
+      Roles.update(this.roleId, {
+        $set: {
+          'name': name,
+          'permissions': permissions,
+        },
+      });
+    }
+
+    Popup.close();
+  },
+
+  'click .js-permission'(evt) {
+    let $target = $(evt.target);
+    if(!$target.hasClass('js-permission')){
+      $target = $target.parent();
+    }
+    $target.find('.materialCheckBox').toggleClass('is-checked');
+    $target.toggleClass('is-checked');
+  },
+  'click #deleteButton'() {
+    Roles.remove(this.roleId);
+    Popup.close();
+  },
+});
+Template.createRolePopup.helpers({
+  isEnabled(role, group, access) {
+    if (!role) {
+      return false;
+    }
+    for (var i in role.permissions) {
+      if (role.permissions[i].group == group && role.permissions[i].access == access)
+        return true;
+    }
+    return false;
+  },
+  groups() {
+    return Roles.groups;
+  },
+  role() {
+    return Roles.findOne(this.roleId);
   },
 });

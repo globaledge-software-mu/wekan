@@ -209,6 +209,10 @@ Users.attachSchema(new SimpleSchema({
     type: Boolean,
     optional: true,
   },
+  roleId: {
+    type: String,
+    optional: true,
+  },
   createdThroughApi: {
     /**
      * was the user created through the API?
@@ -292,6 +296,17 @@ if (Meteor.isClient) {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasAdmin(this._id);
     },
+
+    hasPermission(group, access) {
+      if (!this.roleId || this.isAdmin) {
+        return true;
+      }
+      const role = Roles.findOne(this.roleId);
+      if (!role) {
+        return false;
+      }
+      return role.hasPermission(group, access);
+    }
   });
 }
 

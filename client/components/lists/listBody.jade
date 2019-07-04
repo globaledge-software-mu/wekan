@@ -56,10 +56,11 @@ template(name="addCardForm")
           | &nbsp;
           | /
           a.js-search {{_ 'search'}}
-        span.quiet
-          | &nbsp;
-          | /
-          a.js-card-template {{_ 'template'}}
+        if currentUser.hasPermission 'templates' 'fetch'
+          span.quiet
+            | &nbsp;
+            | /
+            a.js-card-template {{_ 'template'}}
 
 template(name="autocompleteLabelLine")
   .minicard-label(class="card-label-{{colorName}}" title=labelName)

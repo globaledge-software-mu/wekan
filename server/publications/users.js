@@ -14,6 +14,7 @@ Meteor.publish('user-admin', function() {
   return Meteor.users.find(this.userId, {
     fields: {
       isAdmin: 1,
+      roleId: 1,
     },
   });
 });

@@ -82,13 +82,17 @@ function initSortable(boardComponent, $listsDom) {
     return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
   }
 
+  function userCanSort() {
+    return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly() && Meteor.user().hasPermission('board', 'update');
+  }
+
   // Disable drag-dropping while in multi-selection mode, or if the current user
   // is not a board member
   boardComponent.autorun(() => {
     const $listDom = $listsDom;
-    if ($listDom.data('sortable')) {
+    if ($listDom.data('ui-sortable')) {
       $listsDom.sortable('option', 'disabled',
-        MultiSelection.isActive() || !userIsMember());
+        MultiSelection.isActive() || !userCanSort());
     }
   });
 }
