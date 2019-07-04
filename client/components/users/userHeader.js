@@ -3,6 +3,15 @@ Template.headerUserBar.events({
   'click .js-change-avatar': Popup.open('changeAvatar'),
 });
 
+Template.memberMenuPopup.helpers({
+  templatesBoardId() {
+    return Meteor.user().getTemplatesBoardId();
+  },
+  templatesBoardSlug() {
+    return Meteor.user().getTemplatesBoardSlug();
+  },
+});
+
 Template.memberMenuPopup.events({
   'click .js-edit-profile': Popup.open('editProfile'),
   'click .js-change-settings': Popup.open('changeSettings'),
@@ -86,6 +95,11 @@ Template.editProfilePopup.events({
       });
     } else Popup.back();
   },
+  'click #deleteButton'() {
+    Users.remove(Meteor.userId());
+    Popup.close();
+    AccountsTemplates.logout();
+  },
 });
 
 // XXX For some reason the useraccounts autofocus isnt working in this case.
@@ -105,6 +119,8 @@ Template.changeLanguagePopup.helpers({
         name = 'Brezhoneg';
       } else if (lang.name === 'ig') {
         name = 'Igbo';
+      } else if (lang.name === 'oc') {
+        name = 'Occitan';
       }
       return { tag, name };
     }).sort(function (a, b) {

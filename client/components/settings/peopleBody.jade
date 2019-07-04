@@ -3,18 +3,27 @@ template(name="people")
     unless currentUser.isAdmin
       | {{_ 'error-notAuthorized'}}
     else
-      .content-title
-        span {{_ 'people'}}
+      .content-title.ext-box
+        .ext-box-left
+          span {{_ 'people'}}
+          input#searchInput(placeholder="{{_ 'search'}}")
+          button#searchButton {{_ 'search'}}
+        .ext-box-right
+          span {{_ 'people-number'}} #{peopleNumber}
       .content-body
         .side-menu
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
+            li.active
+              a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
         .main-body
           if loading.get
             +spinner
           else if people.get
             +peopleGeneral
+          else if roles.get
+            +rolesGeneral
 
 template(name="peopleGeneral")
   table
@@ -23,10 +32,12 @@ template(name="peopleGeneral")
         th {{_ 'username'}}
         th {{_ 'fullname'}}
         th {{_ 'admin'}}
+        th {{_ 'role'}}
         th {{_ 'email'}}
         th {{_ 'verified'}}
         th {{_ 'createdAt'}}
         th {{_ 'active'}}
+        th {{_ 'authentication-method'}}
         th
       each user in peopleList
         +peopleRow(userId=user._id)
@@ -40,6 +51,7 @@ template(name="peopleRow")
         | {{_ 'yes'}}
       else
         | {{_ 'no'}}
+    td {{ roleName }}
     td {{ userData.emails.[0].address }}
     td
       if userData.emails.[0].verified
@@ -52,6 +64,7 @@ template(name="peopleRow")
         | {{_ 'no'}}
       else
         | {{_ 'yes'}}
+    td {{_ userData.authenticationMethod }}
     td
       a.edit-user
         | {{_ 'edit'}}
@@ -66,25 +79,104 @@ template(name="editUserPopup")
       | {{_ 'username'}}
       span.error.hide.username-taken
         | {{_ 'error-username-taken'}}
-      input.js-profile-username(type="text" value=user.username)
+      if isLdap
+        input.js-profile-username(type="text" value=user.username readonly)
+      else
+        input.js-profile-username(type="text" value=user.username)
     label
       | {{_ 'email'}}
       span.error.hide.email-taken
         | {{_ 'error-email-taken'}}
-      input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
+      if isLdap
+        input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
+      else
+        input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
     label
       | {{_ 'admin'}}
       select.select-role.js-profile-isadmin
         option(value="false") {{_ 'no'}}
         option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
     label
+      | {{_ 'role'}}
+      select.select-role.js-profile-role
+        each role in roles
+          if currentRole role._id
+            option(value="{{role._id}}" selected) {{role.name}}
+          else
+            option(value="{{role._id}}") {{role.name}}
+    label
       | {{_ 'active'}}
       select.select-active.js-profile-isactive
         option(value="false") {{_ 'yes'}}
         option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
+    label
+      | {{_ 'authentication-type'}}
+      select.select-authenticationMethod.js-authenticationMethod
+        each authentications
+          if isSelected value
+            option(value="{{value}}" selected) {{_ value}}
+          else
+            option(value="{{value}}") {{_ value}}
     hr
     label
       | {{_ 'password'}}
       input.js-profile-password(type="password")
+    div.buttonsContainer
+      input.primary.wide(type="submit" value="{{_ 'save'}}")
+      div
+      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
 
-    input.primary.wide(type="submit" value="{{_ 'save'}}")
+template(name="rolesGeneral")
+  table.roleList
+    tbody
+      tr
+        th {{_ 'role'}}
+        th {{_ 'permissions'}}
+        th
+      each role in roles
+        +roleRow(roleId=role._id)
+  button.js-open-create-role.primary {{_ 'create'}}
+
+template(name="roleRow")
+  tr
+    td.rolename {{ roleData.name }}
+    td 
+      each permission in roleData.permissions
+        span.badge {{permission.group}}:
+          span.access {{permission.access}}
+
+    td
+      a.edit-role
+        | {{_ 'edit'}}
+
+template(name="createRolePopup")
+  form
+    label.hide.roleId(type="text" value=role._id)
+    label
+      | {{_ 'name'}} {{_id}}
+      input.js-role-name(type="text" value=role.name autofocus)
+    hr
+    table
+      tbody
+        tr
+          th {{_ 'permission'}}
+          th {{_ 'view'}}
+          th {{_ 'create'}}
+          th {{_ 'change'}}
+        each group in groups
+          tr(data-group=group)
+            td {{group}}
+            td
+              a.flex.js-permission(class="{{#if isEnabled role group 'fetch'}}is-checked{{/if}}", data-access="fetch")
+                .materialCheckBox(class="{{#if isEnabled role group 'fetch'}}is-checked{{/if}}")
+            td
+              a.flex.js-permission(class="{{#if isEnabled role group 'insert'}}is-checked{{/if}}", data-access="insert")
+                .materialCheckBox(class="{{#if isEnabled role group 'insert'}}is-checked{{/if}}")
+            td
+              a.flex.js-permission(class="{{#if isEnabled role group 'update'}}is-checked{{/if}}", data-access="update")
+                .materialCheckBox(class="{{#if isEnabled role group 'update'}}is-checked{{/if}}")
+
+    div.buttonsContainer
+      input.primary.wide(type="submit" value="{{_ 'save'}}")
+      div
+      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")

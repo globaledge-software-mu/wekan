@@ -1,7 +1,17 @@
+let listsColors;
+Meteor.startup(() => {
+  listsColors = Lists.simpleSchema()._schema.color.allowedValues;
+});
+
 BlazeComponent.extendComponent({
   canSeeAddCard() {
     const list = Template.currentData();
     return !list.getWipLimit('enabled') || list.getWipLimit('soft') || !this.reachedWipLimit();
+  },
+
+  canEditTitle() {
+    const user = Meteor.user();
+    return user.isBoardMember() && user.hasPermission('lists', 'update');
   },
 
   editTitle(evt) {
@@ -20,6 +30,16 @@ BlazeComponent.extendComponent({
 
   limitToShowCardsCount() {
     return Meteor.user().getLimitToShowCardsCount();
+  },
+
+  cardsCount() {
+    const list = Template.currentData();
+    let swimlaneId = '';
+    const boardView = (Meteor.user().profile || {}).boardView;
+    if (boardView === 'board-view-swimlanes')
+      swimlaneId = this.parentComponent().parentComponent().data()._id;
+
+    return list.cards(swimlaneId).count();
   },
 
   reachedWipLimit() {
@@ -62,6 +82,7 @@ Template.listActionPopup.helpers({
 
 Template.listActionPopup.events({
   'click .js-list-subscribe' () {},
+  'click .js-set-color-list': Popup.open('setListColor'),
   'click .js-select-cards' () {
     const cardIds = this.allCards().map((card) => card._id);
     MultiSelection.add(cardIds);
@@ -176,3 +197,34 @@ BlazeComponent.extendComponent({
     }];
   }
 }).register('listPropertiesPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.currentList = this.currentData();
+    this.currentColor = new ReactiveVar(this.currentList.color);
+  },
+
+  colors() {
+    return listsColors.map((color) => ({ color, name: '' }));
+  },
+
+  isSelected(color) {
+    return this.currentColor.get() === color;
+  },
+
+  events() {
+    return [{
+      'click .js-palette-color'() {
+        this.currentColor.set(this.currentData().color);
+      },
+      'click .js-submit' () {
+        this.currentList.setColor(this.currentColor.get());
+        Popup.close();
+      },
+      'click .js-remove-color'() {
+        this.currentList.setColor(null);
+        Popup.close();
+      },
+    }];
+  },
+}).register('setListColorPopup');

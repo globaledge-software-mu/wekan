@@ -39,11 +39,11 @@ Utils = {
     if (!prevData && !nextData) {
       base = 0;
       increment = 1;
-    // If we drop the card in the first position
+      // If we drop the card in the first position
     } else if (!prevData) {
       base = nextData.sort - 1;
       increment = -1;
-    // If we drop the card in the last position
+      // If we drop the card in the last position
     } else if (!nextData) {
       base = prevData.sort + 1;
       increment = 1;
@@ -71,11 +71,11 @@ Utils = {
     if (!prevCardDomElement && !nextCardDomElement) {
       base = 0;
       increment = 1;
-    // If we drop the card in the first position
+      // If we drop the card in the first position
     } else if (!prevCardDomElement) {
       base = Blaze.getData(nextCardDomElement).sort - 1;
       increment = -1;
-    // If we drop the card in the last position
+      // If we drop the card in the last position
     } else if (!nextCardDomElement) {
       base = Blaze.getData(prevCardDomElement).sort + 1;
       increment = 1;
@@ -145,6 +145,26 @@ Utils = {
     });
   },
 
+  manageCustomUI(){
+    Meteor.call('getCustomUI', (err, data) => {
+      if (err && err.error[0] === 'var-not-exist'){
+        Session.set('customUI', false); // siteId || address server not defined
+      }
+      if (!err){
+        Utils.setCustomUI(data);
+      }
+    });
+  },
+
+  setCustomUI(data){
+    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    if (currentBoard) {
+      DocHead.setTitle(`${currentBoard.title  } - ${  data.productName}`);
+    } else {
+      DocHead.setTitle(`${data.productName}`);
+    }
+  },
+
   setMatomo(data){
     window._paq = window._paq || [];
     window._paq.push(['setDoNotTrack', data.doNotTrack]);
@@ -188,6 +208,37 @@ Utils = {
     } else if (matomo) {
       window._paq.push(['trackPageView']);
     }
+  },
+
+  getTriggerActionDesc(event, tempInstance) {
+    const jqueryEl = tempInstance.$(event.currentTarget.parentNode);
+    const triggerEls = jqueryEl.find('.trigger-content').children();
+    let finalString = '';
+    for (let i = 0; i < triggerEls.length; i++) {
+      const element = tempInstance.$(triggerEls[i]);
+      if (element.hasClass('trigger-text')) {
+        finalString += element.text().toLowerCase();
+      } else if (element.hasClass('user-details')) {
+        let username = element.find('input').val();
+        if(username === undefined || username === ''){
+          username = '*';
+        }
+        finalString += `${element.find('.trigger-text').text().toLowerCase() } ${  username}`;
+      } else if (element.find('select').length > 0) {
+        finalString += element.find('select option:selected').text().toLowerCase();
+      } else if (element.find('input').length > 0) {
+        let inputvalue = element.find('input').val();
+        if(inputvalue === undefined || inputvalue === ''){
+          inputvalue = '*';
+        }
+        finalString += inputvalue;
+      }
+      // Add space
+      if (i !== length - 1) {
+        finalString += ' ';
+      }
+    }
+    return finalString;
   },
 };
 

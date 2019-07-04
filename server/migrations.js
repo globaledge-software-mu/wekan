@@ -322,6 +322,18 @@ Migrations.add('add-subtasks-allowed', () => {
   }, noValidateMulti);
 });
 
+Migrations.add('add-authenticationMethod', () => {
+  Users.update({
+    'authenticationMethod': {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      'authenticationMethod': 'password',
+    },
+  }, noValidateMulti);
+});
+
 Migrations.add('remove-tag', () => {
   Users.update({
   }, {
@@ -339,3 +351,190 @@ Migrations.add('remove-customFields-references-broken', () => {
     }, noValidateMulti);
 });
 
+Migrations.add('add-product-name', () => {
+  Settings.update({
+    productName: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      productName:'',
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-hide-logo', () => {
+  Settings.update({
+    hideLogo: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      hideLogo: false,
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-custom-html-after-body-start', () => {
+  Settings.update({
+    customHTMLafterBodyStart: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      customHTMLafterBodyStart:'',
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-custom-html-before-body-end', () => {
+  Settings.update({
+    customHTMLbeforeBodyEnd: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      customHTMLbeforeBodyEnd:'',
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-displayAuthenticationMethod', () => {
+  Settings.update({
+    displayAuthenticationMethod: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      displayAuthenticationMethod: true,
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-defaultAuthenticationMethod', () => {
+  Settings.update({
+    defaultAuthenticationMethod: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      defaultAuthenticationMethod: 'password',
+    },
+  }, noValidateMulti);
+});
+
+Migrations.add('add-templates', () => {
+  Boards.update({
+    type: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      type: 'board',
+    },
+  }, noValidateMulti);
+  Swimlanes.update({
+    type: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      type: 'swimlane',
+    },
+  }, noValidateMulti);
+  Lists.update({
+    type: {
+      $exists: false,
+    },
+    swimlaneId: {
+      $exists: false,
+    },
+  }, {
+    $set: {
+      type: 'list',
+      swimlaneId: '',
+    },
+  }, noValidateMulti);
+  Users.find({
+    'profile.templatesBoardId': {
+      $exists: false,
+    },
+  }).forEach((user) => {
+    // Create board and swimlanes
+    Boards.insert({
+      title: TAPi18n.__('templates'),
+      permission: 'private',
+      type: 'template-container',
+      members: [
+        {
+          userId: user._id,
+          isAdmin: true,
+          isActive: true,
+          isNoComments: false,
+          isCommentOnly: false,
+        },
+      ],
+    }, (err, boardId) => {
+
+      // Insert the reference to our templates board
+      Users.update(user._id, {$set: {'profile.templatesBoardId': boardId}});
+
+      // Insert the card templates swimlane
+      Swimlanes.insert({
+        title: TAPi18n.__('card-templates-swimlane'),
+        boardId,
+        sort: 1,
+        type: 'template-container',
+      }, (err, swimlaneId) => {
+
+        // Insert the reference to out card templates swimlane
+        Users.update(user._id, {$set: {'profile.cardTemplatesSwimlaneId': swimlaneId}});
+      });
+
+      // Insert the list templates swimlane
+      Swimlanes.insert({
+        title: TAPi18n.__('list-templates-swimlane'),
+        boardId,
+        sort: 2,
+        type: 'template-container',
+      }, (err, swimlaneId) => {
+
+        // Insert the reference to out list templates swimlane
+        Users.update(user._id, {$set: {'profile.listTemplatesSwimlaneId': swimlaneId}});
+      });
+
+      // Insert the board templates swimlane
+      Swimlanes.insert({
+        title: TAPi18n.__('board-templates-swimlane'),
+        boardId,
+        sort: 3,
+        type: 'template-container',
+      }, (err, swimlaneId) => {
+
+        // Insert the reference to out board templates swimlane
+        Users.update(user._id, {$set: {'profile.boardTemplatesSwimlaneId': swimlaneId}});
+      });
+    });
+  });
+});
+
+Migrations.add('fix-circular-reference_', () => {
+  Cards.find().forEach((card) => {
+    if (card.parentId === card._id) {
+      Cards.update(card._id, {$set: {parentId: ''}}, noValidateMulti);
+    }
+  });
+});
+
+Migrations.add('mutate-boardIds-in-customfields', () => {
+  CustomFields.find().forEach((cf) => {
+    CustomFields.update(cf, {
+      $set: {
+        boardIds: [cf.boardId],
+      },
+      $unset: {
+        boardId: '',
+      },
+    }, noValidateMulti);
+  });
+});

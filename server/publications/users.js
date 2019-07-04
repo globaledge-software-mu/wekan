@@ -14,6 +14,16 @@ Meteor.publish('user-admin', function() {
   return Meteor.users.find(this.userId, {
     fields: {
       isAdmin: 1,
+      roleId: 1,
+    },
+  });
+});
+
+Meteor.publish('user-authenticationMethod', function(match) {
+  check(match, String);
+  return Users.find({$or: [{_id: match}, {email: match}, {username: match}]}, {
+    fields: {
+      'authenticationMethod': 1,
     },
   });
 });

@@ -14,9 +14,11 @@ Meteor.publish('people', function(limit) {
         'username': 1,
         'profile.fullname': 1,
         'isAdmin': 1,
+        'roleId': 1,
         'emails': 1,
         'createdAt': 1,
         'loginDisabled': 1,
+        'authenticationMethod': 1,
       },
     });
   } else {

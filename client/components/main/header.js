@@ -1,9 +1,15 @@
 Meteor.subscribe('user-admin');
+Meteor.subscribe('role');
 Meteor.subscribe('boards');
+Meteor.subscribe('setting');
 
 Template.header.helpers({
   wrappedHeader() {
     return !Session.get('currentBoard');
+  },
+
+  currentSetting() {
+    return Settings.findOne();
   },
 
   hideLogo() {
