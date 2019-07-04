@@ -164,7 +164,7 @@ template(name="boardMenuPopup")
       ul.pop-over-list
         li: a(href="{{exportUrl}}", download="{{exportFilename}}") {{_ 'export-board'}}
         if currentUser.hasPermission 'boards' 'insert'
-        li: a.js-clone-board {{_ 'clone-board'}}
+          li: a.js-clone-board {{_ 'clone-board'}}
         unless currentBoard.isTemplatesBoard
           li: a.js-archive-board {{_ 'archive-board'}}
         li: a.js-outgoing-webhooks {{_ 'outgoing-webhooks'}}
