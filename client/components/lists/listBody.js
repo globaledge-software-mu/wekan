@@ -175,7 +175,7 @@ BlazeComponent.extendComponent({
   },
 
   canSeeAddCard() {
-    return !this.reachedWipLimit() && Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
+    return !this.reachedWipLimit() && Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly() && Meteor.user().hasPermission('cards', 'insert');
   },
 
   reachedWipLimit() {

@@ -3,19 +3,21 @@ template(name="listHeader")
     class="{{#if limitToShowCardsCount}}list-header-card-count{{/if}}"
     class="{{#if colorClass}}list-header-{{colorClass}}{{/if}}")
     +inlinedForm
-      +editListTitleForm
+      if canEditTitle
+        +editListTitleForm
     else
       if isMiniScreen
         if currentList
           a.list-header-left-icon.fa.fa-angle-left.js-unselect-list
       h2.list-header-name(
-        class="{{#if currentUser.isBoardMember}}js-open-inlined-form is-editable{{/if}}")
+        class="{{#if canEditTitle}}js-open-inlined-form is-editable{{/if}}")
         +viewer
           = title
-        if wipLimit.enabled
-         |&nbsp;(
-         span(class="{{#if reachedWipLimit}}highlight{{/if}}") {{cards.count}}
-         |/#{wipLimit.value})
+        if currentUser.hasPermission 'wiplimit' 'fetch'
+          if wipLimit.enabled
+            |&nbsp;(
+            span(class="{{#if reachedWipLimit}}highlight{{/if}}") {{cards.count}}
+            |/#{wipLimit.value})
 
         if showCardsCountForList cards.count
           |&nbsp;
@@ -52,22 +54,26 @@ template(name="listActionPopup")
     li: a.js-toggle-watch-list {{#if isWatching}}{{_ 'unwatch'}}{{else}}{{_ 'watch'}}{{/if}}
   unless currentUser.isCommentOnly
     hr
-    ul.pop-over-list
-      li: a.js-set-color-list {{_ 'set-color-list'}}
-    hr
+    if currentUser.hasPermission 'customization' 'update'
+      ul.pop-over-list
+        li: a.js-set-color-list {{_ 'set-color-list'}}
+      hr
     ul.pop-over-list
       if cards.count
         li: a.js-select-cards {{_ 'list-select-cards'}}
         hr
       if currentUser.isBoardAdmin
-        li: a.js-list-properties {{_ 'listPropertiesPopup-title'}}
-        hr
+        if currentUser.hasPermission 'customization' 'fetch'
+          li: a.js-list-properties {{_ 'listPropertiesPopup-title'}}
+          hr
     if currentUser.isBoardMember
       ul.pop-over-list
-        li: a.js-set-wip-limit {{#if isWipLimitEnabled }}{{_ 'edit-wip-limit'}}{{else}}{{_ 'setWipLimitPopup-title'}}{{/if}}
-        hr
-        li: a.js-add-desctiption {{_ 'list-add-description-title'}}
-        hr
+        if currentUser.hasPermission 'wiplimit' 'update'
+          li: a.js-set-wip-limit {{#if isWipLimitEnabled }}{{_ 'edit-wip-limit'}}{{else}}{{_ 'setWipLimitPopup-title'}}{{/if}}
+          hr
+        if currentUser.hasPermission 'customization' 'update'
+          li: a.js-add-desctiption {{_ 'list-add-description-title'}}
+          hr
     ul.pop-over-list
       li: a.js-close-list {{_ 'archive-list'}}
     hr
@@ -92,7 +98,8 @@ template(name="listMorePopup")
       input.inline-input(type="text" readonly value="{{ rootUrl }}")
     | {{_ 'added'}}
     span.date(title=list.createdAt) {{ moment createdAt 'LLL' }}
-    a.js-delete {{_ 'delete'}}
+    if currentUser.hasPermission 'lists' 'update'
+      a.js-delete {{_ 'delete'}}
 
 template(name="listDeletePopup")
   p {{_ "list-delete-pop"}}

@@ -9,14 +9,16 @@ template(name="swimlane")
         each lists
           +miniList(this)
         if currentUser.isBoardMember
-          +addListForm
+          if currentUser.hasPermission 'lists' 'insert'
+            +addListForm
     else
       each lists
         +list(this)
         if currentCardIsInThisList _id ../_id
           +cardDetails(currentCard)
       if currentUser.isBoardMember
-        +addListForm
+        if currentUser.hasPermission 'lists' 'insert'
+          +addListForm
 
 template(name="listsGroup")
   .swimlane.list-group.js-lists
@@ -27,14 +29,16 @@ template(name="listsGroup")
         each lists
           +miniList(this)
         if currentUser.isBoardMember
-          +addListForm
+          if currentUser.hasPermission 'lists' 'insert'
+            +addListForm
     else
       each lists
         +list(this)
         if currentCardIsInThisList _id null
           +cardDetails(currentCard)
       if currentUser.isBoardMember
-        +addListForm
+        if currentUser.hasPermission 'lists' 'insert'
+          +addListForm
 
 template(name="addListForm")
   .list.list-composer.js-list-composer
@@ -46,9 +50,10 @@ template(name="addListForm")
           button.primary.confirm(type="submit") {{_ 'save'}}
           unless currentBoard.isTemplatesBoard
             unless currentBoard.isTemplateBoard
-              span.quiet
-                | {{_ 'or'}}
-                a.js-list-template {{_ 'template'}}
+              if currentUser.hasPermission 'templates' 'fetch'
+                span.quiet
+                  | {{_ 'or'}}
+                  a.js-list-template {{_ 'template'}}
       else
         a.open-list-composer.js-open-inlined-form
           i.fa.fa-plus

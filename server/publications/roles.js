@@ -1,5 +1,6 @@
 Meteor.publish('roles', function() {
-  if (!this.user.isAdmin) {
+  const user = Users.findOne(this.userId);
+  if (!user.isAdmin) {
     return this.ready();
   }
   return Roles.find();

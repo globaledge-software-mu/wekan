@@ -1,6 +1,6 @@
 Roles = new Mongo.Collection('roles');
 
-Roles.groups = ['cards', 'lists', 'boards', 'templates', 'rules'];
+Roles.groups = ['cards', 'lists', 'customization', 'boards', 'templates', 'rules', 'wiplimit'];
 Roles.accessTypes = ['fetch', 'insert', 'update'];
 
 Roles.attachSchema(new SimpleSchema({
@@ -52,7 +52,7 @@ Roles.allow({
 
 Roles.helpers({
   hasPermission(group, access) {
-    for (let p in this.permissions) {
+    for (const p of this.permissions) {
       if (p.group == group && p.access == access) {
         return true;
       }
