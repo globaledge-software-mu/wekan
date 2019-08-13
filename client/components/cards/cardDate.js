@@ -182,9 +182,6 @@ Template.dateBadge.helpers({
   }
   
   _storeScore(score) {
-    if (this.error.get() !== '') {
-       return false;
-    }
     this.card.setCurrentScore(score);
     this.card.reloadHistoricScoreChart();
   }
