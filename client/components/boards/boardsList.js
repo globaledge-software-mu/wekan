@@ -22,7 +22,7 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
-  	$('ul.board-list.clearfix').sortable();
+  	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
   	$('li.uncategorised_boards').draggable({
   	  revert: 'invalid',
@@ -190,6 +190,20 @@ BlazeComponent.extendComponent({
             FlowRouter.go('home');
           }
         });
+      },
+      'click .sidebar-folder-tongue': function(e) {
+        var selector = $('.sidebar-folder-tongue').children();
+        if (selector.hasClass('fa-angle-left')) {
+          // close sidebar
+          $('.board-widget-folders').hide();
+          $('.sidebar-folder-tongue').css('left', '7px');
+        } else if (selector.hasClass('fa-angle-right')) {
+          // open sidebar
+          $('.board-widget-folders').show();
+          $('.sidebar-folder-tongue').css('left', '-8px');
+        }
+        selector.toggleClass('fa-angle-right fa-angle-left');
+        $('.board-list.clearfix').toggleClass('col-md-8 col-md-11');
       },
     }];
   },

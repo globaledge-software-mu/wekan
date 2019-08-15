@@ -2,6 +2,8 @@ template(name="boardList")
   .row
     +foldersWidget
     ul.col-md-8.board-list.clearfix
+      a.sidebar-folder-tongue.js-toggle-sidebar(title='Close Sidebar')
+        i.fa.fa-angle-left
       if currentUser.hasPermission 'boards' 'insert'
         li.js-add-board
           a.board-list-item.label {{_ 'add-board'}}

@@ -174,13 +174,6 @@ BlazeComponent.extendComponent({
   getViewTemplate() {
     return `${this.getView()}SidebarFolder`;
   },
-
-  showTongueTitle() {
-    if (this.isOpen())
-      return `${TAPi18n.__('sidebar-close')}`;
-    else
-      return `${TAPi18n.__('sidebar-open')}`;
-  },
   
   folders() {
   	return Folders.find(
