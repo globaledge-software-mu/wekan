@@ -55,8 +55,8 @@ i.folderHandle
 
 a.folderOpener
   span.generalFont
-    width: 79%;
-    display: inline-block;
+    width: 100%;
+    line-height: 12px;
 
 ul
   li.myFolder
@@ -66,6 +66,10 @@ ul
 .nav.nav-second-level.collapse
   padding-left: 10px;
   padding-top: 10px;
+
+.create-first-level-folder-container
+  padding-left: 47px
+  padding-right: 0
 
 .create-first-level-folder
   cursor: pointer;
@@ -92,6 +96,19 @@ ul#side-menu
     a.folderOpener
       padding-top: 5px
       padding-bottom: 5px
+      display: flex
+      
+@media screen and (max-width: 1321px)
+  ul#side-menu
+    li.sub-root
+      a.folderOpener
+        display: block
+      
+@media screen and (min-width: 990px)
+  ul#side-menu
+    li.sub-root
+      a.folderOpener
+        display: block
 
 ul#uncategorised-folder-ul-tag
   li.sub-root
@@ -105,6 +122,7 @@ ul#uncategorised-folder-ul-tag
       padding-top: 5px
       padding-bottom: 5px
       padding-left: 10px
+      padding-right: 16px
 
 ul#side-menu
   li.sub-root.myFolder
@@ -130,6 +148,10 @@ ul#side-menu.folders
             width: 76%
 
 div.board-widget.board-widget-folders
+  background-color: white;
+  padding: 20px;
+  overflow: scroll;
+  height: 100vh;
   div.createFirstLevelFolderDiv
     hr
       margin-top: 5px;
@@ -149,6 +171,8 @@ div.board-widget.board-widget-folders
   line-height: 35px;
   margin-bottom: 0px;
   padding-top: 5px;
+  padding-right: 5px;
+  display: contents;
 
 .successStatus
   text-align: center;
@@ -170,16 +194,15 @@ div.board-widget.board-widget-folders
   font-size: 16px;
   word-wrap: break-word;
  
- li.createSubFolderFormTAGli
-   .createSubFolderDiv
-     background-color: white;
-     border: solid 2px #faf0e6;
-     box-shadow: 1px 1px 1px #faf0e6;
-     margin-right: 15px;
-     padding: 10px;
-
-.createSubFolderDiv
-  margin: 0px;
+li.createSubFolderFormTAGli
+  .createSubFolderDiv
+    background-color: white;
+    border: solid 2px #faf0e6;
+    box-shadow: 1px 1px 1px #faf0e6;
+    margin: 0px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+    padding: 10px;
 
 .selected
   background-color: #e4e4e4;

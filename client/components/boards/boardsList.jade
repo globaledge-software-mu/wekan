@@ -1,7 +1,7 @@
 template(name="boardList")
-  .wrapper
-    +sidebarFolder
-    ul.board-list.clearfix
+  .row
+    +foldersWidget
+    ul.col-md-8.board-list.clearfix
       if currentUser.hasPermission 'boards' 'insert'
         li.js-add-board
           a.board-list-item.label {{_ 'add-board'}}
