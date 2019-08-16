@@ -2,8 +2,28 @@
 
 $spaceBetweenTiles = 16px
 
+.sidebar-folder-tongue
+  display: block
+  width: 30px
+  height: @width
+  left: -8px
+  position: absolute
+  top: 0px
+  background: darken(white, 3%)
+  border-bottom-left-radius: 3px
+  box-shadow: 1px 1px 10px 0px #b3b3b3;
+  color: darken(white, 50%)
+
+.fa.fa-angle-right
+  padding: 7px 13px;
+
+.fa.fa-angle-left
+  padding: 7px 13px;
+
 .board-list
   margin: 0 ($spaceBetweenTiles/2)
+  padding: 30px;
+  max-height: 100%;
 
   li
     float: left
@@ -201,5 +221,4 @@ $spaceBetweenTiles = 16px
 
 .uncategorised_boards
   display: none
-
 
