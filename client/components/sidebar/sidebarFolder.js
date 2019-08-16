@@ -271,17 +271,17 @@ BlazeComponent.extendComponent({
       },
 
       'click .deleteFolder': function() {
-        if (this._id != 'undefined' && this._id !== null) {
+        if (this.currentData()._id !== 'undefined' && this.currentData()._id !== null) {
           var folderIds = new Array;
-          folderIds.push(this._id);
+          folderIds.push(this.currentData()._id);
 
-          var subFolders = Folders.find({parentId: this._id}).fetch();
+          var subFolders = Folders.find({parentId: this.currentData()._id}).fetch();
           if(typeof(subFolders) != 'undefined' && subFolders !== null && subFolders.length > 0) {
             for (var i=0; i < subFolders.length; i++) {
               folderIds.push(subFolders[i]._id);
             }
           }
-      
+
           for (var k=0; k < folderIds.length; k++) {
             Folders.remove(folderIds[k]);
           }
