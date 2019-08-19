@@ -63,8 +63,8 @@ Roles.helpers({
 
 if (Meteor.isServer) {
   Meteor.startup(() => {
-    const role = Roles.findOne({});
-    if(!role){
+    const manager = Roles.findOne({name: 'Manager'});
+    if(!manager){
       Roles.insert({
         'name' : 'Manager', 
         'permissions' : [ 
@@ -91,6 +91,9 @@ if (Meteor.isServer) {
           { 'group' : 'wiplimit', 'access' : 'update' } 
         ]
       });
+    }
+    const coach = Roles.findOne({name: 'Coach'});
+    if(!coach){
       Roles.insert({
         'name' : 'Coach', 
         'permissions' : [ 
@@ -109,6 +112,9 @@ if (Meteor.isServer) {
           { 'group' : 'wiplimit', 'access' : 'update' } 
         ]
       });
+    }
+    const coachee = Roles.findOne({name: 'Coachee'});
+    if(!coachee){
       Roles.insert({
         'name' : 'Coachee', 
         'permissions' : [ 
