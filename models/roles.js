@@ -27,9 +27,9 @@ Roles.attachSchema(new SimpleSchema({
 	  allowedValues: Roles.groups,
   },
   'permissions.$.access': {
-	type: String,
-	allowedValues: Roles.accessTypes,
-	defaultValue: 'fetch',
+  	type: String,
+  	allowedValues: Roles.accessTypes,
+  	defaultValue: 'fetch',
   }
 }));
 
@@ -60,3 +60,66 @@ Roles.helpers({
     return false;
   },
 });
+
+if (Meteor.isServer) {
+  Meteor.startup(() => {
+    const role = Roles.findOne({});
+    if(!role){
+      Roles.insert({
+        'name' : 'Manager', 
+        'permissions' : [ 
+          { 'group' : 'cards', 'access' : 'fetch' }, 
+          { 'group' : 'cards', 'access' : 'insert' }, 
+          { 'group' : 'cards', 'access' : 'update' }, 
+          { 'group' : 'lists', 'access' : 'fetch' }, 
+          { 'group' : 'lists', 'access' : 'insert' }, 
+          { 'group' : 'lists', 'access' : 'update' }, 
+          { 'group' : 'customization', 'access' : 'fetch' }, 
+          { 'group' : 'customization', 'access' : 'insert' }, 
+          { 'group' : 'customization', 'access' : 'update' }, 
+          { 'group' : 'boards', 'access' : 'fetch' }, 
+          { 'group' : 'boards', 'access' : 'insert' }, 
+          { 'group' : 'boards', 'access' : 'update' }, 
+          { 'group' : 'templates', 'access' : 'fetch' }, 
+          { 'group' : 'templates', 'access' : 'insert' }, 
+          { 'group' : 'templates', 'access' : 'update' }, 
+          { 'group' : 'rules', 'access' : 'fetch' }, 
+          { 'group' : 'rules', 'access' : 'insert' }, 
+          { 'group' : 'rules', 'access' : 'update' }, 
+          { 'group' : 'wiplimit', 'access' : 'fetch' }, 
+          { 'group' : 'wiplimit', 'access' : 'insert' }, 
+          { 'group' : 'wiplimit', 'access' : 'update' } 
+        ]
+      });
+      Roles.insert({
+        'name' : 'Coach', 
+        'permissions' : [ 
+          { 'group' : 'cards', 'access' : 'fetch' }, 
+          { 'group' : 'cards', 'access' : 'insert' }, 
+          { 'group' : 'cards', 'access' : 'update' }, 
+          { 'group' : 'lists', 'access' : 'fetch' }, 
+          { 'group' : 'lists', 'access' : 'insert' }, 
+          { 'group' : 'lists', 'access' : 'update' }, 
+          { 'group' : 'boards', 'access' : 'fetch' }, 
+          { 'group' : 'boards', 'access' : 'insert' }, 
+          { 'group' : 'boards', 'access' : 'update' }, 
+          { 'group' : 'templates', 'access' : 'fetch' }, 
+          { 'group' : 'wiplimit', 'access' : 'fetch' }, 
+          { 'group' : 'wiplimit', 'access' : 'insert' }, 
+          { 'group' : 'wiplimit', 'access' : 'update' } 
+        ]
+      });
+      Roles.insert({
+        'name' : 'Coachee', 
+        'permissions' : [ 
+          { 'group' : 'cards', 'access' : 'fetch' }, 
+          { 'group' : 'cards', 'access' : 'insert' }, 
+          { 'group' : 'cards', 'access' : 'update' }, 
+          { 'group' : 'lists', 'access' : 'fetch' }, 
+          { 'group' : 'boards', 'access' : 'fetch' } 
+        ]
+      });
+    }
+  });
+}
+
