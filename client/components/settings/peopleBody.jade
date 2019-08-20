@@ -99,11 +99,12 @@ template(name="editUserPopup")
     label
       | {{_ 'role'}}
       select.select-role.js-profile-role
+        option(value='', selected='selected') Select One
         each role in roles
           if currentRole role._id
-            option(value="{{role._id}}" selected) {{role.name}}
+            option(value='{{role._id}}' selected) {{role.name}}
           else
-            option(value="{{role._id}}") {{role.name}}
+            option(value='{{role._id}}') {{role.name}}
     label
       | {{_ 'active'}}
       select.select-active.js-profile-isactive
