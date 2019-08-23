@@ -1,6 +1,6 @@
 Roles = new Mongo.Collection('roles');
 
-Roles.groups = ['cards', 'lists', 'customization', 'boards', 'templates', 'rules', 'wiplimit'];
+Roles.groups = ['cards', 'lists', 'customization', 'boards', 'templates', 'rules', 'wiplimit', 'users'];
 Roles.accessTypes = ['fetch', 'insert', 'update'];
 
 Roles.attachSchema(new SimpleSchema({
@@ -88,7 +88,8 @@ if (Meteor.isServer) {
           { 'group' : 'rules', 'access' : 'update' }, 
           { 'group' : 'wiplimit', 'access' : 'fetch' }, 
           { 'group' : 'wiplimit', 'access' : 'insert' }, 
-          { 'group' : 'wiplimit', 'access' : 'update' } 
+          { 'group' : 'wiplimit', 'access' : 'update' }, 
+          { 'group' : 'users', 'access' : 'fetch' } 
         ]
       });
     }
@@ -109,7 +110,8 @@ if (Meteor.isServer) {
           { 'group' : 'templates', 'access' : 'fetch' }, 
           { 'group' : 'wiplimit', 'access' : 'fetch' }, 
           { 'group' : 'wiplimit', 'access' : 'insert' }, 
-          { 'group' : 'wiplimit', 'access' : 'update' } 
+          { 'group' : 'wiplimit', 'access' : 'update' }, 
+          { 'group' : 'users', 'access' : 'fetch' } 
         ]
       });
     }
@@ -122,7 +124,8 @@ if (Meteor.isServer) {
           { 'group' : 'cards', 'access' : 'insert' }, 
           { 'group' : 'cards', 'access' : 'update' }, 
           { 'group' : 'lists', 'access' : 'fetch' }, 
-          { 'group' : 'boards', 'access' : 'fetch' } 
+          { 'group' : 'boards', 'access' : 'fetch' }, 
+          { 'group' : 'users', 'access' : 'fetch' } 
         ]
       });
     }

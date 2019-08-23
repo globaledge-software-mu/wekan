@@ -1,13 +1,10 @@
 template(name="people")
   .setting-content
-    unless currentUser.isAdmin
+    unless currentUser.isAuthorised
       | {{_ 'error-notAuthorized'}}
     else
       .content-title.ext-box
         .ext-box-left
-          span {{_ 'people'}}
-          input#searchInput(placeholder="{{_ 'search'}}")
-          button#searchButton {{_ 'search'}}
         .ext-box-right
           span {{_ 'people-number'}} #{peopleNumber}
       .content-body
@@ -39,8 +36,10 @@ template(name="peopleGeneral")
         th {{_ 'active'}}
         th {{_ 'authentication-method'}}
         th
-      each user in peopleList
-        +peopleRow(userId=user._id)
+      // if isAdmin, user gets to see all the users
+      if currentUser.isAdmin
+        each user in peopleList
+          +peopleRow(userId=user._id)
 
 template(name="peopleRow")
   tr
@@ -100,11 +99,26 @@ template(name="editUserPopup")
       | {{_ 'role'}}
       select.select-role.js-profile-role
         option(value='', selected='selected') Select One
-        each role in roles
-          if currentRole role._id
-            option(value='{{role._id}}' selected) {{role.name}}
+        // if isAdmin, user gets to choose from all the roles
+        if currentUser.isAdmin
+          each role in roles
+            if currentRole role._id
+              option(value='{{role._id}}' selected) {{role.name}}
+            else
+              option(value='{{role._id}}') {{role.name}}
+        // if isManagerAndNotAdmin, user gets to choose from 'coach' or 'coachee'
+        if currentUser.isManagerAndNotAdmin
+          each role in coachOrCoacheeRoles
+            if currentRole role._id
+              option(value='{{role._id}}' selected) {{role.name}}
+            else
+              option(value='{{role._id}}') {{role.name}}
+        // if isCoachAndNotAdmin, user gets to choose 'coachee'
+        if currentUser.isCoachAndNotAdmin
+          if currentRole coacheeRole._id
+            option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
           else
-            option(value='{{role._id}}') {{role.name}}
+            option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
     label
       | {{_ 'active'}}
       select.select-active.js-profile-isactive

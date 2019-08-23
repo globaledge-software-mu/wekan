@@ -1,5 +1,5 @@
 Meteor.subscribe('user-admin');
-Meteor.subscribe('role');
+Meteor.subscribe('roles');
 Meteor.subscribe('boards');
 Meteor.subscribe('setting');
 

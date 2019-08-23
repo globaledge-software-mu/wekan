@@ -297,6 +297,47 @@ if (Meteor.isClient) {
       return board && board.hasAdmin(this._id);
     },
 
+    // is Admin, Manager or Coach
+    isAuthorised() {
+      var isAllowed = false;
+      var roles = Roles.find({ 
+        $or: [
+          { name: 'Manager' }, 
+          { name: 'Coach' }
+        ] 
+      }).fetch();
+      const LoggedUserRoleId = Meteor.user().roleId;
+      if (roles && roles.length) {
+        for (var i = 0; i < roles.length; i++) {
+          if (LoggedUserRoleId === roles[i]._id) {
+            isAllowed = true;
+          }
+        }
+      }
+      if (Meteor.user().isAdmin || isAllowed) {
+        return true;
+      }
+      return false;
+    },
+
+    isManagerAndNotAdmin() {
+      const manager = Roles.findOne({ name: 'Manager' });
+      const managerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+      if (managerAndNotAdmin) {
+        return true;
+      }
+      return false;
+    },
+
+    isCoachAndNotAdmin() {
+      const coach = Roles.findOne({ name: 'Coach' });
+      const coachAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: coach._id, isAdmin: false });
+      if (coachAndNotAdmin) {
+        return true;
+      }
+      return false;
+    },
+
     hasPermission(group, access) {
       if (!this.roleId || this.isAdmin) {
         return true;
@@ -306,7 +347,7 @@ if (Meteor.isClient) {
         return false;
       }
       return role.hasPermission(group, access);
-    }
+    },
   });
 }
 

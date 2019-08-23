@@ -81,9 +81,7 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-    const users = Users.find(this.findUsersOptions.get(), {
-      fields: {_id: true},
-    });
+    const users = Users.find();
     this.number.set(users.count());
     return users;
   },
@@ -173,6 +171,14 @@ Template.editUserPopup.helpers({
     const userId = Template.instance().data.userId;
     const selected = Users.findOne(userId).roleId;
     return selected === match;
+  },
+  coachOrCoacheeRoles() {
+    return Roles.find({
+      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
+    });
+  },
+  coacheeRole() {
+    return Roles.findOne({ name: 'Coachee' });
   },
   isLdap() {
     const userId = Template.instance().data.userId;
