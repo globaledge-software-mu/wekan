@@ -40,6 +40,10 @@ template(name="peopleGeneral")
       if currentUser.isAdmin
         each user in peopleList
           +peopleRow(userId=user._id)
+      // if isManagerAndNotAdmin, user gets to see 'coaches', 'coachees' and other users that are neither admin nor manager
+      if currentUser.isManagerAndNotAdmin
+        each user in managerUsersList
+          +peopleRow(userId=user._id)
 
 template(name="peopleRow")
   tr

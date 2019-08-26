@@ -29,6 +29,7 @@ BlazeComponent.extendComponent({
         }
       });
       this.subscribe('roles');
+      Meteor.subscribe('users');
     });
   },
   events() {
@@ -82,6 +83,19 @@ BlazeComponent.extendComponent({
   },
   peopleList() {
     const users = Users.find();
+    this.number.set(users.count());
+    return users;
+  },
+  managerUsersList() {
+    const role = Roles.findOne({name: 'Manager'});
+
+    const users = Users.find({
+      $nor: [
+        { isAdmin: true },
+        { roleId: role._id }
+      ]
+    });
+
     this.number.set(users.count());
     return users;
   },
