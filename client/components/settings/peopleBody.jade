@@ -12,8 +12,9 @@ template(name="people")
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
-            li.active
-              a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+            if currentUser.isAdmin
+              li.active
+                a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
         .main-body
           if loading.get
             +spinner
