@@ -45,6 +45,12 @@ template(name="peopleGeneral")
         each user in managerUsersList
           +peopleRow(userId=user._id)
 
+      // if isCoachAndNotAdmin, user gets to see 'coachees' and other users that are neither admin nor manager and not even coach
+      if currentUser.isCoachAndNotAdmin
+        each user in coachUsersList
+          +peopleRow(userId=user._id)
+        
+
 template(name="peopleRow")
   tr
     td.username {{ userData.username }}

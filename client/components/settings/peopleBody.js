@@ -88,14 +88,25 @@ BlazeComponent.extendComponent({
   },
   managerUsersList() {
     const role = Roles.findOne({name: 'Manager'});
-
     const users = Users.find({
       $nor: [
         { isAdmin: true },
         { roleId: role._id }
       ]
     });
-
+    this.number.set(users.count());
+    return users;
+  },
+  coachUsersList() {
+    const managerRole = Roles.findOne({name: 'Manager'});
+    const coachRole = Roles.findOne({name: 'Coach'});
+    const users = Users.find({
+      $nor: [
+        { isAdmin: true },
+        { roleId: managerRole._id },
+        { roleId: coachRole._id }
+      ]
+    });
     this.number.set(users.count());
     return users;
   },
