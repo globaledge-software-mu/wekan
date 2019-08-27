@@ -34,7 +34,7 @@ template(name="header")
             li.current {{_ 'quick-access-description'}}
 
       if currentUser.hasPermission 'boards' 'insert'
-        a#header-new-board-icon.js-create-board
+        a#header-new-board-icon.js-create-board.js-add-board
           i.fa.fa-plus(title="Create a new board")
 
       +headerUserBar
