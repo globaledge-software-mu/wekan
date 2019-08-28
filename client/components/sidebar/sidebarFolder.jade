@@ -18,6 +18,12 @@ template(name='foldersWidget')
           input#title.form-control.input-md(type='text' name='name' required='required')
           button.btn.btn-submit-create-folder(type='submit') {{_ 'Submit'}}
     hr
+    if currentUser.hasPermission 'templates' 'fetch'
+      ul.nav.metismenu#templates-folder-ul-tag
+        li.nav.sub-root
+          a#templatesFolder.fa.fa-clone
+            | &nbsp;
+            span.nav-label.generalFont {{_ 'templates'}}
     ul.nav.metismenu#uncategorised-folder-ul-tag
       li.nav.sub-root
         a#uncategorisedBoardsFolder.fa.fa-folder.selected

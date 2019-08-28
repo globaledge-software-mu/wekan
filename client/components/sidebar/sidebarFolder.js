@@ -308,7 +308,7 @@ BlazeComponent.extendComponent({
       // selecting folder & displaying its boards
       'click a.folderOpener': function(e) {
         if (!$(e.target).closest('li.myFolder').children('a.folderOpener').hasClass('selected')) {
-          $('a#uncategorisedBoardsFolder').removeClass('selected');
+          $('a#uncategorisedBoardsFolder, a#templatesFolder').removeClass('selected');
           $('a.folderOpener').removeClass('selected');
           $(e.target).closest('li.myFolder').children('a.folderOpener').addClass('selected');
         }
@@ -352,8 +352,15 @@ BlazeComponent.extendComponent({
         }
       },
 
+      'click a#templatesFolder': function() {
+        $('a.folderOpener, a#uncategorisedBoardsFolder').removeClass('selected');
+        $('a#templatesFolder').addClass('selected');
+        $('.emptyFolderMessage').remove();
+        $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+      },
+
       'click a#uncategorisedBoardsFolder': function() {
-        $('a.folderOpener').removeClass('selected');
+        $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
         $('li.categorised_boards').hide();
