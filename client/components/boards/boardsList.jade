@@ -82,6 +82,36 @@ template(name="boardList")
                       class="fa-archive"
                       title="{{_ 'archive-board'}}")
 
+      each boardTemplates
+        li.board_templates(class=colorClass data-id="{{_id}}" id="{{_id}}")
+          if isInvited
+            .board-list-item
+              span.details
+                span.board-list-item-name= title
+                p.board-list-item-desc {{_ 'just-invited'}}
+                button.js-accept-invite.primary {{_ 'accept'}}
+                button.js-decline-invite {{_ 'decline'}}
+          else
+            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+              span.details
+                span.board-list-item-name
+                  +viewer
+                    = title
+                p.board-list-item-desc
+                  +viewer
+                    = description
+                if hasSpentTimeCards
+                  i.fa.js-has-spenttime-cards(
+                    class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
+                    title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
+                if currentUser.hasPermission 'boards' 'insert'
+                  i.fa.js-clone-board(
+                      class="fa-clone"
+                      title="{{_ 'duplicate-board'}}")
+                i.fa.js-archive-board(
+                    class="fa-archive"
+                    title="{{_ 'archive-board'}}")
+
 template(name="boardItem")
 
 template(name="boardListHeaderBar")

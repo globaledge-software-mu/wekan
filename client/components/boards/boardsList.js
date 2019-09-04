@@ -60,12 +60,21 @@ BlazeComponent.extendComponent({
       type: 'board',
     }, { sort: ['title'] });
   },
+
   folders() {
   	return Folders.find({
   	  userId: Meteor.userId()
 	  }, {
 	    sort: ['name']
 	  });
+  },
+
+  boardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      'members.userId': Meteor.userId(),
+      archived: false, 
+    });
   },
 
   folderBoards() {
@@ -113,8 +122,12 @@ BlazeComponent.extendComponent({
       }
     }
 
-    var uncategorisedBoardsDetails = Boards.find(
-      { _id: { $nin: categorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+    var uncategorisedBoardsDetails = Boards.find({ 
+        _id: { $nin: categorisedBoardIds }, 
+        archived: false, 
+        'members.userId': Meteor.userId(), 
+        type: {$ne: 'template-board'},
+      }, 
       {fields: {'_id': 1}}
     ).fetch();
     var uncategorisedBoardIds = new Array();

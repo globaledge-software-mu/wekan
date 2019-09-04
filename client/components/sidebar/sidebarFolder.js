@@ -357,13 +357,14 @@ BlazeComponent.extendComponent({
         $('a#templatesFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
         $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+        $('li.board_templates').show();
       },
 
       'click a#uncategorisedBoardsFolder': function() {
         $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
-        $('li.categorised_boards').hide();
+        $('li.categorised_boards, li.board_templates').hide();
         $('li.js-add-board, li.uncategorised_boards').show();
       },
 
