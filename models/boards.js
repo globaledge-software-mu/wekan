@@ -1057,6 +1057,18 @@ if (Meteor.isServer) {
       boardId: doc._id
     });
 
+    // If it is a template board, then we have to also remove the linked-card
+    // otherwise, if the upstream button 'Templates' on the header is clicked the templates
+    // page keeps on loading, never displaying the data
+    // For our Human Resources Application we have removed this button, since we won't be using it
+    // but still, I've added this fix to allow a smooth transition whenever in the future when
+    // we update to the latest updates of upstream
+    if (doc.type === 'template-board') {
+      Cards.remove({
+        linkedId: doc._id
+      });
+    }
+
     // If the board was a categorised one, we remove its trace from the folder to which it belonged
     var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
     for (var i = 0; i < userFolders.length; i++) {
