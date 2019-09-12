@@ -7,10 +7,13 @@ template(name="boardList")
       if currentUser.hasPermission 'boards' 'insert'
         li.js-add-board
           a.board-list-item.label {{_ 'add-board'}}
+      if currentUser.hasPermission 'templates' 'insert'
+        li.js-add-board-template
+          a.board-list-item.label {{_ 'add-board-template'}}
       each folders
         div.folderDetails(data-folder-id="{{_id}}")
           each folderBoards
-            li.categorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}")
+            li.categorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}")
               if isInvited
                 .board-list-item
                   span.details
@@ -47,7 +50,7 @@ template(name="boardList")
 
       each uncategorisedBoards
         unless isTemplatesBoard
-          li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-id="{{_id}}" id="{{_id}}")
+          li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}")
             if isInvited
               .board-list-item
                 span.details
@@ -83,7 +86,7 @@ template(name="boardList")
                       title="{{_ 'archive-board'}}")
 
       each boardTemplates
-        li.board_templates(class=colorClass data-id="{{_id}}" id="{{_id}}")
+        li.board_templates(class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}")
           if isInvited
             .board-list-item
               span.details

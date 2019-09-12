@@ -6,15 +6,17 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
+    // turning the Categorised Folder(s) into droppable(s)
   	$('ul.nav.metismenu#side-menu.folders').droppable({
-      accept: 'li.board-color-belize', // accepts both categorised and uncategorised boards
+  	  // accepts all three Template, Uncategorised and Categorised Folders Boards
+      accept: 'li.board-color-belize', 
       tolerance: 'pointer',
       drop: function( event, ui ) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
   
-        // update old folder's record
+        // Update old folder's contents
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
           var fromFolder = Folders.findOne(fromFolderId);
           var folderContents = fromFolder.contents;
@@ -40,6 +42,7 @@ BlazeComponent.extendComponent({
           }
         }
 
+        // Update new folder's contents (Boards could be from uncategorised or another categorised folder)
         var droppedInFolder = Folders.findOne({_id: droppedInFolderId});
         var key = 0;
         if(typeof(droppedInFolder) != 'undefined' && droppedInFolder !== null) {
@@ -53,44 +56,131 @@ BlazeComponent.extendComponent({
           { _id: droppedInFolderId },
           { $set: { [keyName] : boardIdentifier } }
         );
-  
-        $(ui.draggable).remove();
+
+        // If board is being dropped from template folder
+        if ($('li.board_templates').is(':visible')) {
+          // update board, changing the template board back to a regular one
+          Boards.update(
+            { _id: boardIdentifier },
+            { $set: { type : 'board' } }
+          );
+
+          // removing the board template linked card since the 
+          // board that it represented has been changed to a regular one
+          var linkedCard = Cards.findOne({linkedId: boardIdentifier});
+          if (linkedCard && linkedCard._id && linkedCard._id !== 'undefined' && linkedCard._id !== null) {
+            Cards.remove(linkedCard._id);
+          }
+        }
   	  }
   	});
-  
+
+    // turning the Uncategorised Folder into droppable
   	$('a#uncategorisedBoardsFolder').droppable({
-      accept: 'li.categorised_boards', // accepts only categorised boards
+      accept: 'li.categorised_boards, li.board_templates', // accepts only categorised and template boards
       tolerance: 'pointer',
   	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
 
+        // Update old folder's contents
         var fromFolder = Folders.findOne({ _id:fromFolderId });
-        var folderContents = fromFolder.contents;
-        var boardIds = new Array;
+        if (fromFolder && fromFolder.contents) {
+          var folderContents = fromFolder.contents;
+          var boardIds = new Array;
 
-        for (var v = 0; v < _.keys(folderContents).length; v++) {
-          if (folderContents[v].boardId !== boardIdentifier) {
-          	boardIds.push(folderContents[v].boardId);
+          for (var v = 0; v < _.keys(folderContents).length; v++) {
+            if (folderContents[v].boardId !== boardIdentifier) {
+              boardIds.push(folderContents[v].boardId);
+            }
+          }
+
+          Folders.update(
+            { _id : fromFolderId }, 
+            { $unset: { contents : '' } }
+          );
+
+          for (var z = 0; z < boardIds.length; z++) {
+            var keyName = 'contents.' + z + '.boardId';
+            Folders.update(
+              { _id: fromFolderId },
+              { $set: { [keyName] : boardIds[z] } }
+            );
           }
         }
 
-      	Folders.update(
-    		  { _id : fromFolderId }, 
-    		  { $unset: { contents : '' } }
-    		);
+        // update board, changing the template board back to a regular one
+        Boards.update(
+          { _id: boardIdentifier },
+          { $set: { type : 'board' } }
+        );
 
-      	for (var z = 0; z < boardIds.length; z++) {
-          var keyName = 'contents.' + z + '.boardId';
-      	  Folders.update(
-    	      { _id: fromFolderId },
-            { $set: { [keyName] : boardIds[z] } }
-      	  );
-      	}
-
-        $(ui.draggable).remove();
+        // removing the board template linked card since the 
+        // board that it represented has been changed to a regular one
+        var linkedCard = Cards.findOne({linkedId: boardIdentifier});
+        if (linkedCard && linkedCard._id && linkedCard._id !== 'undefined' && linkedCard._id !== null) {
+          Cards.remove(linkedCard._id);
+        }
   	  }
   	});
+
+    // turning the Template Folder into droppable
+    $('a#templatesFolder').droppable({
+      accept: 'li.board-color-belize', // accepts any board
+      tolerance: 'pointer',
+      drop: function( event, ui ) {
+        var boardIdentifier = $(ui.draggable).data('id').trim();
+        var boardTitle = $(ui.draggable).data('title').trim();
+        var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+
+        var fromFolder = Folders.findOne({ _id:fromFolderId });
+        if (fromFolder && fromFolder.contents) {
+          var folderContents = fromFolder.contents;
+          var boardIds = new Array;
+
+          for (var v = 0; v < _.keys(folderContents).length; v++) {
+            if (folderContents[v].boardId !== boardIdentifier) {
+              boardIds.push(folderContents[v].boardId);
+            }
+          }
+
+          Folders.update(
+            { _id : fromFolderId }, 
+            { $unset: { contents : '' } }
+          );
+
+          for (var z = 0; z < boardIds.length; z++) {
+            var keyName = 'contents.' + z + '.boardId';
+            Folders.update(
+              { _id: fromFolderId },
+              { $set: { [keyName] : boardIds[z] } }
+            );
+          }
+        }
+
+        // update board
+        Boards.update(
+          { _id: boardIdentifier },
+          { $set: { type : 'template-board' } }
+        );
+
+        // create card
+        // We need this, because as per upstream logic they'll query for the card that gets created by default 
+        // whenever the user creates a templates for when the system tries to list all the templates in 
+        // feature to create boards with template
+        var linkedCard = Cards.findOne({linkedId: boardIdentifier});
+        if (!linkedCard) {
+          const sortIndex = -1;
+          Cards.insert({
+            title: boardTitle,
+            boardId: boardIdentifier,
+            type: 'cardType-linkedBoard',
+            linkedId: boardIdentifier,
+            sort: sortIndex,
+          });
+        }
+      }
+    });
 
     if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
       $('a#uncategorisedBoardsFolder').trigger('click');
@@ -319,7 +409,7 @@ BlazeComponent.extendComponent({
           var selectedFolder = Folders.findOne({ _id:folderId }); 
           var folderContents = selectedFolder.contents;
 
-          $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+          $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
           $('.emptyFolderMessage').remove();
 
           if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
@@ -357,29 +447,57 @@ BlazeComponent.extendComponent({
         $('a#templatesFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
         $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
-        $('li.board_templates').show();
+        $('li.js-add-board-template, li.board_templates').show();
+        var boardTemplates = Boards.find({
+          type: 'template-board',
+          'members.userId': Meteor.userId(),
+          archived: false, 
+        });
+        if(typeof(boardTemplates) != 'undefined' && boardTemplates !== null && _.keys(boardTemplates).length > 0) {
+          // making the board templates draggable
+          $('li.board_templates').draggable({
+            revert: 'invalid',
+            start: function(event) {
+              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+            },
+            drag: function() {},
+            stop: function() {
+              $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+              $('p#actionTitle').remove();
+            }
+          });
+        } else {
+          $('.board-list.clearfix.ui-sortable').append(
+            '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+          );
+        }
       },
 
       'click a#uncategorisedBoardsFolder': function() {
         $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
-        $('li.categorised_boards, li.board_templates').hide();
+        $('li.js-add-board-template, li.categorised_boards, li.board_templates').hide();
         $('li.js-add-board, li.uncategorised_boards').show();
       },
 
-      'mouseover a#uncategorisedBoardsFolder': function(e) {
-        if ($('li.categorised_boards').is(':visible')) {
+      'mouseover a#templatesFolder': function(e) {
+        if ($('li.board_templates').not(':visible')) {
           $('p#actionTitle').addClass('pull-right');
-          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Remove from folder</b>');
+          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Drop in Templates folder</b>');
         } else {
           return false;
         }
       },
 
-      'mouseout a#uncategorisedBoardsFolder': function(e) {
-        $('p#actionTitle').removeClass('pull-right');
-        $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
+      'mouseover a#uncategorisedBoardsFolder': function(e) {
+        if ($('li.uncategorised_boards').not(':visible')) {
+          $('p#actionTitle').addClass('pull-right');
+          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Drop in Uncategorised folder</b>');
+        } else {
+          return false;
+        }
       },
 
       'mouseover .myFolder': function(e) {
@@ -397,7 +515,8 @@ BlazeComponent.extendComponent({
         $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + folderId + '"> </span><b> Drop in ' + folderName + '</b>');
       },
 
-      'mouseout .myFolder': function(e) {
+      'mouseout .myFolder, mouseout #uncategorisedBoardsFolder, mouseout #templatesFolder': function(e) {
+        $('p#actionTitle').removeClass('pull-right');
         $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
       },
     }];

@@ -44,6 +44,8 @@ Cards.attachSchema(new SimpleSchema({
      * Swimlane ID where the card is
      */
     type: String,
+    optional: true,
+    defaultValue: '',
   },
   // The system could work without this `boardId` information (we could deduce
   // the board identifier from the card), but it would make the system more
@@ -1776,17 +1778,31 @@ function cardCustomFields(userId, doc, fieldNames, modifier) {
 }
 
 function cardCreation(userId, doc) {
-  Activities.insert({
-    userId,
-    activityType: 'createCard',
-    boardId: doc.boardId,
-    listName: Lists.findOne(doc.listId).title,
-    listId: doc.listId,
-    cardId: doc._id,
-    cardTitle:doc.title,
-    swimlaneName: Swimlanes.findOne(doc.swimlaneId).title,
-    swimlaneId: doc.swimlaneId,
-  });
+  var list = Lists.findOne(doc.listId);
+  var swimlane = Swimlanes.findOne(doc.swimlaneId);
+  if (list && list.title) {
+    Activities.insert({
+      userId,
+      activityType: 'createCard',
+      boardId: doc.boardId,
+      listName: list.title,
+      listId: doc.listId,
+      cardId: doc._id,
+      cardTitle:doc.title,
+      swimlaneName: swimlane.title,
+      swimlaneId: doc.swimlaneId,
+    });
+  } else {
+    Activities.insert({
+      userId,
+      activityType: 'createCard',
+      boardId: doc.boardId,
+      listId: doc.listId,
+      cardId: doc._id,
+      cardTitle:doc.title,
+      swimlaneId: doc.swimlaneId,
+    });
+  }
 }
 
 function cardRemover(userId, doc) {
