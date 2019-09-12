@@ -72,6 +72,11 @@ BlazeComponent.extendComponent({
             Cards.remove(linkedCard._id);
           }
         }
+
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
+        }
   	  }
   	});
 
@@ -120,6 +125,11 @@ BlazeComponent.extendComponent({
         var linkedCard = Cards.findOne({linkedId: boardIdentifier});
         if (linkedCard && linkedCard._id && linkedCard._id !== 'undefined' && linkedCard._id !== null) {
           Cards.remove(linkedCard._id);
+        }
+
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
         }
   	  }
   	});
@@ -179,10 +189,15 @@ BlazeComponent.extendComponent({
             sort: sortIndex,
           });
         }
+
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
+        }
       }
     });
 
-    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
       $('a#uncategorisedBoardsFolder').trigger('click');
     }
   },
@@ -377,7 +392,7 @@ BlazeComponent.extendComponent({
           }
         }
 
-        if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+        if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
           $('a#uncategorisedBoardsFolder').trigger('click');
         }
       },
@@ -470,9 +485,7 @@ BlazeComponent.extendComponent({
             }
           });
         } else {
-          $('.board-list.clearfix.ui-sortable').append(
-            '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
-          );
+          return false;
         }
       },
 

@@ -107,7 +107,9 @@ BlazeComponent.extendComponent({
   },
 
   uncategorisedBoards() {
-    $('a#uncategorisedBoardsFolder').trigger('click');
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+    }
     var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
     var categorisedBoardIds = new Array;
 
