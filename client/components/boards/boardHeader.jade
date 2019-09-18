@@ -168,26 +168,28 @@ template(name="createBoard")
     label
       | {{_ 'title'}}
       input.js-new-board-title(type="text" placeholder="{{_ 'bucket-example'}}" autofocus required)
-    if visibilityMenuIsOpen.get
-      +boardVisibilityList
-    else
-      p.quiet
-        if $eq visibility.get 'public'
-          span.fa.fa-globe.colorful
-          = " "
-          | {{{_ 'board-public-info'}}}
-        else
-          span.fa.fa-lock.colorful
-          = " "
-          | {{{_ 'board-private-info'}}}
-        a.js-change-visibility {{_ 'change'}}.
+    unless createTemplateBtn
+      if visibilityMenuIsOpen.get
+        +boardVisibilityList
+      else
+        p.quiet
+          if $eq visibility.get 'public'
+            span.fa.fa-globe.colorful
+            = " "
+            | {{{_ 'board-public-info'}}}
+          else
+            span.fa.fa-lock.colorful
+            = " "
+            | {{{_ 'board-private-info'}}}
+          a.js-change-visibility {{_ 'change'}}.
     input.primary.wide(type="submit" value="{{_ 'create'}}")
-    span.quiet
-      | {{_ 'or'}}
-      a.js-import-board {{_ 'import'}}
-    span.quiet
-      | /
-      a.js-board-template {{_ 'template'}}
+    unless createTemplateBtn
+      span.quiet
+        | {{_ 'or'}}
+        a.js-import-board {{_ 'import'}}
+      span.quiet
+        | /
+        a.js-board-template {{_ 'template'}}
 
 template(name="cloneBoardPopup")
   form

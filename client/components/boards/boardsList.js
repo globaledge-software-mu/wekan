@@ -166,7 +166,7 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-      'click .js-add-board': Popup.open('createBoard'),
+      'click .js-add-board, click .js-add-board-template': Popup.open('createBoard'),
       'click .js-star-board'(evt) {
         const boardId = this.currentData()._id;
         Meteor.user().toggleBoardStar(boardId);

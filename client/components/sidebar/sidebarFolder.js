@@ -65,11 +65,15 @@ BlazeComponent.extendComponent({
             { $set: { type : 'board' } }
           );
 
-          // removing the board template linked card since the 
+          // removing the board template linked card and swimlane docs, since the 
           // board that it represented has been changed to a regular one
           var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-          if (linkedCard && linkedCard._id && linkedCard._id !== 'undefined' && linkedCard._id !== null) {
+          if (linkedCard && linkedCard._id) {
             Cards.remove(linkedCard._id);
+          }
+          var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
+          if (linkedSwimlane && linkedSwimlane._id) {
+            Swimlanes.remove(linkedSwimlane._id);
           }
         }
 
@@ -120,11 +124,15 @@ BlazeComponent.extendComponent({
           { $set: { type : 'board' } }
         );
 
-        // removing the board template linked card since the 
+        // removing the board template linked card and swimlane docs, since the 
         // board that it represented has been changed to a regular one
         var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-        if (linkedCard && linkedCard._id && linkedCard._id !== 'undefined' && linkedCard._id !== null) {
+        if (linkedCard && linkedCard._id) {
           Cards.remove(linkedCard._id);
+        }
+        var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
+        if (linkedSwimlane && linkedSwimlane._id) {
+          Swimlanes.remove(linkedSwimlane._id);
         }
 
         // if categorised boards is being displayed, have the selected folder be clicked again
@@ -174,21 +182,28 @@ BlazeComponent.extendComponent({
           { $set: { type : 'template-board' } }
         );
 
-        // create card
-        // We need this, because as per upstream logic they'll query for the card that gets created by default 
-        // whenever the user creates a templates for when the system tries to list all the templates in 
-        // feature to create boards with template
-        var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-        if (!linkedCard) {
-          const sortIndex = -1;
-          Cards.insert({
-            title: boardTitle,
-            boardId: boardIdentifier,
-            type: 'cardType-linkedBoard',
-            linkedId: boardIdentifier,
-            sort: sortIndex,
-          });
-        }
+        // Create card and swimlane docs
+        // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default 
+        // whenever the user creates a templates for when the system tries to list all the templates in feature to create boards with template
+        Swimlanes.insert({
+          title: TAPi18n.__('default'),
+          boardId: boardIdentifier,
+        });
+        const userProfile = Meteor.user().profile;
+        const defaultBoardTemplatesList = Lists.findOne({
+          swimlaneId: userProfile.boardTemplatesSwimlaneId,
+          archived : false,
+        });
+        
+        Cards.insert({
+          title: boardTitle,
+          listId: defaultBoardTemplatesList._id, 
+          boardId: userProfile.templatesBoardId,
+          swimlaneId: userProfile.boardTemplatesSwimlaneId,
+          type: 'cardType-linkedBoard',
+          linkedId: boardIdentifier,
+          sort: -1,
+        });
 
         // if categorised boards is being displayed, have the selected folder be clicked again
         if ($('li.categorised_boards').is(':visible')) {
@@ -210,6 +225,8 @@ BlazeComponent.extendComponent({
     this.autorun(() => {
     	this.subscribe('folders');
     	this.subscribe('boards');
+      this.subscribe('lists');
+      this.subscribe('cards');
     });
   },
 

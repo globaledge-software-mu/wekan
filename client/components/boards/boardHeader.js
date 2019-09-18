@@ -165,22 +165,68 @@ const CreateBoard = BlazeComponent.extendComponent({
     this.visibilityMenuIsOpen.set(!this.visibilityMenuIsOpen.get());
   },
 
+  createTemplateBtn() {
+    var status = $('.board-list').children('.js-add-board-template:visible').length;
+    if (status < 1) {
+      return false;
+    }
+    return true;
+  },
+
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
-    const visibility = this.visibility.get();
 
-    this.boardId.set(Boards.insert({
-      title,
-      permission: visibility,
-    }));
+    // If creating regular board
+    if ($('.board-list').children('.js-add-board-template:visible').length === 0) {
+      const visibility = this.visibility.get();
+      this.boardId.set(Boards.insert({
+        title,
+        permission: visibility,
+      }));
 
-    Swimlanes.insert({
-      title: 'Default',
-      boardId: this.boardId.get(),
-    });
+      Swimlanes.insert({
+        title: 'Default',
+        boardId: this.boardId.get(),
+      });
 
-    Utils.goBoardId(this.boardId.get());
+      Utils.goBoardId(this.boardId.get());
+    } 
+    // else creating board template
+    else {
+      let linkedId = '';
+      linkedId = Boards.insert({
+        title,
+        permission: 'private',
+        type: 'template-board',
+      });
+
+      Swimlanes.insert({
+        title: TAPi18n.__('default'),
+        boardId: linkedId,
+      });
+
+      const userProfile = Meteor.user().profile;
+      const defaultBoardTemplatesList = Lists.findOne({
+        swimlaneId: userProfile.boardTemplatesSwimlaneId,
+        archived : false,
+      });
+      const _id = Cards.insert({
+        title,
+        listId: defaultBoardTemplatesList._id,   
+        boardId: userProfile.templatesBoardId,
+        sort: -1,
+        swimlaneId: userProfile.boardTemplatesSwimlaneId,
+        type: 'cardType-linkedBoard',
+        linkedId,
+      });
+
+      Utils.goBoardId(linkedId);
+
+        // In case the filter is active we need to add the newly inserted card in
+        // the list of exceptions. Otherwise the card will disappear instantly.
+//        Filter.addException(_id);
+    }
   },
 
   events() {
@@ -201,7 +247,9 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(evt) {
     super.onSubmit(evt);
     // Immediately star boards crated with the headerbar popup.
-    Meteor.user().toggleBoardStar(this.boardId.get());
+    if ($('.board-list').children('.js-add-board-template:visible').length < 1) {
+      Meteor.user().toggleBoardStar(this.boardId.get());
+    }
   }
 }).register('headerBarCreateBoardPopup');
 
