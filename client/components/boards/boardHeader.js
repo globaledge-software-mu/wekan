@@ -222,10 +222,6 @@ const CreateBoard = BlazeComponent.extendComponent({
       });
 
       Utils.goBoardId(linkedId);
-
-        // In case the filter is active we need to add the newly inserted card in
-        // the list of exceptions. Otherwise the card will disappear instantly.
-//        Filter.addException(_id);
     }
   },
 
