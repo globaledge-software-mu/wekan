@@ -144,7 +144,14 @@ BlazeComponent.extendComponent({
 
     // turning the Template Folder into droppable
     $('a#templatesFolder').droppable({
-      accept: 'li.board-color-belize', // accepts any board
+    	// accepts any board from admin or manager
+      accept: function(dropElem) {
+        if (Meteor.user().isAdminOrManager() && dropElem.hasClass('board-color-belize')) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
       tolerance: 'pointer',
       drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();

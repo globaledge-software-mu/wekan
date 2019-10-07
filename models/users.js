@@ -317,7 +317,16 @@ if (Meteor.isClient) {
       if (Meteor.user().isAdmin || isAllowed) {
         return true;
       }
-      return false;
+      return false;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+    },
+
+    isAdminOrManager() {
+      var manager = Roles.findOne({name: 'Manager'});
+      if (Meteor.user().isAdmin || Meteor.user().roleId == manager._id) {
+		    return true;
+		  } else {
+	      return false;
+		  }
     },
 
     isManagerAndNotAdmin() {
