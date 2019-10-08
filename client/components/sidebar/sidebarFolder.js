@@ -13,7 +13,12 @@ BlazeComponent.extendComponent({
       accept: function(dropElem) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var fromFolderId = dropElem.closest('div.folderDetails').data('folder-id');
-        if (dropElem.hasClass('board-color-belize') && droppedInFolderId !== fromFolderId) {
+        if (droppedInFolderId !== fromFolderId && 
+        		( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() ||
+      				dropElem.hasClass('uncategorised_boards') ||
+      				dropElem.hasClass('categorised_boards')
+    				)
+    		) {
             return true;
         } else {
           return false;
@@ -97,7 +102,7 @@ BlazeComponent.extendComponent({
   	$('a#uncategorisedBoardsFolder').droppable({
       // accepts only categorised and template boards
       accept: function(dropElem) {
-        if (dropElem.hasClass('categorised_boards') || dropElem.hasClass('board_templates')) {
+        if (dropElem.hasClass('categorised_boards') || ( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() )) {
             return true;
         } else {
           return false;
