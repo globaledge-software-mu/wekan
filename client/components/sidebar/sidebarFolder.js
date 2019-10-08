@@ -9,7 +9,16 @@ BlazeComponent.extendComponent({
     // turning the Categorised Folder(s) into droppable(s)
   	$('ul.nav.metismenu#side-menu.folders').droppable({
   	  // accepts all three Template, Uncategorised and Categorised Folders Boards
-      accept: 'li.board-color-belize', 
+  		// except its own folder's boards
+      accept: function(dropElem) {
+        var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
+        var fromFolderId = dropElem.closest('div.folderDetails').data('folder-id');
+        if (dropElem.hasClass('board-color-belize') && droppedInFolderId !== fromFolderId) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
       tolerance: 'pointer',
       drop: function( event, ui ) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
@@ -86,7 +95,14 @@ BlazeComponent.extendComponent({
 
     // turning the Uncategorised Folder into droppable
   	$('a#uncategorisedBoardsFolder').droppable({
-      accept: 'li.categorised_boards, li.board_templates', // accepts only categorised and template boards
+      // accepts only categorised and template boards
+      accept: function(dropElem) {
+        if (dropElem.hasClass('categorised_boards') || dropElem.hasClass('board_templates')) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
       tolerance: 'pointer',
   	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
@@ -144,9 +160,9 @@ BlazeComponent.extendComponent({
 
     // turning the Template Folder into droppable
     $('a#templatesFolder').droppable({
-    	// accepts any board from admin or manager
+    	// accepts any board from admin or manager except the boards that are already in the templates folder
       accept: function(dropElem) {
-        if (Meteor.user().isAdminOrManager() && dropElem.hasClass('board-color-belize')) {
+        if (Meteor.user().isAdminOrManager() && dropElem.hasClass('board-color-belize') && !dropElem.hasClass('board_templates')) {
             return true;
         } else {
           return false;
