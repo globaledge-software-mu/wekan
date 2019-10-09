@@ -108,11 +108,8 @@ template(name="boardList")
                     i.fa.js-has-spenttime-cards(
                       class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
                       title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
-                  if currentUser.hasPermission 'boards' 'insert'
-                    i.fa.js-clone-board(
-                        class="fa-clone"
-                        title="{{_ 'duplicate-board'}}")
-                  i.fa.js-archive-board(
+                  if isBoardTemplateAdmin
+                    i.fa.js-archive-board(
                       class="fa-archive"
                       title="{{_ 'archive-board'}}")
       else
@@ -138,11 +135,8 @@ template(name="boardList")
                     i.fa.js-has-spenttime-cards(
                       class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
                       title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
-                  if currentUser.hasPermission 'boards' 'insert'
-                    i.fa.js-clone-board(
-                        class="fa-clone"
-                        title="{{_ 'duplicate-board'}}")
-                  i.fa.js-archive-board(
+                  if isBoardTemplateAdmin
+                    i.fa.js-archive-board(
                       class="fa-archive"
                       title="{{_ 'archive-board'}}")
 
