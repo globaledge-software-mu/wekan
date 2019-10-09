@@ -13,7 +13,7 @@ template(name="boardList")
       each folders
         div.folderDetails(data-folder-id="{{_id}}")
           each folderBoards
-            li.categorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
+            li.categorised_boards.hide(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
               if isInvited
                 .board-list-item
                   span.details
@@ -87,7 +87,7 @@ template(name="boardList")
 
       if currentUser.isAdminOrManager
         each everyBoardTemplates
-          li.board_templates.everyBoard(class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
+          li.board_templates.everyBoard.hide(class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
             if isInvited
               .board-list-item
                 span.details
@@ -114,7 +114,7 @@ template(name="boardList")
                       title="{{_ 'archive-board'}}")
       else
         each assignedBoardTemplates
-          li.board_templates.assigned(class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
+          li.board_templates.assigned.hide(class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
             if isInvited
               .board-list-item
                 span.details
