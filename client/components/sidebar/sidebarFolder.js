@@ -10,13 +10,17 @@ BlazeComponent.extendComponent({
   	$('ul.nav.metismenu#side-menu.folders').droppable({
   	  // accepts all three Template, Uncategorised and Categorised Folders Boards
   		// except its own folder's boards
+  		// it accepts board templates of which the user is the admin only not of which any other user is an admin
       accept: function(dropElem) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var fromFolderId = dropElem.closest('div.folderDetails').data('folder-id');
         if (droppedInFolderId !== fromFolderId && 
-        		( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() ||
-      				dropElem.hasClass('uncategorised_boards') ||
-      				dropElem.hasClass('categorised_boards')
+        		( dropElem.hasClass('uncategorised_boards') ||
+      				dropElem.hasClass('categorised_boards') || 
+      				( dropElem.hasClass('board_templates') && 
+    						Meteor.user().isAdminOrManager() && 
+    						dropElem.data('is-template-admin') 
+  						)
     				)
     		) {
             return true;
@@ -101,8 +105,12 @@ BlazeComponent.extendComponent({
     // turning the Uncategorised Folder into droppable
   	$('a#uncategorisedBoardsFolder').droppable({
       // accepts only categorised and template boards
+  		// for it to accept a template board, the user needs to be the template board's admin, have the class 'board_templates'
+  		// and the user has to be of the user role admin or manager of the system
       accept: function(dropElem) {
-        if (dropElem.hasClass('categorised_boards') || ( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() )) {
+        if (dropElem.hasClass('categorised_boards') || 
+        		( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() && dropElem.data('is-template-admin') )
+    		) {
             return true;
         } else {
           return false;
@@ -510,11 +518,18 @@ BlazeComponent.extendComponent({
         $('.emptyFolderMessage').remove();
         $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
         $('li.js-add-board-template, li.board_templates').show();
-        var boardTemplates = Boards.find({
-          type: 'template-board',
-          'members.userId': Meteor.userId(),
-          archived: false, 
-        });
+        if (Meteor.user().isAdminOrManager()) {
+          var boardTemplates = Boards.find({
+            type: 'template-board',
+            archived: false, 
+          });
+        } else {
+          var boardTemplates = Boards.find({
+            type: 'template-board',
+            'members.userId': Meteor.userId(),
+            archived: false, 
+          });
+        }
         if(typeof(boardTemplates) != 'undefined' && boardTemplates !== null && _.keys(boardTemplates).length > 0) {
           // making the board templates draggable
           $('li.board_templates').draggable({

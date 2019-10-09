@@ -322,7 +322,7 @@ if (Meteor.isClient) {
 
     isAdminOrManager() {
       var manager = Roles.findOne({name: 'Manager'});
-      if (Meteor.user().isAdmin || Meteor.user().roleId == manager._id) {
+      if ( Meteor.user().isAdmin || (manager && Meteor.user().roleId == manager._id) ) {
 		    return true;
 		  } else {
 	      return false;

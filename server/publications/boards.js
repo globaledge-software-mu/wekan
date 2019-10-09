@@ -1,3 +1,11 @@
+// Publishing all the template boards to be displayed to the admin or the manager
+Meteor.publish('templateBoards', function() {
+  return Boards.find({
+    type: 'template-board',
+    archived: false, 
+  });
+});
+
 // This is the publication used to display the board list. We publish all the
 // non-archived boards:
 // 1. that the user is a member of

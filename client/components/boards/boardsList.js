@@ -19,6 +19,7 @@ BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
     Meteor.subscribe('folders');
+    Meteor.subscribe('templateBoards');
   },
 
   onRendered() {
@@ -69,12 +70,25 @@ BlazeComponent.extendComponent({
 	  });
   },
 
-  boardTemplates() {
+  everyBoardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      archived: false, 
+    });
+  },
+
+  assignedBoardTemplates() {
     return Boards.find({
       type: 'template-board',
       'members.userId': Meteor.userId(),
       archived: false, 
     });
+  },
+
+  isBoardTemplateAdmin() {
+  	var currentBoard = Boards.findOne({_id: this.currentData()._id});
+  	// returns true or false
+  	return currentBoard && currentBoard.members[0].isAdmin == true && currentBoard.members[0].userId == Meteor.userId();
   },
 
   folderBoards() {
