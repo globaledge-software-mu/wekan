@@ -887,8 +887,51 @@ if (Meteor.isServer) {
 }
 
 if (Meteor.isServer) {
-  // Let MongoDB ensure that a member is not included twice in the same board
   Meteor.startup(() => {
+    var boardTemplates = Boards.find({
+      type: 'template-board',
+      archived: false, 
+    });
+    var managerRole = Roles.findOne({name: 'Manager'});
+    var managerRoleId = null;
+    if (managerRole && managerRole._id) {
+    	managerRoleId = managerRole._id;
+    }
+    var adminsOrManagers = Users.find({
+    	$or: [ 
+    		{ isAdmin: true }, 
+    		{ roleId: managerRoleId } 
+  		]
+    });
+    boardTemplates.forEach((boardTemplate) => {
+    	adminsOrManagers.forEach((adminOrManager) => {
+    		var boardTemplateId = boardTemplate._id;
+    		var boardTemplateMembers = boardTemplate.members;
+    		var adminOrManagerId = adminOrManager._id; 
+  			isMember = false;
+    		boardTemplateMembers.forEach((boardTemplateMember) => {
+      		if (boardTemplateMember.userId == adminOrManagerId) {
+      			isMember = true;
+      		}
+        });
+    		if (isMember === false) {
+          Boards.update(
+            { _id: boardTemplateId },
+            { $push: {
+	              members: {
+	                isAdmin: false,
+	                isActive: true,
+	                isCommentOnly: false,
+	                userId: adminOrManagerId,
+	              },
+	            },
+            }
+          );
+    		}
+      });
+    });
+
+    // Let MongoDB ensure that a member is not included twice in the same board
     Boards._collection._ensureIndex({
       _id: 1,
       'members.userId': 1,
