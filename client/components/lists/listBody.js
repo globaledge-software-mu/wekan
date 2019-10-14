@@ -545,10 +545,23 @@ BlazeComponent.extendComponent({
     } else if (this.isSwimlaneTemplateSearch) {
       return board.searchSwimlanes(this.term.get());
     } else if (this.isBoardTemplateSearch) {
-      const boards = board.searchBoards(this.term.get());
-      boards.forEach((board) => {
-        subManager.subscribe('board', board.linkedId, false);
+    	//Original upstream logic
+//      const boards = board.searchBoards(this.term.get());
+//      boards.forEach((board) => {
+//        subManager.subscribe('board', board.linkedId, false);
+//      });
+//      return boards;
+    	
+    	//Added logic
+    	const boards = Cards.find({
+        type: 'cardType-linkedBoard',
+        archived: false, 
       });
+	    
+	    boards.forEach((board) => {
+	      subManager.subscribe('board', board.linkedId, false);
+	    });
+      
       return boards;
     } else {
       return [];
@@ -604,6 +617,12 @@ BlazeComponent.extendComponent({
           board.sort = Boards.find({archived: false}).count();
           board.type = 'board';
           board.title = element.title;
+          board.members = [{
+            isAdmin: true,
+            isActive: true,
+            isCommentOnly: false,
+            userId: Meteor.userId(),
+          }]
           delete board.slug;
           _id = board.copy();
         }
