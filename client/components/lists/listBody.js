@@ -545,23 +545,38 @@ BlazeComponent.extendComponent({
     } else if (this.isSwimlaneTemplateSearch) {
       return board.searchSwimlanes(this.term.get());
     } else if (this.isBoardTemplateSearch) {
-    	//Original upstream logic
-//      const boards = board.searchBoards(this.term.get());
-//      boards.forEach((board) => {
-//        subManager.subscribe('board', board.linkedId, false);
-//      });
-//      return boards;
-    	
-    	//Added logic
-    	const boards = Cards.find({
-        type: 'cardType-linkedBoard',
-        archived: false, 
+    	var boards;
+    	// if Admin or Manager
+    	if (Meteor.user().isAdminOrManager()) {
+      	boards = Cards.find({
+          type: 'cardType-linkedBoard',
+          archived: false, 
+        });
+    	} 
+    	// else if Coach or Coachee
+    	else if (Meteor.user().isCoachOrCoachee()) {
+      	const linkedBoardCards = Cards.find({
+          type: 'cardType-linkedBoard',
+          archived: false, 
+        });
+      	var boardIds = [];
+      	linkedBoardCards.foreach((linkedBoardCard) => {
+      		boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
+      		(boardTemplate.members).foreach((member) => {
+      			if (member.userId == Meteor.userId()) {
+      				boardIds.push(linkedBoardCard.linkedId);
+      			}
+      		});
+      	});
+  			boards = Cards.find({ linkedId: {$in: boardIds} });
+    	} 
+    	// else regular users (they get the original upstream logic)
+    	else {
+	      boards = board.searchBoards(this.term.get());
+    	}
+      boards.forEach((board) => {
+        subManager.subscribe('board', board.linkedId, false);
       });
-	    
-	    boards.forEach((board) => {
-	      subManager.subscribe('board', board.linkedId, false);
-	    });
-      
       return boards;
     } else {
       return [];

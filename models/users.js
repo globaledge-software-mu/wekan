@@ -329,6 +329,15 @@ if (Meteor.isClient) {
 		  }
     },
 
+    isCoachOrCoachee() {
+      var coachOrCoachee = Roles.find( { name: { $in: [ 'Coach', 'Coachee' ] } } ).fetch();
+      if (coachOrCoachee && coachOrCoachee[0] && coachOrCoachee[0].name) {
+		    return true;
+		  } else {
+	      return false;
+		  }
+    },
+
     isManagerAndNotAdmin() {
       const manager = Roles.findOne({ name: 'Manager' });
       const managerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
