@@ -560,9 +560,9 @@ BlazeComponent.extendComponent({
           archived: false, 
         });
       	var boardIds = [];
-      	linkedBoardCards.foreach((linkedBoardCard) => {
+      	linkedBoardCards.forEach((linkedBoardCard) => {
       		boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
-      		(boardTemplate.members).foreach((member) => {
+      		(boardTemplate.members).forEach((member) => {
       			if (member.userId == Meteor.userId()) {
       				boardIds.push(linkedBoardCard.linkedId);
       			}

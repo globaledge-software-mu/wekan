@@ -21,10 +21,6 @@ template(name="memberMenuPopup")
         li: a.js-change-language {{_ 'changeLanguagePopup-title'}}
     if currentUser.isAuthorised
       li: a.js-go-setting(href="{{pathFor 'setting'}}") {{_ 'admin-panel'}}
-  if currentUser.hasPermission 'templates' 'fetch'
-    hr
-    ul.pop-over-list
-      li: a(href="{{pathFor 'board' id=templatesBoardId slug=templatesBoardSlug}}") {{_ 'templates'}}
   unless isSandstorm
     hr
     ul.pop-over-list
