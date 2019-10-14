@@ -170,6 +170,9 @@ const CreateBoard = BlazeComponent.extendComponent({
     if (status < 1) {
       return false;
     }
+    if ($('.js-create-board.js-add-board').hasClass('is-active')) {
+      return false;
+    }
     return true;
   },
 
