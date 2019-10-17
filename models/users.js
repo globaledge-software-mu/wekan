@@ -272,6 +272,18 @@ if (Meteor.isClient) {
       return board && board.hasMember(this._id);
     },
 
+    isBoardTemplate() {
+      const board = Boards.findOne({
+      	_id: Session.get('currentBoard'),
+      	type: 'template-board'
+      });
+      if (board) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
     isNotNoComments() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasMember(this._id) && !board.hasNoComments(this._id);
@@ -354,6 +366,46 @@ if (Meteor.isClient) {
         return true;
       }
       return false;
+    },
+
+    regularBoard() {
+    	return this.isBoardMember() && !this.isCommentOnly() && !this.isBoardTemplate();
+    },
+
+    isBoardTemplateAdmin() {
+    	return this.isBoardTemplate() && this.isBoardAdmin();
+    },
+
+    canAlterCard() {
+      if ( this.regularBoard() || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canAddList() {
+    	if ( ( this.hasPermission('lists', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
+    },
+
+    canSeeAddCard() {
+      if ( ( this.hasPermission('cards', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canCustomiseFields() {
+    	if ( ( this.hasPermission('customization', 'update') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
     },
 
     hasPermission(group, access) {

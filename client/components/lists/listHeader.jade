@@ -36,11 +36,12 @@ template(name="listHeader")
       else if currentUser.isBoardMember
         if isWatching
           i.list-header-watch-icon.fa.fa-eye
-        div.list-header-menu
-          unless currentUser.isCommentOnly
-            if canSeeAddCard
-              a.js-add-card.fa.fa-plus.list-header-plus-icon
-            a.fa.fa-navicon.js-open-list-menu
+        if currentUser.canAddList
+          div.list-header-menu
+            unless currentUser.isCommentOnly
+              if canSeeAddCard
+                a.js-add-card.fa.fa-plus.list-header-plus-icon
+              a.fa.fa-navicon.js-open-list-menu
 
 template(name="editListTitleForm")
   .list-composer

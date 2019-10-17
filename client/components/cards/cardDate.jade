@@ -1,5 +1,5 @@
 template(name="dateBadge")
-  if canModifyCard
+  if currentUser.canAlterCard
     a.js-edit-date.card-date(title="{{showTitle}}" class="{{classes}}")
       time(datetime="{{showISODate}}")
         | {{showDate}}

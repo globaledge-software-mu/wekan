@@ -147,7 +147,7 @@ template(name="outgoingWebhooksPopup")
 
 template(name="boardMenuPopup")
   ul.pop-over-list
-    if currentUser.hasPermission 'customization' 'update'
+    if currentUser.canCustomiseFields
       li: a.js-custom-fields {{_ 'custom-fields'}}
     li: a.js-open-archives {{_ 'archived-items'}}
     if currentUser.isBoardAdmin

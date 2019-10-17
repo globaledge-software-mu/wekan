@@ -174,10 +174,6 @@ BlazeComponent.extendComponent({
     return list.cards(swimlaneId).count() > this.cardlimit.get();
   },
 
-  canSeeAddCard() {
-    return !this.reachedWipLimit() && Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly() && Meteor.user().hasPermission('cards', 'insert');
-  },
-
   reachedWipLimit() {
     const list = Template.currentData();
     return !list.getWipLimit('soft') && list.getWipLimit('enabled') && list.getWipLimit('value') <= list.cards().count();

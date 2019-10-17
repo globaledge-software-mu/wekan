@@ -11,7 +11,13 @@ BlazeComponent.extendComponent({
 
   canEditTitle() {
     const user = Meteor.user();
-    return user.isBoardMember() && user.hasPermission('lists', 'update');
+  	var isUsersRegularBoard = !this.reachedWipLimit() && user && user.isBoardMember() && user.isCommentOnly() === false && user.hasPermission('lists', 'update') && user.isBoardTemplate() === false;
+  	var userIsAdminOfBoardTemplate = user && user.isBoardTemplate() === true && user.isBoardAdmin() === true;
+    if ( ( isUsersRegularBoard === true ) || ( userIsAdminOfBoardTemplate === true ) ) {
+    	return true;
+    } else {
+    	return false;
+    }
   },
 
   editTitle(evt) {

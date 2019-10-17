@@ -120,28 +120,32 @@ template(name="cardDetails")
               h3.card-details-item-title {{getPropertyAlias 'spent-time-hours'}}
             +cardSpentTime
 
-    //- XXX We should use "editable" to avoid repetiting ourselves
     if isPropertyVisible 'description' and canModifyCard
       h3.card-details-item-title {{getPropertyAlias 'description'}}
-      +inlinedCardDescription(classNames="card-description js-card-description")
-        +editor(autofocus=true)
-          | {{getUnsavedValue 'cardDescription' _id getDescription}}
-        .edit-controls.clearfix
-          button.primary(type="submit") {{_ 'save'}}
-          a.fa.fa-times-thin.js-close-inlined-form
-      else
-        a.js-open-inlined-form
-          if getDescription
-            +viewer
-              = getDescription
-          else
-            | {{_ 'edit'}}
-        if (hasUnsavedValue 'cardDescription' _id)
-          p.quiet
-            | {{_ 'unsaved-description'}}
-            a.js-open-inlined-form {{_ 'view-it'}}
-            = ' - '
-            a.js-close-inlined-form {{_ 'discard'}}
+      if canModifyCard
+        +inlinedCardDescription(classNames="card-description js-card-description")
+          +editor(autofocus=true)
+            | {{getUnsavedValue 'cardDescription' _id getDescription}}
+          .edit-controls.clearfix
+            button.primary(type="submit") {{_ 'save'}}
+            a.fa.fa-times-thin.js-close-inlined-form
+        else
+          a.js-open-inlined-form
+            if getDescription and canModifyCard
+              +viewer
+                = getDescription
+            else
+              | {{_ 'edit'}}
+          if (hasUnsavedValue 'cardDescription' _id)
+            p.quiet
+              | {{_ 'unsaved-description'}}
+              a.js-open-inlined-form {{_ 'view-it'}}
+              = ' - '
+              a.js-close-inlined-form {{_ 'discard'}}
+      else if getDescription
+        +viewer
+          = getDescription
+
     else if isPropertyVisible 'description' and getDescription
       h3.card-details-item-title {{getPropertyAlias 'description'}}
       +viewer
@@ -187,7 +191,6 @@ template(name="cardDetails")
       +checklists(cardId = _id)
 
     if currentBoard.allowsSubtasks
-      hr
       if isPropertyVisible 'subtasks'
         +subtasks(cardId = _id)
     if isPropertyVisible 'attachments'
