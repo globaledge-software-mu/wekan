@@ -333,12 +333,18 @@ if (Meteor.isClient) {
     },
 
     isAdminOrManager() {
-      var manager = Roles.findOne({name: 'Manager'});
-      if ( Meteor.user().isAdmin || (manager && Meteor.user().roleId == manager._id) ) {
-		    return true;
-		  } else {
-	      return false;
+    	var allow = false;
+      if ( Meteor.user().isAdmin ) {
+      	allow = true;
 		  }
+      var manager = Roles.findOne({name: 'Manager'});
+      if (manager && manager._id) {
+      	var managerId = manager._id;
+        if ( Meteor.user().isAdmin || (manager && Meteor.user().roleId == manager._id) ) {
+        	allow = true;
+  		  }
+      }
+      return allow;
     },
 
     isCoachOrCoachee() {
@@ -378,6 +384,14 @@ if (Meteor.isClient) {
 
     canAlterCard() {
       if ( this.regularBoard() || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    adminOrManagerCanAssignTemplate() {
+      if ( this.isAdminOrManager() && this.isBoardTemplate() ) {
       	return true;
       } else {
       	return false;
@@ -674,12 +688,21 @@ if (Meteor.isServer) {
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
-      const allowInvite = inviter &&
-        board &&
-        board.members &&
-        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
-        _.where(board.members, {userId: inviter._id})[0].isActive &&
-        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      var allowInvite;
+      if (board.type = 'template-board') {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive;
+      } else {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive &&
+	        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      }
       if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
 
       this.unblock();

@@ -44,9 +44,14 @@ template(name="membersWidget")
         if currentUser.isBoardMember
           a.member.add-member.sandstorm-powerbox-request-identity
             i.fa.fa-plus
-      else if currentUser.isBoardAdmin
-        a.member.add-member.js-manage-board-members
-          i.fa.fa-plus
+      else 
+        if currentUser.adminOrManagerCanAssignTemplate
+          a.member.add-member.js-manage-board-members
+            i.fa.fa-plus
+        else 
+          if currentUser.isBoardAdmin
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
       .clearfix
   if isInvited
     hr
@@ -222,10 +227,16 @@ template(name="memberPopup")
             | {{_ 'change-permissions'}}
             span.quiet (#{memberType})
       li
-        if $eq currentUser._id userId
-          a.js-leave-member {{_ 'leave-board'}}
-        else if currentUser.isBoardAdmin
-          a.js-remove-member {{_ 'remove-from-board'}}
+        if currentUser.isBoardTemplate
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isAdminOrManager
+            a.js-remove-member {{_ 'remove-from-board'}}
+        else
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isBoardAdmin
+            a.js-remove-member {{_ 'remove-from-board'}}
 
 
 template(name="removeMemberPopup")

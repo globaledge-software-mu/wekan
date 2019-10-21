@@ -761,14 +761,15 @@ Boards.mutations({
           [`members.${memberIndex}.isActive`]: true,
         },
       };
+    } else {
+      return {
+        $pull: {
+        	members: {
+	  				'userId': memberId
+	  			}
+        },
+      };
     }
-
-    return {
-      $set: {
-        [`members.${memberIndex}.isActive`]: false,
-        [`members.${memberIndex}.isAdmin`]: false,
-      },
-    };
   },
 
   setMemberPermission(memberId, isAdmin, isNoComments, isCommentOnly, currentUserId = Meteor.userId()) {
