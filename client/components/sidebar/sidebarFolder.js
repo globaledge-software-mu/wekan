@@ -33,6 +33,7 @@ BlazeComponent.extendComponent({
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+        var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
   
         // Update old folder's contents
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
@@ -76,11 +77,15 @@ BlazeComponent.extendComponent({
         );
 
         // If board is being dropped from template folder
-        if ($('li.board_templates').is(':visible')) {
+        if (boardTemplateIsDropped) {
           // update board, changing the template board back to a regular one
           Boards.update(
             { _id: boardIdentifier },
-            { $set: { type : 'board' } }
+            { $set: { type : 'board' },
+            	$pull: { members: {
+        				"isAdmin": false, 
+        			} }
+            }
           );
 
           // removing the board template linked card and swimlane docs, since the 
@@ -120,6 +125,7 @@ BlazeComponent.extendComponent({
   	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+        var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
 
         // Update old folder's contents
         var fromFolder = Folders.findOne({ _id:fromFolderId });
@@ -147,21 +153,28 @@ BlazeComponent.extendComponent({
           }
         }
 
-        // update board, changing the template board back to a regular one
-        Boards.update(
-          { _id: boardIdentifier },
-          { $set: { type : 'board' } }
-        );
+        // If board is being dropped from template folder
+        if (boardTemplateIsDropped) {
+          // update board, changing the template board back to a regular one
+        	Boards.update(
+            { _id: boardIdentifier },
+            { $set: { type : 'board' },
+            	$pull: { members: {
+        				"isAdmin": false, 
+        			} }
+            }
+          );
 
-        // removing the board template linked card and swimlane docs, since the 
-        // board that it represented has been changed to a regular one
-        var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-        if (linkedCard && linkedCard._id) {
-          Cards.remove(linkedCard._id);
-        }
-        var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
-        if (linkedSwimlane && linkedSwimlane._id) {
-          Swimlanes.remove(linkedSwimlane._id);
+          // removing the board template linked card and swimlane docs, since the 
+          // board that it represented has been changed to a regular one
+          var linkedCard = Cards.findOne({linkedId: boardIdentifier});
+          if (linkedCard && linkedCard._id) {
+            Cards.remove(linkedCard._id);
+          }
+          var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
+          if (linkedSwimlane && linkedSwimlane._id) {
+            Swimlanes.remove(linkedSwimlane._id);
+          }
         }
 
         // if categorised boards is being displayed, have the selected folder be clicked again
@@ -218,6 +231,43 @@ BlazeComponent.extendComponent({
           { $set: { type : 'template-board' } }
         );
 
+        // make every admin and manager of the system a member of the template
+        var managerRole = Roles.findOne({name: 'Manager'});
+        var managerRoleId = null;
+        if (managerRole && managerRole._id) {
+        	managerRoleId = managerRole._id;
+        }
+        var adminsOrManagers = Users.find({
+        	$or: [ 
+        		{ isAdmin: true }, 
+        		{ roleId: managerRoleId } 
+      		]
+        });
+    		var boardTemplateMembers = (Boards.findOne({_id: boardIdentifier})).members;
+      	adminsOrManagers.forEach((adminOrManager) => {
+      		var adminOrManagerId = adminOrManager._id; 
+    			isMember = false;
+      		boardTemplateMembers.forEach((boardTemplateMember) => {
+        		if (boardTemplateMember.userId == adminOrManagerId) {
+        			isMember = true;
+        		}
+          });
+      		if (isMember === false) {
+            Boards.update(
+              { _id: boardIdentifier },
+              { $push: {
+  	              members: {
+  	                isAdmin: false,
+  	                isActive: true,
+  	                isCommentOnly: false,
+  	                userId: adminOrManagerId,
+  	              },
+  	            },
+              }
+            );
+      		}
+        });
+
         // Create card and swimlane docs
         // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default 
         // whenever the user creates a templates for when the system tries to list all the templates in feature to create boards with template
@@ -263,6 +313,7 @@ BlazeComponent.extendComponent({
     	this.subscribe('boards');
       this.subscribe('lists');
       this.subscribe('cards');
+      this.subscribe('users');
     });
   },
 

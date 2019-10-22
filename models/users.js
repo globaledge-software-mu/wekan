@@ -349,7 +349,11 @@ if (Meteor.isClient) {
 
     isCoachOrCoachee() {
       var coachOrCoachee = Roles.find( { name: { $in: [ 'Coach', 'Coachee' ] } } ).fetch();
-      if (coachOrCoachee && coachOrCoachee[0] && coachOrCoachee[0].name) {
+      if (coachOrCoachee && 
+      		coachOrCoachee[0] && 
+      		coachOrCoachee[0]._id && 
+      		( coachOrCoachee[0]._id == this.roleId || coachOrCoachee[1]._id == this.roleId	)
+  		) {
 		    return true;
 		  } else {
 	      return false;
