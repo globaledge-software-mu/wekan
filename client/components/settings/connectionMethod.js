@@ -24,7 +24,8 @@ Template.connectionMethod.onCreated(function() {
 
 Template.connectionMethod.onRendered(() => {
   // Moves the select boxe in the first place of the at-pwd-form div
-  $('.at-form-authentication').detach().prependTo('.at-pwd-form');
+//  $('.at-form-authentication').detach().prependTo('.at-pwd-form');
+	$('.at-form-authentication').remove()
   $('.at-oauth').remove();
   $('.at-sep').remove();
 });
