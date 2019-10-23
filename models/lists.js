@@ -169,6 +169,15 @@ Lists.helpers({
     }).forEach((card) => {
       card.copy(boardId, swimlaneId, _id);
     });
+
+    var oldBoardId = (Lists.findOne(oldId)).boardId;
+    // Copy all 'list properties' in list
+    ListProperties.find({
+    	boardId: oldBoardId,
+      listId: oldId,
+    }).forEach((listProperty) => {
+    	listProperty.copy(boardId, _id, listProperty.alias, listProperty.i18nKey);
+    });
   },
 
   cards(swimlaneId) {

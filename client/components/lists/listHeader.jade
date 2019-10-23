@@ -64,9 +64,8 @@ template(name="listActionPopup")
         li: a.js-select-cards {{_ 'list-select-cards'}}
         hr
       if currentUser.isBoardAdmin
-        if currentUser.hasPermission 'customization' 'fetch'
-          li: a.js-list-properties {{_ 'listPropertiesPopup-title'}}
-          hr
+        li: a.js-list-properties {{_ 'listPropertiesPopup-title'}}
+        hr
     if currentUser.isBoardMember
       ul.pop-over-list
         if currentUser.hasPermission 'wiplimit' 'update'
