@@ -471,6 +471,7 @@ BlazeComponent.extendComponent({
   },
 
   onCreated() {
+    Meteor.subscribe('cards');
     this.isCardTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-card-template');
     this.isListTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-list-template');
     this.isSwimlaneTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-open-add-swimlane-menu');
@@ -557,12 +558,14 @@ BlazeComponent.extendComponent({
         });
       	var boardIds = [];
       	linkedBoardCards.forEach((linkedBoardCard) => {
-      		boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
-      		(boardTemplate.members).forEach((member) => {
-      			if (member.userId == Meteor.userId()) {
-      				boardIds.push(linkedBoardCard.linkedId);
-      			}
-      		});
+      		var boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
+      		if (boardTemplate) {
+        		(boardTemplate.members).forEach((member) => {
+        			if (member.userId == Meteor.userId()) {
+        				boardIds.push(linkedBoardCard.linkedId);
+        			}
+        		});
+      		}
       	});
   			boards = Cards.find({ linkedId: {$in: boardIds} });
     	} 

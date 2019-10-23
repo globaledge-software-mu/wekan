@@ -569,19 +569,12 @@ BlazeComponent.extendComponent({
         $('.emptyFolderMessage').remove();
         $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
         $('li.js-add-board-template, li.board_templates').show();
-        if (Meteor.user().isAdminOrManager()) {
-          var boardTemplates = Boards.find({
-            type: 'template-board',
-            archived: false, 
-          });
-        } else {
-          var boardTemplates = Boards.find({
-            type: 'template-board',
-            'members.userId': Meteor.userId(),
-            archived: false, 
-          });
-        }
-        if(typeof(boardTemplates) != 'undefined' && boardTemplates !== null && _.keys(boardTemplates).length > 0) {
+        var boardTemplates = Boards.find({
+          type: 'template-board',
+          'members.userId': Meteor.userId(),
+          archived: false, 
+        });
+        if(boardTemplates.count() > 0) {
           // making the board templates draggable
           $('li.board_templates').draggable({
             revert: 'invalid',
@@ -596,7 +589,9 @@ BlazeComponent.extendComponent({
             }
           });
         } else {
-          return false;
+          $('.board-list.clearfix.ui-sortable').append(
+            '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+          );
         }
       },
 
