@@ -316,11 +316,13 @@ Boards.attachSchema(new SimpleSchema({
 
 
 Boards.helpers({
-  copy() {
-    const oldId = this._id;
+	getNewBoardId() {
     delete this._id;
-    const _id = Boards.insert(this);
+    return Boards.insert(this);
+	},
 
+  copy(_id) {
+    const oldId = this._id;
     // Copy all swimlanes in board
     Swimlanes.find({
       boardId: oldId,
@@ -330,6 +332,7 @@ Boards.helpers({
       swimlane.copy(_id);
     });
   },
+
   /**
    * Is supplied user authorized to view this board?
    */

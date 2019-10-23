@@ -638,7 +638,9 @@ BlazeComponent.extendComponent({
             userId: Meteor.userId(),
           }]
           delete board.slug;
-          _id = board.copy();
+          _id = board.getNewBoardId();
+          board.copy(_id);
+          Utils.goBoardId(_id);
         }
         Popup.close();
       },
