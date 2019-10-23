@@ -35,11 +35,6 @@ template(name="setting")
 template(name="general")
   ul#registration-setting.setting-detail
     li
-      a.flex.js-toggle-registration
-        .materialCheckBox(class="{{#if currentSetting.disableRegistration}}is-checked{{/if}}")
-
-        span {{_ 'disable-self-registration'}}
-    li
       .invite-people(class="{{#if currentSetting.disableRegistration}}{{else}}hide{{/if}}")
         ul
           li
