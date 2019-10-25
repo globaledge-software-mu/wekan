@@ -193,8 +193,8 @@ const CreateBoard = BlazeComponent.extendComponent({
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
 
-    // If creating regular board
-    if ($('.board-list').children('.js-add-board-template:visible').length === 0) {
+    // Creating regular board
+    if (!$('.js-new-board-title').hasClass('createBoardTemplate')) {
       const visibility = this.visibility.get();
       this.boardId.set(Boards.insert({
         title,
@@ -208,7 +208,7 @@ const CreateBoard = BlazeComponent.extendComponent({
 
       Utils.goBoardId(this.boardId.get());
     } 
-    // else creating board template
+    // Creating board template
     else {
       let linkedId = '';
       linkedId = Boards.insert({
@@ -236,6 +236,9 @@ const CreateBoard = BlazeComponent.extendComponent({
         type: 'cardType-linkedBoard',
         linkedId,
       });
+
+      // make every admin and manager of the system a member of the template
+      Meteor.user().addEveryAdminAndManagerToBoard(linkedId);
 
       Utils.goBoardId(linkedId);
     }

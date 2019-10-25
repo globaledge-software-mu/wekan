@@ -180,7 +180,12 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-      'click .js-add-board, click .js-add-board-template': Popup.open('createBoard'),
+      'click .js-add-board, click .js-add-board-template'(evt) {
+      	Popup.open('createBoard')(evt);
+      	if ($(evt.target).closest('li').hasClass('js-add-board-template')) {
+      		$('.js-new-board-title').addClass('createBoardTemplate');
+      	}
+      },
       'click .js-star-board'(evt) {
         const boardId = this.currentData()._id;
         Meteor.user().toggleBoardStar(boardId);

@@ -481,6 +481,45 @@ if (Meteor.isClient) {
       }
     },
 
+    addEveryAdminAndManagerToBoard(boardIdentifier) {
+      // make every admin and manager of the system a member of the template
+      var managerRole = Roles.findOne({name: 'Manager'});
+      var managerRoleId = null;
+      if (managerRole && managerRole._id) {
+      	managerRoleId = managerRole._id;
+      }
+      var adminsOrManagers = Users.find({
+      	$or: [ 
+      		{ isAdmin: true }, 
+      		{ roleId: managerRoleId } 
+    		]
+      });
+  		var boardTemplateMembers = (Boards.findOne({_id: boardIdentifier})).members;
+    	adminsOrManagers.forEach((adminOrManager) => {
+    		var adminOrManagerId = adminOrManager._id; 
+  			isMember = false;
+    		boardTemplateMembers.forEach((boardTemplateMember) => {
+      		if (boardTemplateMember.userId == adminOrManagerId) {
+      			isMember = true;
+      		}
+        });
+    		if (isMember === false) {
+          Boards.update(
+            { _id: boardIdentifier },
+            { $push: {
+	              members: {
+	                isAdmin: false,
+	                isActive: true,
+	                isCommentOnly: false,
+	                userId: adminOrManagerId,
+	              },
+	            },
+            }
+          );
+    		}
+      });
+    },
+
   });
 }
 
