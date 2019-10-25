@@ -187,9 +187,10 @@ template(name="createBoard")
       span.quiet
         | {{_ 'or'}}
         a.js-import-board {{_ 'import'}}
-      span.quiet
-        | /
-        a.js-board-template {{_ 'template'}}
+      if hasTemplate
+        span.quiet
+          | /
+          a.js-board-template {{_ 'template'}}
 
 template(name="cloneBoardPopup")
   form

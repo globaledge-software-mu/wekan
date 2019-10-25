@@ -176,6 +176,19 @@ const CreateBoard = BlazeComponent.extendComponent({
     return true;
   },
 
+  hasTemplate() {
+  	var templateMember = Boards.find({
+  		type: 'template-board',
+  		'members.userId': Meteor.userId(),
+  		archived: false,
+  	});
+  	if (templateMember.count() > 0) {
+  		return true;
+  	} else {
+  		return false;
+  	}
+  },
+
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
