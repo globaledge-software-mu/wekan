@@ -321,8 +321,7 @@ Boards.helpers({
     return Boards.insert(this);
 	},
 
-  copy(_id) {
-    const oldId = this._id;
+  copy(_id, oldId) {
     // Copy all swimlanes in board
     Swimlanes.find({
       boardId: oldId,

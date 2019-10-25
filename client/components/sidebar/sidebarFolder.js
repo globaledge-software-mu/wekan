@@ -38,27 +38,8 @@ BlazeComponent.extendComponent({
         // Update old folder's contents
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
           var fromFolder = Folders.findOne(fromFolderId);
-          var folderContents = fromFolder.contents;
-          var boardIds = new Array;
-
-          for (var m = 0; m < _.keys(folderContents).length; m++) {
-            if (folderContents[m].boardId !== boardIdentifier) {
-              boardIds.push(folderContents[m].boardId);
-            }
-          }
-
-          Folders.update(
-      	    { _id : fromFolderId }, 
-      		  { $unset: { contents : '' } }
-          );
-  
-          for (var n = 0; n < boardIds.length; n++) {
-            var keyName = 'contents.' + n + '.boardId';
-        	  Folders.update(
-    	        { _id: fromFolderId },
-              { $set: { [keyName] : boardIds[n] } }
-    		    );
-          }
+        	// remove board from folder
+          Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
         }
 
         // Update new folder's contents (Boards could be from uncategorised or another categorised folder)
@@ -78,26 +59,8 @@ BlazeComponent.extendComponent({
 
         // If board is being dropped from template folder
         if (boardTemplateIsDropped) {
-          // update board, changing the template board back to a regular one
-          Boards.update(
-            { _id: boardIdentifier },
-            { $set: { type : 'board' },
-            	$pull: { members: {
-        				"isAdmin": false, 
-        			} }
-            }
-          );
-
-          // removing the board template linked card and swimlane docs, since the 
-          // board that it represented has been changed to a regular one
-          var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-          if (linkedCard && linkedCard._id) {
-            Cards.remove(linkedCard._id);
-          }
-          var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
-          if (linkedSwimlane && linkedSwimlane._id) {
-            Swimlanes.remove(linkedSwimlane._id);
-          }
+          // Changing the template board back to a regular
+        	Meteor.user().changeBoardToRegular(boardIdentifier);
         }
 
         // if categorised boards is being displayed, have the selected folder be clicked again
@@ -127,54 +90,44 @@ BlazeComponent.extendComponent({
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
         var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
 
-        // Update old folder's contents
         var fromFolder = Folders.findOne({ _id:fromFolderId });
         if (fromFolder && fromFolder.contents) {
-          var folderContents = fromFolder.contents;
-          var boardIds = new Array;
-
-          for (var v = 0; v < _.keys(folderContents).length; v++) {
-            if (folderContents[v].boardId !== boardIdentifier) {
-              boardIds.push(folderContents[v].boardId);
-            }
-          }
-
-          Folders.update(
-            { _id : fromFolderId }, 
-            { $unset: { contents : '' } }
-          );
-
-          for (var z = 0; z < boardIds.length; z++) {
-            var keyName = 'contents.' + z + '.boardId';
-            Folders.update(
-              { _id: fromFolderId },
-              { $set: { [keyName] : boardIds[z] } }
-            );
-          }
+        	// remove board from folder
+        	Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
         }
 
         // If board is being dropped from template folder
         if (boardTemplateIsDropped) {
-          // update board, changing the template board back to a regular one
-        	Boards.update(
-            { _id: boardIdentifier },
-            { $set: { type : 'board' },
-            	$pull: { members: {
-        				"isAdmin": false, 
-        			} }
-            }
-          );
+        	// Since dropping in uncategorised from template folder, remove its old categorised folder parent , if it has any, but
+        	// we do that only for the user that moves the board, that is the admin. We do not scrap the members old categorised folder 
+        	// record at the moment that its moved into the templates folder as when the board is moved out of the template folder, 
+        	// the other members find it eaxactly in the same folder that they had put it in earlier on (before it was put in the templates 
+        	// folder ), provided they did not delete that folder, in which case the'll find in the uncategorised folder. 
+        	var hasOldFolder = false;
+        	var oldFolderId = null;
+        	var userFolders = Folders.find({ userId: Meteor.userId() });
+        	if (userFolders) {
+          	userFolders.forEach((userFolder) => {
+          		var folderContents = userFolder.contents;
+          		if (folderContents) {
+            		for (var t = 0; t < _.keys(folderContents).length; t++) {
+            			if (folderContents[t] == boardIdentifier) {
+            				hasOldFolder = true;
+            			}
+            		}
+            		if (hasOldFolder) {
+            			oldFolderId = userFolder._id;
+            		}
+          		}
+          	});
+          	if (oldFolderId !== null) {
+            	// remove board from folder
+          		Meteor.user().removeBoardFromFolder(boardIdentifier, oldFolder, oldFolderId);
+          	}
+        	}
 
-          // removing the board template linked card and swimlane docs, since the 
-          // board that it represented has been changed to a regular one
-          var linkedCard = Cards.findOne({linkedId: boardIdentifier});
-          if (linkedCard && linkedCard._id) {
-            Cards.remove(linkedCard._id);
-          }
-          var linkedSwimlane = Swimlanes.findOne({boardId: boardIdentifier});
-          if (linkedSwimlane && linkedSwimlane._id) {
-            Swimlanes.remove(linkedSwimlane._id);
-          }
+          // Changing the template board back to a regular
+        	Meteor.user().changeBoardToRegular(boardIdentifier);
         }
 
         // if categorised boards is being displayed, have the selected folder be clicked again
@@ -202,27 +155,8 @@ BlazeComponent.extendComponent({
 
         var fromFolder = Folders.findOne({ _id:fromFolderId });
         if (fromFolder && fromFolder.contents) {
-          var folderContents = fromFolder.contents;
-          var boardIds = new Array;
-
-          for (var v = 0; v < _.keys(folderContents).length; v++) {
-            if (folderContents[v].boardId !== boardIdentifier) {
-              boardIds.push(folderContents[v].boardId);
-            }
-          }
-
-          Folders.update(
-            { _id : fromFolderId }, 
-            { $unset: { contents : '' } }
-          );
-
-          for (var z = 0; z < boardIds.length; z++) {
-            var keyName = 'contents.' + z + '.boardId';
-            Folders.update(
-              { _id: fromFolderId },
-              { $set: { [keyName] : boardIds[z] } }
-            );
-          }
+        	// remove board from folder
+        	Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
         }
 
         // update board
@@ -271,25 +205,33 @@ BlazeComponent.extendComponent({
         // Create card and swimlane docs
         // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default 
         // whenever the user creates a templates for when the system tries to list all the templates in feature to create boards with template
-        Swimlanes.insert({
-          title: TAPi18n.__('default'),
-          boardId: boardIdentifier,
-        });
         const userProfile = Meteor.user().profile;
+        var swimlanesFieldsValues = {
+      		title: TAPi18n.__('default'),
+          boardId: boardIdentifier,
+      	};
+      	const existingSwimlane = Swimlanes.findOne(swimlanesFieldsValues);
+      	if (!existingSwimlane) {
+          Swimlanes.insert(swimlanesFieldsValues);
+      	}
+
         const defaultBoardTemplatesList = Lists.findOne({
           swimlaneId: userProfile.boardTemplatesSwimlaneId,
           archived : false,
         });
-        
-        Cards.insert({
-          title: boardTitle,
+        var cardsFieldsValues = {
+      		title: boardTitle,
           listId: defaultBoardTemplatesList._id, 
           boardId: userProfile.templatesBoardId,
           swimlaneId: userProfile.boardTemplatesSwimlaneId,
           type: 'cardType-linkedBoard',
           linkedId: boardIdentifier,
           sort: -1,
-        });
+      	}
+      	const existingCards = Cards.findOne(cardsFieldsValues);
+      	if (!existingCards) {
+          Cards.insert(cardsFieldsValues);
+      	}
 
         // if categorised boards is being displayed, have the selected folder be clicked again
         if ($('li.categorised_boards').is(':visible')) {
@@ -534,7 +476,19 @@ BlazeComponent.extendComponent({
 
           if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
             for (var i=0; i < _.keys(folderContents).length; i++) {
-              boardIds.push(folderContents[i].boardId);
+            	var boardTemplate = Boards.find({ 
+            		_id: folderContents[i].boardId,
+            		type: 'template-board'
+          		});
+            	if (boardTemplate.count() == 0) {
+                boardIds.push(folderContents[i].boardId);
+            	}
+            }
+            if (boardIds.length == 0) {
+              $('.board-list.clearfix.ui-sortable').append(
+                '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+              );
+            	return false;
             }
 
             for (var k=0; k < boardIds.length; k++) {

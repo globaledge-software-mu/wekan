@@ -637,9 +637,10 @@ BlazeComponent.extendComponent({
             isCommentOnly: false,
             userId: Meteor.userId(),
           }]
+          var oldId = board._id;
           delete board.slug;
           _id = board.getNewBoardId();
-          board.copy(_id);
+          board.copy(_id, oldId);
           Utils.goBoardId(_id);
         }
         Popup.close();

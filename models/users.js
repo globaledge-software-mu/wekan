@@ -436,6 +436,51 @@ if (Meteor.isClient) {
       }
       return role.hasPermission(group, access);
     },
+
+  	removeBoardFromFolder(boardIdentifier, targetFolder, targetFolderId) {
+      var boardIds = new Array;
+      var folderContents = targetFolder.contents;
+  		if (folderContents) {
+    		for (var t = 0; t < _.keys(folderContents).length; t++) {
+        	if (folderContents[t].boardId !== boardIdentifier) {
+    	      boardIds.push(folderContents[t].boardId);
+    	    }
+    		}
+  		}
+      
+      Folders.update(
+        { _id : targetFolderId }, 
+        { $unset: { contents : '' } }
+      );
+      for (var z = 0; z < boardIds.length; z++) {
+        var keyName = 'contents.' + z + '.boardId';
+        Folders.update(
+          { _id: targetFolderId },
+          { $set: { [keyName] : boardIds[z] } }
+        );
+      }
+    },
+
+    changeBoardToRegular(boardIdentifier) {
+      Boards.update(
+        { _id: boardIdentifier },
+        { $set: { 
+        		type : 'board' 
+        	},
+        }
+      );
+
+      // removing the board template linked card and swimlane docs, since the 
+      // board that it represented has been changed to a regular one
+      var linkedCard = Cards.findOne({
+      	linkedId: boardIdentifier,
+      	type: 'cardType-linkedBoard',
+    	});
+      if (linkedCard && linkedCard._id) {
+        Cards.remove(linkedCard._id);
+      }
+    },
+
   });
 }
 
