@@ -52,6 +52,9 @@ template(name="membersWidget")
           if currentUser.isBoardAdmin
             a.member.add-member.js-manage-board-members
               i.fa.fa-plus
+          else if currentUser.isBoardMemberAndCoach
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
       .clearfix
   if isInvited
     hr
@@ -273,7 +276,8 @@ template(name="addMemberPopup")
       +ifEsHasNoResults(index="users")
         .manage-member-section
           p.quiet {{_ 'no-results'}}
-    button.js-email-invite.primary.full {{_ 'email-invite'}}
+    unless currentUser.isCoachee
+      button.js-email-invite.primary.full {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

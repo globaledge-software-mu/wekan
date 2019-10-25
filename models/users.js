@@ -309,6 +309,35 @@ if (Meteor.isClient) {
       return board && board.hasAdmin(this._id);
     },
 
+    isCoach() {
+      var coachRole = Roles.findOne({name: 'Coach'});
+      if (coachRole && coachRole._id) {
+        var coach = Users.find({_id: this._id, roleId: coachRole._id});
+        if (coach.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isCoachee() {
+      var coacheeRole = Roles.findOne({name: 'Coachee'});
+      if (coacheeRole && coacheeRole._id) {
+        var coachee = Users.find({_id: this._id, roleId: coacheeRole._id});
+        if (coachee.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isBoardMemberAndCoach() {
+      const board = Boards.findOne(Session.get('currentBoard'));
+      return board && board.hasMember(this._id) && this.isCoach();
+    },
+
     // is Admin, Manager or Coach
     isAuthorised() {
       var isAllowed = false;
