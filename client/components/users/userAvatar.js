@@ -40,7 +40,39 @@ Template.userAvatar.events({
 Template.userAvatarInitials.helpers({
   initials() {
     const user = Users.findOne(this.userId);
-    return user && user.getInitials();
+    var userInitials = user.getInitials();
+    if (userInitials.length > 3) {
+    	userInitials.substring(0,3);
+    }
+    return user && userInitials;
+    
+  },
+
+  oneInitial() {
+    const user = Users.findOne(this.userId);
+    var userInitials = user.getInitials();
+    if (userInitials.length == 1) {
+    	return true;
+    }
+  	return false;
+  },
+
+  twoInitials() {
+    const user = Users.findOne(this.userId);
+    var userInitials = user.getInitials();
+    if (userInitials.length == 2) {
+    	return true;
+    }
+  	return false;
+  },
+
+  threeInitials() {
+    const user = Users.findOne(this.userId);
+    var userInitials = user.getInitials();
+    if (userInitials.length == 3) {
+    	return true;
+    }
+  	return false;
   },
 
   viewPortWidth() {

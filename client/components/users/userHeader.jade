@@ -41,7 +41,7 @@ template(name="editProfilePopup")
         input.js-profile-username(type="text" value=username readonly)
     label
       | {{_ 'initials'}}
-      input.js-profile-initials(type="text" value=profile.initials)
+      input.js-profile-initials(type="text" maxlength="3" value=profile.initials)
     label
       | {{_ 'email'}}
       span.error.hide.email-taken
