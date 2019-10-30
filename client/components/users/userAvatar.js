@@ -8,6 +8,7 @@ Template.userAvatar.helpers({
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId, {
       fields: {
+      	_id: 1,
         profile: 1,
         username: 1,
       },
@@ -38,41 +39,56 @@ Template.userAvatar.events({
 });
 
 Template.userAvatarInitials.helpers({
+	currentUserId() {
+		return this.userId;
+	},
+
   initials() {
     const user = Users.findOne(this.userId);
-    var userInitials = user.getInitials();
-    if (userInitials.length > 3) {
-    	userInitials.substring(0,3);
+    if (user) {
+      var userInitials = user.getInitials();
+      if (userInitials.length > 3) {
+      	userInitials.substring(0,3);
+      }
+      return user && userInitials;
     }
-    return user && userInitials;
-    
+    return null;
   },
 
   oneInitial() {
     const user = Users.findOne(this.userId);
-    var userInitials = user.getInitials();
-    if (userInitials.length == 1) {
-    	return true;
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 1) {
+	    	return true;
+	    }
+	  	return false;
     }
-  	return false;
+    return null;
   },
 
   twoInitials() {
     const user = Users.findOne(this.userId);
-    var userInitials = user.getInitials();
-    if (userInitials.length == 2) {
-    	return true;
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 2) {
+	    	return true;
+	    }
+	  	return false;
     }
-  	return false;
+    return null;
   },
 
   threeInitials() {
     const user = Users.findOne(this.userId);
-    var userInitials = user.getInitials();
-    if (userInitials.length == 3) {
-    	return true;
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 3) {
+	    	return true;
+	    }
+	  	return false;
     }
-  	return false;
+    return null;
   },
 
   viewPortWidth() {

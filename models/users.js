@@ -213,6 +213,10 @@ Users.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+  roleName: {
+    type: String,
+    optional: true,
+  },
   createdThroughApi: {
     /**
      * was the user created through the API?
@@ -282,6 +286,29 @@ if (Meteor.isClient) {
       } else {
       	return false;
       }
+    },
+
+    getRoleColor(user_id) {
+    	var handler1 = Meteor.subscribe('users');
+    	var handler2 = Meteor.subscribe('role_colors');
+
+    	if (handler1.ready() && handler2.ready()) {
+        var boardUser = Users.findOne({_id: user_id});
+        if (boardUser && boardUser.isAdmin && boardUser.isAdmin == true) {
+        	var roleColor = RoleColors.findOne({ userType: {$exists: true, $eq: 'admin'} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        } else if (boardUser && boardUser.roleId) {
+        	var roleColor = RoleColors.findOne({ roleId: {$exists: true, $eq: boardUser.roleId} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        }
+        return 'darkkhaki';
+    	}
     },
 
     isNotNoComments() {

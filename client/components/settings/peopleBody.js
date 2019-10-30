@@ -237,6 +237,11 @@ Template.editUserPopup.events({
     const password = tpl.find('.js-profile-password').value;
     const isAdmin = tpl.find('.js-profile-isadmin').value.trim();
     const roleId = tpl.find('.js-profile-role').value;
+  	const roleName = null;
+    const role = Roles.findOne({_id: roleId});
+    if (role && role.name) {
+    	roleName = role.name;
+    }
     const isActive = tpl.find('.js-profile-isactive').value.trim();
     const email = tpl.find('.js-profile-email').value.trim();
     const authentication = tpl.find('.js-authenticationMethod').value.trim();
@@ -250,6 +255,7 @@ Template.editUserPopup.events({
         'profile.fullname': fullname,
         'isAdmin': isAdmin === 'true',
         'roleId': roleId,
+        'roleName': roleName,
         'loginDisabled': isActive === 'true',
         'authenticationMethod': authentication,
       },
