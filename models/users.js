@@ -849,8 +849,6 @@ if (Meteor.isServer) {
       }
       if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
 
-//      this.unblock();
-
       const posAt = username.indexOf('@');
       let user = null;
       if (posAt >= 0) {
