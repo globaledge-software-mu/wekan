@@ -849,7 +849,7 @@ if (Meteor.isServer) {
       }
       if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
 
-      this.unblock();
+//      this.unblock();
 
       const posAt = username.indexOf('@');
       let user = null;
@@ -859,15 +859,23 @@ if (Meteor.isServer) {
         user = Users.findOne(username) || Users.findOne({username});
       }
       if (user) {
-        if (user._id === inviter._id) throw new Meteor.Error('error-user-notAllowSelf');
+        if (user._id !== inviter._id) {
+          board.addMember(user._id);
+          user.addInvite(boardId);
+        } else {
+        	throw new Meteor.Error('error-user-notAllowSelf');
+        }
       } else {
         if (posAt <= 0) throw new Meteor.Error('error-user-doesNotExist');
         if (Settings.findOne().disableRegistration) throw new Meteor.Error('error-user-notCreated');
         // Set in lowercase email before creating account
         const email = username.toLowerCase();
         username = email.substring(0, posAt);
+        // Create user doc
         const newUserId = Accounts.createUser({username, email});
-        if (!newUserId) throw new Meteor.Error('error-user-notCreated');
+        if (!newUserId) {
+        	throw new Meteor.Error('error-user-notCreated');
+        }
         // assume new user speak same language with inviter
         if (inviter.profile && inviter.profile.language) {
           Users.update(newUserId, {
@@ -876,30 +884,32 @@ if (Meteor.isServer) {
             },
           });
         }
+        // Send Enrollment Email
         Accounts.sendEnrollmentEmail(newUserId);
         user = Users.findOne(newUserId);
+
+        board.addMember(user._id);
+        user.addInvite(boardId);
       }
 
-      board.addMember(user._id);
-      user.addInvite(boardId);
-
-      try {
-        const params = {
-          user: user.username,
-          inviter: inviter.username,
-          board: board.title,
-          url: board.absoluteUrl(),
-        };
-        const lang = user.getLanguage();
-        Email.send({
-          to: user.emails[0].address.toLowerCase(),
-          from: Accounts.emailTemplates.from,
-          subject: TAPi18n.__('email-invite-subject', params, lang),
-          text: TAPi18n.__('email-invite-text', params, lang),
-        });
-      } catch (e) {
-        throw new Meteor.Error('email-fail', e.message);
-      }
+      // Send Invite 'Login To Accept Invite To Board'
+//      try {
+//        const params = {
+//          user: user.username,
+//          inviter: inviter.username,
+//          board: board.title,
+//          url: board.absoluteUrl(),
+//        };
+//        const lang = user.getLanguage();
+//        Email.send({
+//          to: user.emails[0].address.toLowerCase(),
+//          from: Accounts.emailTemplates.from,
+//          subject: TAPi18n.__('email-invite-subject', params, lang),
+//          text: TAPi18n.__('email-invite-text', params, lang),
+//        });
+//      } catch (e) {
+//        throw new Meteor.Error('email-fail', e.message);
+//      }
       return {username: user.username, email: user.emails[0].address};
     },
   });
