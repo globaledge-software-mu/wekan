@@ -404,4 +404,17 @@ Template.createRolePopup.helpers({
   role() {
     return Roles.findOne(this.roleId);
   },
+  managerCoachOrCoacheeDoc(id) {
+  	var role = Roles.findOne({ 
+  		_id: id, 
+  		name: { 
+  			$in: ['Manager', 'Coach', 'Coachee'] 
+  		} 
+  	});
+
+  	if (role) {
+  		return true;
+  	}
+  	return false;
+  },
 });

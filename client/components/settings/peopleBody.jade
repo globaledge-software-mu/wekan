@@ -180,7 +180,10 @@ template(name="createRolePopup")
     label.hide.roleId(type="text" value=role._id)
     label
       | {{_ 'name'}} {{_id}}
-      input.js-role-name(type="text" value=role.name autofocus)
+      unless managerCoachOrCoacheeDoc role._id
+        input.js-role-name(type="text" value=role.name autofocus)
+      else
+        input.js-role-name(type="text" value=role.name disabled)
     hr
     table
       tbody
@@ -205,4 +208,5 @@ template(name="createRolePopup")
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
       div
-      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+      unless managerCoachOrCoacheeDoc role._id
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
