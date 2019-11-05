@@ -185,6 +185,16 @@ template(name="createRolePopup")
       else
         input.js-role-name(type="text" value=role.name disabled)
     hr
+    label(style="padding-top: 5px")
+      span.role-color-label
+        | {{_ 'color'}}
+      .palette-colors: each color in colors
+        if isSelected role._id color
+          span.card-label.checked-palette-color.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
+            i.fa.fa-check
+        else
+          span.card-label.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
+    hr
     table
       tbody
         tr

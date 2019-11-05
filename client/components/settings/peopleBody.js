@@ -30,6 +30,7 @@ BlazeComponent.extendComponent({
       });
       this.subscribe('roles');
       Meteor.subscribe('users');
+      Meteor.subscribe('role_colors');
     });
   },
   events() {
@@ -355,13 +356,21 @@ Template.createRolePopup.events({
       permissions.push({group:group, access:access});
     });
     const name = tpl.find('.js-role-name').value.trim();
+    const colour = tpl.$('.fa-check').closest('.palette-color.js-palette-color').data('color');
 
     // insert or update
     if (!this.roleId) {
-      Roles.insert({
+      const newRoleId = Roles.insert({
         'name': name,
         'permissions': permissions,
       });
+      if (colour) {
+      	RoleColors.insert({
+      		roleId: newRoleId, 
+      		color: colour, 
+      		roleName: name
+      	});
+      }
     } else {
       Roles.update(this.roleId, {
         $set: {
@@ -369,9 +378,36 @@ Template.createRolePopup.events({
           'permissions': permissions,
         },
       });
+      if (colour) {
+      	const roleColor = RoleColors.findOne({ roleId: this.roleId });
+      	if (roleColor && roleColor._id) {
+      		RoleColors.update(
+      			{ _id: roleColor._id }, 
+      			{ $set: 
+      				{  color: colour, roleName: name } 
+      			}
+    			);
+      	} else {
+        	RoleColors.insert({
+        		roleId: this.roleId, 
+        		color: colour, 
+        		roleName: name
+        	});
+      	}
+      }
     }
 
     Popup.close();
+  },
+
+  'click .palette-color.js-palette-color'(e) {
+  	if (!$(e.target).hasClass('fa-check')) {
+    	var colorsSelector = $('.palette-color.js-palette-color');
+    	colorsSelector.children().remove();
+    	colorsSelector.css({'padding-left':'8px', 'padding-right':'8px'});
+    	$(e.currentTarget).append('<i class="fa fa-check"></i>');
+    	$(e.currentTarget).css({'padding-left':'5px', 'padding-right':'5px'});
+  	}
   },
 
   'click .js-permission'(evt) {
@@ -382,6 +418,7 @@ Template.createRolePopup.events({
     $target.find('.materialCheckBox').toggleClass('is-checked');
     $target.toggleClass('is-checked');
   },
+
   'click #deleteButton'() {
     Roles.remove(this.roleId);
     Popup.close();
@@ -413,6 +450,25 @@ Template.createRolePopup.helpers({
   	});
 
   	if (role) {
+  		return true;
+  	}
+  	return false;
+  },
+  colors() {
+  	return [ 
+  		'green', 'yellow', 'orange', 'red', 
+  		'purple', 'blue', 'sky', 'lime', 
+  		'pink', 'peachpuff', 'crimson', 'plum', 
+  		'darkgreen', 'slateblue', 'magenta', 'gold', 
+  		'navy', 'saddlebrown', 'paleturquoise', 'indigo' 
+  	];
+  },
+  isSelected(id, colour) {
+  	const roleColor = RoleColors.findOne({
+  		roleId: { $exists: true, $eq: id },
+  		color: colour 
+  	});
+  	if (roleColor) {
   		return true;
   	}
   	return false;
