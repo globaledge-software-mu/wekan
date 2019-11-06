@@ -48,7 +48,7 @@ Template.userAvatarInitials.helpers({
     if (user) {
       var userInitials = user.getInitials();
       if (userInitials.length > 3) {
-      	userInitials.substring(0,3);
+      	userInitials = userInitials.substring(0,3);
       }
       return user && userInitials;
     }
@@ -84,6 +84,18 @@ Template.userAvatarInitials.helpers({
     if (user) {
 	    var userInitials = user.getInitials();
 	    if (userInitials.length == 3) {
+	    	return true;
+	    }
+	  	return false;
+    }
+    return null;
+  },
+
+  moreThanThreeInitials() {
+    const user = Users.findOne(this.userId);
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length > 3) {
 	    	return true;
 	    }
 	  	return false;

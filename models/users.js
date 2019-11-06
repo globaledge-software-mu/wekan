@@ -908,7 +908,7 @@ if (Meteor.isServer) {
 //      } catch (e) {
 //        throw new Meteor.Error('email-fail', e.message);
 //      }
-      return {username: user.username, email: user.emails[0].address};
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
   });
   Accounts.onCreateUser((options, user) => {
@@ -989,6 +989,26 @@ if (Meteor.isServer) {
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
+
+    // Cleanup old boards of all the non-existing users as members
+    const allBoards = Boards.find({archived: false});
+    allBoards.forEach((board) => {
+    	if (board.members.length > 0) {
+    		board.members.forEach((member) => {
+    			const existingUser = Users.find({_id: member.userId});
+    			if (existingUser.count() < 1) {
+    				Boards.update(
+  						{ _id: board._id },
+  						{ $pull: {
+  							members: {
+  								userId: member.userId
+  							}
+  						} }
+						);
+    			}
+    		});
+    	}
+    });
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,

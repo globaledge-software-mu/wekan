@@ -32,6 +32,10 @@ template(name="userAvatarInitials")
     svg.avatar.avatar-initials(viewBox="0 0 {{viewPortWidth}} 15")
       circle(cx="50%" cy="7.5" r="18" stroke="{{currentUser.getRoleColor currentUserId}}" stroke-width="5" fill="transparent")
       text(x="50%" y="11" text-anchor="middle" style="font-size: 11px")= initials
+  else if moreThanThreeInitials
+    svg.avatar.avatar-initials(viewBox="0 0 {{viewPortWidth}} 15")
+      circle(cx="50%" cy="7.5" r="28" stroke="{{currentUser.getRoleColor currentUserId}}" stroke-width="5" fill="transparent")
+      text(x="50%" y="15" text-anchor="middle" style="font-size: 22px")= initials
 
 template(name="userPopup")
   .board-member-menu
