@@ -169,6 +169,15 @@ Lists.helpers({
     }).forEach((card) => {
       card.copy(boardId, swimlaneId, _id);
     });
+
+    var oldBoardId = (Lists.findOne(oldId)).boardId;
+    // Copy all 'list properties' in list
+    ListProperties.find({
+    	boardId: oldBoardId,
+      listId: oldId,
+    }).forEach((listProperty) => {
+    	listProperty.copy(boardId, _id, listProperty.alias, listProperty.i18nKey);
+    });
   },
 
   cards(swimlaneId) {
@@ -357,6 +366,31 @@ Lists.hookOptions.after.update = { fetchPrevious: false };
 if (Meteor.isServer) {
   Meteor.startup(() => {
     Lists._collection._ensureIndex({ boardId: 1 });
+    
+    const users = Users.find();
+
+    users.forEach((user) => {
+      const userProfile = user.profile;
+      const defaultBoardTemplatesList = Lists.findOne({swimlaneId: userProfile.boardTemplatesSwimlaneId});
+      if (!defaultBoardTemplatesList) {
+        let sortIndex = 3;
+        const templatesLastList = Lists.findOne({
+          boardId: userProfile.templatesBoardId,
+        }, {
+          sort: {createdAt: -1, limit: 1}
+        });
+        if (templatesLastList && templatesLastList.sort) {
+          sortIndex = templatesLastList.sort + 1;
+        }
+        Lists.insert({
+          title: 'Default List',
+          boardId: userProfile.templatesBoardId,
+          sort: sortIndex,
+          type: 'list',
+          swimlaneId: userProfile.boardTemplatesSwimlaneId,
+        });
+      }
+    });
   });
 
   Lists.after.insert((userId, doc) => {

@@ -44,9 +44,17 @@ template(name="membersWidget")
         if currentUser.isBoardMember
           a.member.add-member.sandstorm-powerbox-request-identity
             i.fa.fa-plus
-      else if currentUser.isBoardAdmin
-        a.member.add-member.js-manage-board-members
-          i.fa.fa-plus
+      else 
+        if currentUser.adminOrManagerCanAssignTemplate
+          a.member.add-member.js-manage-board-members
+            i.fa.fa-plus
+        else 
+          if currentUser.isBoardAdmin
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
+          else if currentUser.isBoardMemberAndCoach
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
       .clearfix
   if isInvited
     hr
@@ -147,7 +155,7 @@ template(name="outgoingWebhooksPopup")
 
 template(name="boardMenuPopup")
   ul.pop-over-list
-    if currentUser.hasPermission 'customization' 'update'
+    if currentUser.canCustomiseFields
       li: a.js-custom-fields {{_ 'custom-fields'}}
     li: a.js-open-archives {{_ 'archived-items'}}
     if currentUser.isBoardAdmin
@@ -222,10 +230,16 @@ template(name="memberPopup")
             | {{_ 'change-permissions'}}
             span.quiet (#{memberType})
       li
-        if $eq currentUser._id userId
-          a.js-leave-member {{_ 'leave-board'}}
-        else if currentUser.isBoardAdmin
-          a.js-remove-member {{_ 'remove-from-board'}}
+        if currentUser.isBoardTemplate
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isAdminOrManager
+            a.js-remove-member {{_ 'remove-from-board'}}
+        else
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isBoardAdmin
+            a.js-remove-member {{_ 'remove-from-board'}}
 
 
 template(name="removeMemberPopup")
@@ -262,7 +276,9 @@ template(name="addMemberPopup")
       +ifEsHasNoResults(index="users")
         .manage-member-section
           p.quiet {{_ 'no-results'}}
-    button.js-email-invite.primary.full {{_ 'email-invite'}}
+    unless currentUser.isCoachee
+      // Directly from board
+      button.js-email-invite.primary.full {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

@@ -19,6 +19,7 @@ BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
     Meteor.subscribe('folders');
+    Meteor.subscribe('templateBoards');
   },
 
   onRendered() {
@@ -60,12 +61,34 @@ BlazeComponent.extendComponent({
       type: 'board',
     }, { sort: ['title'] });
   },
+
   folders() {
   	return Folders.find({
   	  userId: Meteor.userId()
 	  }, {
 	    sort: ['name']
 	  });
+  },
+
+  everyBoardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      archived: false, 
+    });
+  },
+
+  assignedBoardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      'members.userId': Meteor.userId(),
+      archived: false, 
+    });
+  },
+
+  isBoardTemplateAdmin() {
+  	var currentBoard = Boards.findOne({_id: this.currentData()._id});
+  	// returns true or false
+  	return currentBoard && currentBoard.members[0].isAdmin == true && currentBoard.members[0].userId == Meteor.userId();
   },
 
   folderBoards() {
@@ -98,7 +121,9 @@ BlazeComponent.extendComponent({
   },
 
   uncategorisedBoards() {
-    $('a#uncategorisedBoardsFolder').trigger('click');
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+    }
     var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
     var categorisedBoardIds = new Array;
 
@@ -113,8 +138,12 @@ BlazeComponent.extendComponent({
       }
     }
 
-    var uncategorisedBoardsDetails = Boards.find(
-      { _id: { $nin: categorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+    var uncategorisedBoardsDetails = Boards.find({ 
+        _id: { $nin: categorisedBoardIds }, 
+        archived: false, 
+        'members.userId': Meteor.userId(), 
+        type: {$ne: 'template-board'},
+      }, 
       {fields: {'_id': 1}}
     ).fetch();
     var uncategorisedBoardIds = new Array();
@@ -151,7 +180,12 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-      'click .js-add-board': Popup.open('createBoard'),
+      'click .js-add-board, click .js-add-board-template'(evt) {
+      	Popup.open('createBoard')(evt);
+      	if ($(evt.target).closest('li').hasClass('js-add-board-template')) {
+      		$('.js-new-board-title').addClass('createBoardTemplate');
+      	}
+      },
       'click .js-star-board'(evt) {
         const boardId = this.currentData()._id;
         Meteor.user().toggleBoardStar(boardId);

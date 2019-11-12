@@ -27,6 +27,25 @@ ListProperties.attachSchema(new SimpleSchema({
   }
 }));
 
+ListProperties.helpers({
+  copy(boardId, listId, alias, i18nKey) {
+  	var hasListProperty = ListProperties.findOne({
+  		boardId: boardId,
+  		listId: listId,
+      alias: alias,
+      i18nKey: i18nKey
+  	});
+  	if (!hasListProperty) {
+      ListProperties.insert({
+      	boardId: boardId,
+      	listId: listId,
+        alias: alias,
+        i18nKey: i18nKey
+      });
+  	}
+  },
+});
+
 ListProperties.allow({
   insert(userId, doc) {
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));

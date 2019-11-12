@@ -42,19 +42,20 @@ template(name="listsGroup")
 
 template(name="addListForm")
   .list.list-composer.js-list-composer
-    .list-header-add
-      +inlinedForm(autoclose=false)
-        input.list-name-input.full-line(type="text" placeholder="{{_ 'add-list'}}"
-          autocomplete="off" autofocus)
-        .edit-controls.clearfix
-          button.primary.confirm(type="submit") {{_ 'save'}}
-          unless currentBoard.isTemplatesBoard
-            unless currentBoard.isTemplateBoard
-              if currentUser.hasPermission 'templates' 'fetch'
-                span.quiet
-                  | {{_ 'or'}}
-                  a.js-list-template {{_ 'template'}}
-      else
-        a.open-list-composer.js-open-inlined-form
-          i.fa.fa-plus
-          | {{_ 'add-list'}}
+    if currentUser.canAddList
+      .list-header-add
+        +inlinedForm(autoclose=false)
+          input.list-name-input.full-line(type="text" placeholder="{{_ 'add-list'}}"
+            autocomplete="off" autofocus)
+          .edit-controls.clearfix
+            button.primary.confirm(type="submit") {{_ 'save'}}
+            unless currentBoard.isTemplatesBoard
+              unless currentBoard.isTemplateBoard
+                if currentUser.hasPermission 'templates' 'fetch'
+                  span.quiet
+                    | {{_ 'or'}}
+                    a.js-list-template {{_ 'template'}}
+        else
+          a.open-list-composer.js-open-inlined-form
+            i.fa.fa-plus
+            | {{_ 'add-list'}}

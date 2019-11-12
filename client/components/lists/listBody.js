@@ -174,10 +174,6 @@ BlazeComponent.extendComponent({
     return list.cards(swimlaneId).count() > this.cardlimit.get();
   },
 
-  canSeeAddCard() {
-    return !this.reachedWipLimit() && Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly() && Meteor.user().hasPermission('cards', 'insert');
-  },
-
   reachedWipLimit() {
     const list = Template.currentData();
     return !list.getWipLimit('soft') && list.getWipLimit('enabled') && list.getWipLimit('value') <= list.cards().count();
@@ -475,6 +471,7 @@ BlazeComponent.extendComponent({
   },
 
   onCreated() {
+    Meteor.subscribe('cards');
     this.isCardTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-card-template');
     this.isListTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-list-template');
     this.isSwimlaneTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-open-add-swimlane-menu');
@@ -545,7 +542,37 @@ BlazeComponent.extendComponent({
     } else if (this.isSwimlaneTemplateSearch) {
       return board.searchSwimlanes(this.term.get());
     } else if (this.isBoardTemplateSearch) {
-      const boards = board.searchBoards(this.term.get());
+    	var boards;
+    	// if Admin or Manager
+    	if (Meteor.user().isAdminOrManager()) {
+      	boards = Cards.find({
+          type: 'cardType-linkedBoard',
+          archived: false, 
+        });
+    	} 
+    	// else if Coach or Coachee
+    	else if (Meteor.user().isCoachOrCoachee()) {
+      	const linkedBoardCards = Cards.find({
+          type: 'cardType-linkedBoard',
+          archived: false, 
+        });
+      	var boardIds = [];
+      	linkedBoardCards.forEach((linkedBoardCard) => {
+      		var boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
+      		if (boardTemplate) {
+        		(boardTemplate.members).forEach((member) => {
+        			if (member.userId == Meteor.userId()) {
+        				boardIds.push(linkedBoardCard.linkedId);
+        			}
+        		});
+      		}
+      	});
+  			boards = Cards.find({ linkedId: {$in: boardIds} });
+    	} 
+    	// else regular users (they get the original upstream logic)
+    	else {
+	      boards = board.searchBoards(this.term.get());
+    	}
       boards.forEach((board) => {
         subManager.subscribe('board', board.linkedId, false);
       });
@@ -604,8 +631,17 @@ BlazeComponent.extendComponent({
           board.sort = Boards.find({archived: false}).count();
           board.type = 'board';
           board.title = element.title;
+          board.members = [{
+            isAdmin: true,
+            isActive: true,
+            isCommentOnly: false,
+            userId: Meteor.userId(),
+          }]
+          var oldId = board._id;
           delete board.slug;
-          _id = board.copy();
+          _id = board.getNewBoardId();
+          board.copy(_id, oldId);
+          Utils.goBoardId(_id);
         }
         Popup.close();
       },

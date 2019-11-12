@@ -1,3 +1,7 @@
 template(name="scoreBadge")
-  a.js-edit-date.card-date.card-score(class="{{classes}}")
-    | {{#if showScore}} {{showScore}} {{else}}{{/if}}
+  if currentUser.canAlterCard
+    a.js-edit-date.card-date.card-score(class="{{classes}}")
+      | {{#if showScore}} {{showScore}} {{else}}{{/if}}
+  else
+    a.card-date.card-score(class="{{classes}}")
+      | {{#if showScore}} {{showScore}} {{else}}{{/if}}

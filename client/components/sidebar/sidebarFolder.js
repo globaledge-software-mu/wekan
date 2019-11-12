@@ -6,40 +6,43 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
+    // turning the Categorised Folder(s) into droppable(s)
   	$('ul.nav.metismenu#side-menu.folders').droppable({
-      accept: 'li.board-color-belize', // accepts both categorised and uncategorised boards
+  	  // accepts all three Template, Uncategorised and Categorised Folders Boards
+  		// except its own folder's boards
+  		// it accepts board templates of which the user is the admin only not of which any other user is an admin
+      accept: function(dropElem) {
+        var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
+        var fromFolderId = dropElem.closest('div.folderDetails').data('folder-id');
+        if (droppedInFolderId !== fromFolderId && 
+        		( dropElem.hasClass('uncategorised_boards') ||
+      				dropElem.hasClass('categorised_boards') || 
+      				( dropElem.hasClass('board_templates') && 
+    						Meteor.user().isAdminOrManager() && 
+    						dropElem.data('is-template-admin') 
+  						)
+    				)
+    		) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
       tolerance: 'pointer',
       drop: function( event, ui ) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+        var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
   
-        // update old folder's record
+        // Update old folder's contents
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
           var fromFolder = Folders.findOne(fromFolderId);
-          var folderContents = fromFolder.contents;
-          var boardIds = new Array;
-
-          for (var m = 0; m < _.keys(folderContents).length; m++) {
-            if (folderContents[m].boardId !== boardIdentifier) {
-              boardIds.push(folderContents[m].boardId);
-            }
-          }
-
-          Folders.update(
-      	    { _id : fromFolderId }, 
-      		  { $unset: { contents : '' } }
-          );
-  
-          for (var n = 0; n < boardIds.length; n++) {
-            var keyName = 'contents.' + n + '.boardId';
-        	  Folders.update(
-    	        { _id: fromFolderId },
-              { $set: { [keyName] : boardIds[n] } }
-    		    );
-          }
+        	// remove board from folder
+          Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
         }
 
+        // Update new folder's contents (Boards could be from uncategorised or another categorised folder)
         var droppedInFolder = Folders.findOne({_id: droppedInFolderId});
         var key = 0;
         if(typeof(droppedInFolder) != 'undefined' && droppedInFolder !== null) {
@@ -53,46 +56,157 @@ BlazeComponent.extendComponent({
           { _id: droppedInFolderId },
           { $set: { [keyName] : boardIdentifier } }
         );
-  
-        $(ui.draggable).remove();
+
+        // If board is being dropped from template folder
+        if (boardTemplateIsDropped) {
+          // Changing the template board back to a regular
+        	Meteor.user().changeBoardToRegular(boardIdentifier);
+        }
+
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
+        }
   	  }
   	});
-  
+
+    // turning the Uncategorised Folder into droppable
   	$('a#uncategorisedBoardsFolder').droppable({
-      accept: 'li.categorised_boards', // accepts only categorised boards
+      // accepts only categorised and template boards
+  		// for it to accept a template board, the user needs to be the template board's admin, have the class 'board_templates'
+  		// and the user has to be of the user role admin or manager of the system
+      accept: function(dropElem) {
+        if (dropElem.hasClass('categorised_boards') || 
+        		( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() && dropElem.data('is-template-admin') )
+    		) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
       tolerance: 'pointer',
   	  drop: function( event, ui ) {
         var boardIdentifier = $(ui.draggable).data('id').trim();
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+        var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
 
         var fromFolder = Folders.findOne({ _id:fromFolderId });
-        var folderContents = fromFolder.contents;
-        var boardIds = new Array;
-
-        for (var v = 0; v < _.keys(folderContents).length; v++) {
-          if (folderContents[v].boardId !== boardIdentifier) {
-          	boardIds.push(folderContents[v].boardId);
-          }
+        if (fromFolder && fromFolder.contents) {
+        	// remove board from folder
+        	Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
         }
 
-      	Folders.update(
-    		  { _id : fromFolderId }, 
-    		  { $unset: { contents : '' } }
-    		);
+        // If board is being dropped from template folder
+        if (boardTemplateIsDropped) {
+        	// Since dropping in uncategorised from template folder, remove its old categorised folder parent , if it has any, but
+        	// we do that only for the user that moves the board, that is the admin. We do not scrap the members old categorised folder 
+        	// record at the moment that its moved into the templates folder as when the board is moved out of the template folder, 
+        	// the other members find it eaxactly in the same folder that they had put it in earlier on (before it was put in the templates 
+        	// folder ), provided they did not delete that folder, in which case the'll find in the uncategorised folder. 
+        	var hasOldFolder = false;
+        	var oldFolderId = null;
+        	var userFolders = Folders.find({ userId: Meteor.userId() });
+        	if (userFolders) {
+          	userFolders.forEach((userFolder) => {
+          		var folderContents = userFolder.contents;
+          		if (folderContents) {
+            		for (var t = 0; t < _.keys(folderContents).length; t++) {
+            			if (folderContents[t] == boardIdentifier) {
+            				hasOldFolder = true;
+            			}
+            		}
+            		if (hasOldFolder) {
+            			oldFolderId = userFolder._id;
+            		}
+          		}
+          	});
+          	if (oldFolderId !== null) {
+            	// remove board from folder
+          		Meteor.user().removeBoardFromFolder(boardIdentifier, oldFolder, oldFolderId);
+          	}
+        	}
 
-      	for (var z = 0; z < boardIds.length; z++) {
-          var keyName = 'contents.' + z + '.boardId';
-      	  Folders.update(
-    	      { _id: fromFolderId },
-            { $set: { [keyName] : boardIds[z] } }
-      	  );
-      	}
+          // Changing the template board back to a regular
+        	Meteor.user().changeBoardToRegular(boardIdentifier);
+        }
 
-        $(ui.draggable).remove();
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
+        }
   	  }
   	});
 
-    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+    // turning the Template Folder into droppable
+    $('a#templatesFolder').droppable({
+    	// accepts any board from admin or manager except the boards that are already in the templates folder
+      accept: function(dropElem) {
+        if (Meteor.user().isAdminOrManager() && dropElem.hasClass('board-color-belize') && !dropElem.hasClass('board_templates')) {
+            return true;
+        } else {
+          return false;
+	    	}
+      },
+      tolerance: 'pointer',
+      drop: function( event, ui ) {
+        var boardIdentifier = $(ui.draggable).data('id').trim();
+        var boardTitle = $(ui.draggable).data('title').trim();
+        var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
+
+        var fromFolder = Folders.findOne({ _id:fromFolderId });
+        if (fromFolder && fromFolder.contents) {
+        	// remove board from folder
+        	Meteor.user().removeBoardFromFolder(boardIdentifier, fromFolder, fromFolderId);
+        }
+
+        // update board
+        Boards.update(
+          { _id: boardIdentifier },
+          { $set: { type : 'template-board' } }
+        );
+
+        // make every admin and manager of the system a member of the template
+        Meteor.user().addEveryAdminAndManagerToBoard(boardIdentifier);
+
+        // Create card and swimlane docs
+        // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default 
+        // whenever the user creates a templates for when the system tries to list all the templates in feature to create boards with template
+        const userProfile = Meteor.user().profile;
+        var swimlanesFieldsValues = {
+      		title: TAPi18n.__('default'),
+          boardId: boardIdentifier,
+      	};
+      	const existingSwimlane = Swimlanes.findOne(swimlanesFieldsValues);
+      	if (!existingSwimlane) {
+          Swimlanes.insert(swimlanesFieldsValues);
+      	}
+
+        const defaultBoardTemplatesList = Lists.findOne({
+          swimlaneId: userProfile.boardTemplatesSwimlaneId,
+          archived : false,
+        });
+        var cardsFieldsValues = {
+      		title: boardTitle,
+          listId: defaultBoardTemplatesList._id, 
+          boardId: userProfile.templatesBoardId,
+          swimlaneId: userProfile.boardTemplatesSwimlaneId,
+          type: 'cardType-linkedBoard',
+          linkedId: boardIdentifier,
+          sort: -1,
+      	}
+      	const existingCards = Cards.findOne(cardsFieldsValues);
+      	if (!existingCards) {
+          Cards.insert(cardsFieldsValues);
+      	}
+
+        // if categorised boards is being displayed, have the selected folder be clicked again
+        if ($('li.categorised_boards').is(':visible')) {
+          $('a.folderOpener.selected').trigger('click');
+        }
+      }
+    });
+
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
       $('a#uncategorisedBoardsFolder').trigger('click');
     }
   },
@@ -105,6 +219,9 @@ BlazeComponent.extendComponent({
     this.autorun(() => {
     	this.subscribe('folders');
     	this.subscribe('boards');
+      this.subscribe('lists');
+      this.subscribe('cards');
+      this.subscribe('users');
     });
   },
 
@@ -287,7 +404,7 @@ BlazeComponent.extendComponent({
           }
         }
 
-        if (!$('li.myFolder').children('a.folderOpener').hasClass('selected')) {
+        if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
           $('a#uncategorisedBoardsFolder').trigger('click');
         }
       },
@@ -307,8 +424,9 @@ BlazeComponent.extendComponent({
 
       // selecting folder & displaying its boards
       'click a.folderOpener': function(e) {
+        Popup.close();
         if (!$(e.target).closest('li.myFolder').children('a.folderOpener').hasClass('selected')) {
-          $('a#uncategorisedBoardsFolder').removeClass('selected');
+          $('a#uncategorisedBoardsFolder, a#templatesFolder').removeClass('selected');
           $('a.folderOpener').removeClass('selected');
           $(e.target).closest('li.myFolder').children('a.folderOpener').addClass('selected');
         }
@@ -319,12 +437,24 @@ BlazeComponent.extendComponent({
           var selectedFolder = Folders.findOne({ _id:folderId }); 
           var folderContents = selectedFolder.contents;
 
-          $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+          $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
           $('.emptyFolderMessage').remove();
 
           if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
             for (var i=0; i < _.keys(folderContents).length; i++) {
-              boardIds.push(folderContents[i].boardId);
+            	var boardTemplate = Boards.find({ 
+            		_id: folderContents[i].boardId,
+            		type: 'template-board'
+          		});
+            	if (boardTemplate.count() == 0) {
+                boardIds.push(folderContents[i].boardId);
+            	}
+            }
+            if (boardIds.length == 0) {
+              $('.board-list.clearfix.ui-sortable').append(
+                '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+              );
+            	return false;
             }
 
             for (var k=0; k < boardIds.length; k++) {
@@ -352,26 +482,64 @@ BlazeComponent.extendComponent({
         }
       },
 
+      'click a#templatesFolder': function() {
+        Popup.close();
+        $('a.folderOpener, a#uncategorisedBoardsFolder').removeClass('selected');
+        $('a#templatesFolder').addClass('selected');
+        $('.emptyFolderMessage').remove();
+        $('li.js-add-board, li.uncategorised_boards, li.categorised_boards').hide();
+        $('li.js-add-board-template, li.board_templates').show();
+        var boardTemplates = Boards.find({
+          type: 'template-board',
+          'members.userId': Meteor.userId(),
+          archived: false, 
+        });
+        if(boardTemplates.count() > 0) {
+          // making the board templates draggable
+          $('li.board_templates').draggable({
+            revert: 'invalid',
+            start: function(event) {
+              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+            },
+            drag: function() {},
+            stop: function() {
+              $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+              $('p#actionTitle').remove();
+            }
+          });
+        } else {
+          $('.board-list.clearfix.ui-sortable').append(
+            '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
+          );
+        }
+      },
+
       'click a#uncategorisedBoardsFolder': function() {
-        $('a.folderOpener').removeClass('selected');
+        Popup.close();
+        $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
-        $('li.categorised_boards').hide();
+        $('li.js-add-board-template, li.categorised_boards, li.board_templates').hide();
         $('li.js-add-board, li.uncategorised_boards').show();
       },
 
-      'mouseover a#uncategorisedBoardsFolder': function(e) {
-        if ($('li.categorised_boards').is(':visible')) {
+      'mouseover a#templatesFolder': function(e) {
+        if ($('li.board_templates').not(':visible')) {
           $('p#actionTitle').addClass('pull-right');
-          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Remove from folder</b>');
+          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Drop in Templates folder</b>');
         } else {
           return false;
         }
       },
 
-      'mouseout a#uncategorisedBoardsFolder': function(e) {
-        $('p#actionTitle').removeClass('pull-right');
-        $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
+      'mouseover a#uncategorisedBoardsFolder': function(e) {
+        if ($('li.uncategorised_boards').not(':visible')) {
+          $('p#actionTitle').addClass('pull-right');
+          $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="drop-in-uncategorised"> </span><b> Drop in Uncategorised folder</b>');
+        } else {
+          return false;
+        }
       },
 
       'mouseover .myFolder': function(e) {
@@ -389,7 +557,8 @@ BlazeComponent.extendComponent({
         $('p#actionTitle').html('<span class="fa fa-arrow-left" data-id="' + folderId + '"> </span><b> Drop in ' + folderName + '</b>');
       },
 
-      'mouseout .myFolder': function(e) {
+      'mouseout .myFolder, mouseout #uncategorisedBoardsFolder, mouseout #templatesFolder': function(e) {
+        $('p#actionTitle').removeClass('pull-right');
         $('p#actionTitle').html('<span class="fa fa-arrow-left"> </span><b> Drop in a folder</b>');
       },
     }];

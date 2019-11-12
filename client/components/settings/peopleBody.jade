@@ -1,13 +1,10 @@
 template(name="people")
   .setting-content
-    unless currentUser.isAdmin
+    unless currentUser.isAuthorised
       | {{_ 'error-notAuthorized'}}
     else
       .content-title.ext-box
         .ext-box-left
-          span {{_ 'people'}}
-          input#searchInput(placeholder="{{_ 'search'}}")
-          button#searchButton {{_ 'search'}}
         .ext-box-right
           span {{_ 'people-number'}} #{peopleNumber}
       .content-body
@@ -15,8 +12,9 @@ template(name="people")
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
-            li.active
-              a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+            if currentUser.isAdmin
+              li.active
+                a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
         .main-body
           if loading.get
             +spinner
@@ -25,7 +23,41 @@ template(name="people")
           else if roles.get
             +rolesGeneral
 
+template(name="createNewUserPopup")
+  form
+    label.hide
+      span.error.user-not-created
+        | {{_ 'error-user-notCreated'}}
+    label
+      | {{_ 'fullname'}}
+      input.js-profile-fullname(type="text" value="" autofocus)
+    label
+      | {{_ 'username'}}
+      span.error.hide.username-taken
+        | {{_ 'error-username-taken'}}
+      input.js-profile-username(type="text" value="")
+    label
+      | {{_ 'email'}}
+      span.error.hide.email-taken
+        | {{_ 'error-email-taken'}}
+      input.js-profile-email(type="email" value="")
+    if currentUser.isAdmin
+      label
+        | {{_ 'admin'}}
+        select.select-role.js-profile-isadmin
+          option(value="false" selected) {{_ 'no'}}
+          option(value="true") {{_ 'yes'}}
+    label
+      | {{_ 'role'}}
+      +roleOptions
+    hr
+    div.buttonsContainer
+      input.primary.wide(type="submit" value="{{_ 'save'}}")
+      div
+      input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
 template(name="peopleGeneral")
+  button#create-user.btn.btn-primary {{_ 'add-user'}}
   table
     tbody
       tr
@@ -39,8 +71,20 @@ template(name="peopleGeneral")
         th {{_ 'active'}}
         th {{_ 'authentication-method'}}
         th
-      each user in peopleList
-        +peopleRow(userId=user._id)
+      // if isAdmin, user gets to see all the users
+      if currentUser.isAdmin
+        each user in peopleList
+          +peopleRow(userId=user._id)
+      // if isManagerAndNotAdmin, user gets to see 'coaches', 'coachees' and other users that are neither admin nor manager
+      if currentUser.isManagerAndNotAdmin
+        each user in managerUsersList
+          +peopleRow(userId=user._id)
+
+      // if isCoachAndNotAdmin, user gets to see 'coachees' and other users that are neither admin nor manager and not even coach
+      if currentUser.isCoachAndNotAdmin
+        each user in coachUsersList
+          +peopleRow(userId=user._id)
+        
 
 template(name="peopleRow")
   tr
@@ -91,19 +135,15 @@ template(name="editUserPopup")
         input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
       else
         input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
-    label
-      | {{_ 'admin'}}
-      select.select-role.js-profile-isadmin
-        option(value="false") {{_ 'no'}}
-        option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
+    if currentUser.isAdmin
+      label
+        | {{_ 'admin'}}
+        select.select-role.js-profile-isadmin
+          option(value="false") {{_ 'no'}}
+          option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
     label
       | {{_ 'role'}}
-      select.select-role.js-profile-role
-        each role in roles
-          if currentRole role._id
-            option(value="{{role._id}}" selected) {{role.name}}
-          else
-            option(value="{{role._id}}") {{role.name}}
+      +roleOptions
     label
       | {{_ 'active'}}
       select.select-active.js-profile-isactive
@@ -125,6 +165,30 @@ template(name="editUserPopup")
       input.primary.wide(type="submit" value="{{_ 'save'}}")
       div
       input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="roleOptions")
+  select.select-role.js-profile-role
+    option(value='', selected='selected') Select One
+    // if isAdmin, user gets to choose from all the roles
+    if currentUser.isAdmin
+      each role in roles
+        if currentRole role._id
+          option(value='{{role._id}}' selected) {{role.name}}
+        else
+          option(value='{{role._id}}') {{role.name}}
+    // if isManagerAndNotAdmin, user gets to choose from 'coach' or 'coachee'
+    if currentUser.isManagerAndNotAdmin
+      each role in coachOrCoacheeRoles
+        if currentRole role._id
+          option(value='{{role._id}}' selected) {{role.name}}
+        else
+          option(value='{{role._id}}') {{role.name}}
+    // if isCoachAndNotAdmin, user gets to choose 'coachee'
+    if currentUser.isCoachAndNotAdmin
+      if currentRole coacheeRole._id
+        option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
+      else
+        option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
 
 template(name="rolesGeneral")
   table.roleList
@@ -154,7 +218,20 @@ template(name="createRolePopup")
     label.hide.roleId(type="text" value=role._id)
     label
       | {{_ 'name'}} {{_id}}
-      input.js-role-name(type="text" value=role.name autofocus)
+      unless managerCoachOrCoacheeDoc role._id
+        input.js-role-name(type="text" value=role.name autofocus)
+      else
+        input.js-role-name(type="text" value=role.name disabled)
+    hr
+    label(style="padding-top: 5px")
+      span.role-color-label
+        | {{_ 'color'}}
+      .palette-colors: each color in colors
+        if isSelected role._id color
+          span.card-label.checked-palette-color.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
+            i.fa.fa-check
+        else
+          span.card-label.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
     hr
     table
       tbody
@@ -179,4 +256,5 @@ template(name="createRolePopup")
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
       div
-      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+      unless managerCoachOrCoacheeDoc role._id
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")

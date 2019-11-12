@@ -213,6 +213,10 @@ Users.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+  roleName: {
+    type: String,
+    optional: true,
+  },
   createdThroughApi: {
     /**
      * was the user created through the API?
@@ -272,6 +276,41 @@ if (Meteor.isClient) {
       return board && board.hasMember(this._id);
     },
 
+    isBoardTemplate() {
+      const board = Boards.findOne({
+      	_id: Session.get('currentBoard'),
+      	type: 'template-board'
+      });
+      if (board) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    getRoleColor(user_id) {
+    	var handler1 = Meteor.subscribe('users');
+    	var handler2 = Meteor.subscribe('role_colors');
+
+    	if (handler1.ready() && handler2.ready()) {
+        var boardUser = Users.findOne({_id: user_id});
+        if (boardUser && boardUser.isAdmin && boardUser.isAdmin == true) {
+        	var roleColor = RoleColors.findOne({ userType: {$exists: true, $eq: 'admin'} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        } else if (boardUser && boardUser.roleId) {
+        	var roleColor = RoleColors.findOne({ roleId: {$exists: true, $eq: boardUser.roleId} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        }
+        return 'darkkhaki';
+    	}
+    },
+
     isNotNoComments() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasMember(this._id) && !board.hasNoComments(this._id);
@@ -297,6 +336,152 @@ if (Meteor.isClient) {
       return board && board.hasAdmin(this._id);
     },
 
+    isCoach() {
+      var coachRole = Roles.findOne({name: 'Coach'});
+      if (coachRole && coachRole._id) {
+        var coach = Users.find({_id: this._id, roleId: coachRole._id});
+        if (coach.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isCoachee() {
+      var coacheeRole = Roles.findOne({name: 'Coachee'});
+      if (coacheeRole && coacheeRole._id) {
+        var coachee = Users.find({_id: this._id, roleId: coacheeRole._id});
+        if (coachee.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isBoardMemberAndCoach() {
+      const board = Boards.findOne(Session.get('currentBoard'));
+      return board && board.hasMember(this._id) && this.isCoach();
+    },
+
+    // is Admin, Manager or Coach
+    isAuthorised() {
+      var isAllowed = false;
+      var roles = Roles.find({ 
+        $or: [
+          { name: 'Manager' }, 
+          { name: 'Coach' }
+        ] 
+      }).fetch();
+      const LoggedUserRoleId = Meteor.user().roleId;
+      if (roles && roles.length) {
+        for (var i = 0; i < roles.length; i++) {
+          if (LoggedUserRoleId === roles[i]._id) {
+            isAllowed = true;
+          }
+        }
+      }
+      if (Meteor.user().isAdmin || isAllowed) {
+        return true;
+      }
+      return false;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+    },
+
+    isAdminOrManager() {
+    	var allow = false;
+      if ( Meteor.user().isAdmin ) {
+      	allow = true;
+		  }
+      var manager = Roles.findOne({name: 'Manager'});
+      if (manager && manager._id) {
+      	var managerId = manager._id;
+        if ( Meteor.user().isAdmin || (manager && Meteor.user().roleId == manager._id) ) {
+        	allow = true;
+  		  }
+      }
+      return allow;
+    },
+
+    isCoachOrCoachee() {
+      var coachOrCoachee = Roles.find( { name: { $in: [ 'Coach', 'Coachee' ] } } ).fetch();
+      if (coachOrCoachee && 
+      		coachOrCoachee[0] && 
+      		coachOrCoachee[0]._id && 
+      		( coachOrCoachee[0]._id == this.roleId || coachOrCoachee[1]._id == this.roleId	)
+  		) {
+		    return true;
+		  } else {
+	      return false;
+		  }
+    },
+
+    isManagerAndNotAdmin() {
+      const manager = Roles.findOne({ name: 'Manager' });
+      const managerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+      if (managerAndNotAdmin) {
+        return true;
+      }
+      return false;
+    },
+
+    isCoachAndNotAdmin() {
+      const coach = Roles.findOne({ name: 'Coach' });
+      const coachAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: coach._id, isAdmin: false });
+      if (coachAndNotAdmin) {
+        return true;
+      }
+      return false;
+    },
+
+    regularBoard() {
+    	return this.isBoardMember() && !this.isCommentOnly() && !this.isBoardTemplate();
+    },
+
+    isBoardTemplateAdmin() {
+    	return this.isBoardTemplate() && this.isBoardAdmin();
+    },
+
+    canAlterCard() {
+      if ( this.regularBoard() || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    adminOrManagerCanAssignTemplate() {
+      if ( this.isAdminOrManager() && this.isBoardTemplate() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canAddList() {
+    	if ( ( this.hasPermission('lists', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
+    },
+
+    canSeeAddCard() {
+      if ( ( this.hasPermission('cards', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canCustomiseFields() {
+    	if ( ( this.hasPermission('customization', 'update') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
+    },
+
     hasPermission(group, access) {
       if (!this.roleId || this.isAdmin) {
         return true;
@@ -306,7 +491,91 @@ if (Meteor.isClient) {
         return false;
       }
       return role.hasPermission(group, access);
-    }
+    },
+
+  	removeBoardFromFolder(boardIdentifier, targetFolder, targetFolderId) {
+      var boardIds = new Array;
+      var folderContents = targetFolder.contents;
+  		if (folderContents) {
+    		for (var t = 0; t < _.keys(folderContents).length; t++) {
+        	if (folderContents[t].boardId !== boardIdentifier) {
+    	      boardIds.push(folderContents[t].boardId);
+    	    }
+    		}
+  		}
+      
+      Folders.update(
+        { _id : targetFolderId }, 
+        { $unset: { contents : '' } }
+      );
+      for (var z = 0; z < boardIds.length; z++) {
+        var keyName = 'contents.' + z + '.boardId';
+        Folders.update(
+          { _id: targetFolderId },
+          { $set: { [keyName] : boardIds[z] } }
+        );
+      }
+    },
+
+    changeBoardToRegular(boardIdentifier) {
+      Boards.update(
+        { _id: boardIdentifier },
+        { $set: { 
+        		type : 'board' 
+        	},
+        }
+      );
+
+      // removing the board template linked card and swimlane docs, since the 
+      // board that it represented has been changed to a regular one
+      var linkedCard = Cards.findOne({
+      	linkedId: boardIdentifier,
+      	type: 'cardType-linkedBoard',
+    	});
+      if (linkedCard && linkedCard._id) {
+        Cards.remove(linkedCard._id);
+      }
+    },
+
+    addEveryAdminAndManagerToBoard(boardIdentifier) {
+      // make every admin and manager of the system a member of the template
+      var managerRole = Roles.findOne({name: 'Manager'});
+      var managerRoleId = null;
+      if (managerRole && managerRole._id) {
+      	managerRoleId = managerRole._id;
+      }
+      var adminsOrManagers = Users.find({
+      	$or: [ 
+      		{ isAdmin: true }, 
+      		{ roleId: managerRoleId } 
+    		]
+      });
+  		var boardTemplateMembers = (Boards.findOne({_id: boardIdentifier})).members;
+    	adminsOrManagers.forEach((adminOrManager) => {
+    		var adminOrManagerId = adminOrManager._id; 
+  			isMember = false;
+    		boardTemplateMembers.forEach((boardTemplateMember) => {
+      		if (boardTemplateMember.userId == adminOrManagerId) {
+      			isMember = true;
+      		}
+        });
+    		if (isMember === false) {
+          Boards.update(
+            { _id: boardIdentifier },
+            { $push: {
+	              members: {
+	                isAdmin: false,
+	                isActive: true,
+	                isCommentOnly: false,
+	                userId: adminOrManagerId,
+	              },
+	            },
+            }
+          );
+    		}
+      });
+    },
+
   });
 }
 
@@ -556,6 +825,34 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+  	createNewUser(params) {
+      check(params, Object);
+
+      const username = params.username;
+      const email = params.email;
+
+      // create new user 
+      const newUserId = Accounts.createUser({username, email});
+
+      // update new user's details
+    	Users.update(
+  			{ _id: newUserId },
+  			{ $set: {
+          'profile.fullname': params.fullname,
+          'isAdmin': params.isAdmin === 'true',
+          'roleId': params.roleId,
+          'roleName': params.roleName,
+          'loginDisabled': false,
+          'authenticationMethod': 'password',
+  			} }
+			);
+
+      // Send new user invite to complete registration by adding his password
+      Accounts.sendEnrollmentEmail(newUserId);
+
+      return newUserId;
+  	},
+
     // we accept userId, username, email
     inviteUserToBoard(username, boardId) {
       check(username, String);
@@ -563,15 +860,22 @@ if (Meteor.isServer) {
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
-      const allowInvite = inviter &&
-        board &&
-        board.members &&
-        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
-        _.where(board.members, {userId: inviter._id})[0].isActive &&
-        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      var allowInvite;
+      if (board.type = 'template-board') {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive;
+      } else {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive &&
+	        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      }
       if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
-
-      this.unblock();
 
       const posAt = username.indexOf('@');
       let user = null;
@@ -581,15 +885,23 @@ if (Meteor.isServer) {
         user = Users.findOne(username) || Users.findOne({username});
       }
       if (user) {
-        if (user._id === inviter._id) throw new Meteor.Error('error-user-notAllowSelf');
+        if (user._id !== inviter._id) {
+          board.addMember(user._id);
+          user.addInvite(boardId);
+        } else {
+        	throw new Meteor.Error('error-user-notAllowSelf');
+        }
       } else {
         if (posAt <= 0) throw new Meteor.Error('error-user-doesNotExist');
         if (Settings.findOne().disableRegistration) throw new Meteor.Error('error-user-notCreated');
         // Set in lowercase email before creating account
         const email = username.toLowerCase();
         username = email.substring(0, posAt);
+        // Create user doc
         const newUserId = Accounts.createUser({username, email});
-        if (!newUserId) throw new Meteor.Error('error-user-notCreated');
+        if (!newUserId) {
+        	throw new Meteor.Error('error-user-notCreated');
+        }
         // assume new user speak same language with inviter
         if (inviter.profile && inviter.profile.language) {
           Users.update(newUserId, {
@@ -598,31 +910,33 @@ if (Meteor.isServer) {
             },
           });
         }
+        // Send Enrollment Email
         Accounts.sendEnrollmentEmail(newUserId);
         user = Users.findOne(newUserId);
+
+        board.addMember(user._id);
+        user.addInvite(boardId);
       }
 
-      board.addMember(user._id);
-      user.addInvite(boardId);
-
-      try {
-        const params = {
-          user: user.username,
-          inviter: inviter.username,
-          board: board.title,
-          url: board.absoluteUrl(),
-        };
-        const lang = user.getLanguage();
-        Email.send({
-          to: user.emails[0].address.toLowerCase(),
-          from: Accounts.emailTemplates.from,
-          subject: TAPi18n.__('email-invite-subject', params, lang),
-          text: TAPi18n.__('email-invite-text', params, lang),
-        });
-      } catch (e) {
-        throw new Meteor.Error('email-fail', e.message);
-      }
-      return {username: user.username, email: user.emails[0].address};
+      // Send Invite 'Login To Accept Invite To Board'
+//      try {
+//        const params = {
+//          user: user.username,
+//          inviter: inviter.username,
+//          board: board.title,
+//          url: board.absoluteUrl(),
+//        };
+//        const lang = user.getLanguage();
+//        Email.send({
+//          to: user.emails[0].address.toLowerCase(),
+//          from: Accounts.emailTemplates.from,
+//          subject: TAPi18n.__('email-invite-subject', params, lang),
+//          text: TAPi18n.__('email-invite-text', params, lang),
+//        });
+//      } catch (e) {
+//        throw new Meteor.Error('email-fail', e.message);
+//      }
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
   });
   Accounts.onCreateUser((options, user) => {
@@ -703,6 +1017,26 @@ if (Meteor.isServer) {
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
+
+    // Cleanup old boards of all the non-existing users as members
+    const allBoards = Boards.find({archived: false});
+    allBoards.forEach((board) => {
+    	if (board.members.length > 0) {
+    		board.members.forEach((member) => {
+    			const existingUser = Users.find({_id: member.userId});
+    			if (existingUser.count() < 1) {
+    				Boards.update(
+  						{ _id: board._id },
+  						{ $pull: {
+  							members: {
+  								userId: member.userId
+  							}
+  						} }
+						);
+    			}
+    		});
+    	}
+    });
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,

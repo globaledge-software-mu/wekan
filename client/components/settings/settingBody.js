@@ -45,6 +45,17 @@ BlazeComponent.extendComponent({
       sort: ['title'],
     });
   },
+
+  roles() {
+    return Roles.find({});
+  },
+
+  coachOrCoacheeRoles() {
+    return Roles.find({
+      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
+    });
+  },
+
   toggleRegistration() {
     this.setLoading(true);
     const registrationClosed = this.currentSetting().disableRegistration;
@@ -101,13 +112,44 @@ BlazeComponent.extendComponent({
         validEmails.push(email.trim());
       }
     });
+    const roleId = $('.js-profile-role').children("option:selected").val();
+  	const roleName = null;
+    const role = Roles.findOne({_id: roleId});
+    if (role && role.name) {
+    	roleName = role.name;
+    }
     if (validEmails.length) {
       this.setLoading(true);
-      Meteor.call('sendInvitation', validEmails, boardsToInvite, () => {
-        // if (!err) {
-        //   TODO - show more info to user
-        // }
-        this.setLoading(false);
+      // Call method to Invite User(s) to Board(s) 
+//      Meteor.call('sendInvitation', validEmails, boardsToInvite, () => {
+//        // if (!err) {
+//        //   TODO - show more info to user
+//        // }
+//        this.setLoading(false);
+//      });
+      
+      // Added the following logic to call the 'inviteUserToBoard' method from the model 'Users'
+      // so that the system creates the user record and then an email to the user to complete its registration by just entering his password
+      const self = this;
+
+      validEmails.forEach((validEmail) => {
+      	boardsToInvite.forEach((inviteToBoard) => {
+          Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, (err, ret) => {
+            self.setLoading(false);
+            if (err) {
+            	self.setError(err.error);
+            }
+            else if (ret.email) {
+            	self.setError('email-sent');
+              Users.update(
+            		{ _id: ret.userID }, 
+            		{ $set: 
+            			{ 'roleId': roleId, 'roleName': roleName },
+            		}
+          		);
+            }
+          });
+      	});
       });
     }
   },

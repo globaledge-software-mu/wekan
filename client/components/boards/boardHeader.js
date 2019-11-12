@@ -165,22 +165,83 @@ const CreateBoard = BlazeComponent.extendComponent({
     this.visibilityMenuIsOpen.set(!this.visibilityMenuIsOpen.get());
   },
 
+  createTemplateBtn() {
+    var status = $('.board-list').children('.js-add-board-template:visible').length;
+    if (status < 1) {
+      return false;
+    }
+    if ($('.js-create-board.js-add-board').hasClass('is-active')) {
+      return false;
+    }
+    return true;
+  },
+
+  hasTemplate() {
+  	var templateMember = Boards.find({
+  		type: 'template-board',
+  		'members.userId': Meteor.userId(),
+  		archived: false,
+  	});
+  	if (templateMember.count() > 0) {
+  		return true;
+  	} else {
+  		return false;
+  	}
+  },
+
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
-    const visibility = this.visibility.get();
 
-    this.boardId.set(Boards.insert({
-      title,
-      permission: visibility,
-    }));
+    // Creating regular board
+    if (!$('.js-new-board-title').hasClass('createBoardTemplate')) {
+      const visibility = this.visibility.get();
+      this.boardId.set(Boards.insert({
+        title,
+        permission: visibility,
+      }));
 
-    Swimlanes.insert({
-      title: 'Default',
-      boardId: this.boardId.get(),
-    });
+      Swimlanes.insert({
+        title: 'Default',
+        boardId: this.boardId.get(),
+      });
 
-    Utils.goBoardId(this.boardId.get());
+      Utils.goBoardId(this.boardId.get());
+    } 
+    // Creating board template
+    else {
+      let linkedId = '';
+      linkedId = Boards.insert({
+        title,
+        permission: 'private',
+        type: 'template-board',
+      });
+
+      Swimlanes.insert({
+        title: TAPi18n.__('default'),
+        boardId: linkedId,
+      });
+
+      const userProfile = Meteor.user().profile;
+      const defaultBoardTemplatesList = Lists.findOne({
+        swimlaneId: userProfile.boardTemplatesSwimlaneId,
+        archived : false,
+      });
+      const _id = Cards.insert({
+        title,
+        listId: defaultBoardTemplatesList._id,   
+        boardId: userProfile.templatesBoardId,
+        sort: -1,
+        swimlaneId: userProfile.boardTemplatesSwimlaneId,
+        type: 'cardType-linkedBoard',
+        linkedId,
+      });
+
+      // make every admin and manager of the system a member of the template
+      Meteor.user().addEveryAdminAndManagerToBoard(linkedId);
+
+      Utils.goBoardId(linkedId);
+    }
   },
 
   events() {
@@ -201,7 +262,9 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(evt) {
     super.onSubmit(evt);
     // Immediately star boards crated with the headerbar popup.
-    Meteor.user().toggleBoardStar(this.boardId.get());
+    if ($('.board-list').children('.js-add-board-template:visible').length < 1) {
+      Meteor.user().toggleBoardStar(this.boardId.get());
+    }
   }
 }).register('headerBarCreateBoardPopup');
 

@@ -50,7 +50,11 @@ BlazeComponent.extendComponent({
   },
 
   canModifyCard() {
-    return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
+    if ( Meteor.user().regularBoard() || Meteor.user().isBoardTemplateAdmin() ) {
+    	return true;
+    } else {
+    	return false;
+    }
   },
 
   scrollParentContainer() {
@@ -377,27 +381,30 @@ BlazeComponent.extendComponent({
       'click canvas.card-details-item.score-line.chartjs-render-monitor': function(evt) {
         evt.preventDefault();
         evt.stopImmediatePropagation();
-        var activePoints = scoreChart.getElementAtEvent(evt);
-        if (activePoints.length > 0) {
-          var theElement = scoreChart.config.data.datasets[activePoints[0]._datasetIndex].data[activePoints[0]._index];
-          var cardScoreDoc = CardScores.findOne({_id: theElement.pointId})
-          var date = cardScoreDoc.date;
-          var score = cardScoreDoc.score;
-          var type = cardScoreDoc.type;
-          this.currentData()['dataPointDate'] = date;
-          this.currentData()['dataPointScore'] = score;
-          var selector = null;
-          if (type == 'current') {
-            selector = $('.card-details-item-start a.js-edit-date.card-date.start-date').not('.card-score');
-            addNewDate = $('.js-start-date');
-          } else if (type == 'target') {
-            selector = $('.card-details-item-due a.js-edit-date.card-date.due-date').not('.card-score');
-            addNewDate = $('.js-due-date');
-          }
-          if (selector[0]) {
-            selector[0].click();
-          } else {
-            addNewDate.click();
+        
+        if (Meteor.user().canAlterCard()) {
+          var activePoints = scoreChart.getElementAtEvent(evt);
+          if (activePoints.length > 0) {
+            var theElement = scoreChart.config.data.datasets[activePoints[0]._datasetIndex].data[activePoints[0]._index];
+            var cardScoreDoc = CardScores.findOne({_id: theElement.pointId})
+            var date = cardScoreDoc.date;
+            var score = cardScoreDoc.score;
+            var type = cardScoreDoc.type;
+            this.currentData()['dataPointDate'] = date;
+            this.currentData()['dataPointScore'] = score;
+            var selector = null;
+            if (type == 'current') {
+              selector = $('.card-details-item-start a.js-edit-date.card-date.start-date').not('.card-score');
+              addNewDate = $('.js-start-date');
+            } else if (type == 'target') {
+              selector = $('.card-details-item-due a.js-edit-date.card-date.due-date').not('.card-score');
+              addNewDate = $('.js-due-date');
+            }
+            if (selector[0]) {
+              selector[0].click();
+            } else {
+              addNewDate.click();
+            }
           }
         }
       },
@@ -449,7 +456,11 @@ Template.cardDetailsActionsPopup.helpers({
   },
 
   canModifyCard() {
-    return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
+    if ( Meteor.user().regularBoard() || Meteor.user().isBoardTemplateAdmin() ) {
+    	return true;
+    } else {
+    	return false;
+    }
   },
 });
 

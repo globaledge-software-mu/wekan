@@ -1,3 +1,7 @@
+Meteor.publish('users', function() {
+  return Meteor.users.find();
+});
+
 Meteor.publish('user-miniprofile', function(userId) {
   check(userId, String);
 

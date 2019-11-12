@@ -15,7 +15,7 @@ template(name="listBody")
       if (showSpinner (idOrNull ../../_id))
         +spinnerList
 
-      if canSeeAddCard
+      if currentUser.canSeeAddCard
         +inlinedForm(autoclose=false position="bottom")
           +addCardForm(listId=_id position="bottom")
         else

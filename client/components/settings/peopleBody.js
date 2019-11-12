@@ -29,6 +29,8 @@ BlazeComponent.extendComponent({
         }
       });
       this.subscribe('roles');
+      Meteor.subscribe('users');
+      Meteor.subscribe('role_colors');
     });
   },
   events() {
@@ -81,8 +83,30 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-    const users = Users.find(this.findUsersOptions.get(), {
-      fields: {_id: true},
+    const users = Users.find();
+    this.number.set(users.count());
+    return users;
+  },
+  managerUsersList() {
+    const role = Roles.findOne({name: 'Manager'});
+    const users = Users.find({
+      $nor: [
+        { isAdmin: true },
+        { roleId: role._id }
+      ]
+    });
+    this.number.set(users.count());
+    return users;
+  },
+  coachUsersList() {
+    const managerRole = Roles.findOne({name: 'Manager'});
+    const coachRole = Roles.findOne({name: 'Coach'});
+    const users = Users.find({
+      $nor: [
+        { isAdmin: true },
+        { roleId: managerRole._id },
+        { roleId: coachRole._id }
+      ]
     });
     this.number.set(users.count());
     return users;
@@ -111,9 +135,76 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click a.js-setting-menu': this.switchMenu,
+      'click #create-user': Popup.open('createNewUser'),
     }];
   },
 }).register('people');
+
+Template.createNewUserPopup.events({
+  submit(evt, tpl) {
+    evt.preventDefault();
+    const fullname = tpl.find('.js-profile-fullname').value.trim();
+    const username = tpl.find('.js-profile-username').value.trim();
+    const isAdmin = false;
+    if (tpl.find('.js-profile-isadmin')) {
+      isAdmin = tpl.find('.js-profile-isadmin').value.trim();
+    }
+    const roleId = tpl.find('.js-profile-role').value;
+  	const roleName = null;
+    const role = Roles.findOne({_id: roleId});
+    if (role && role.name) {
+    	roleName = role.name;
+    }
+    const email = tpl.find('.js-profile-email').value.trim().toLowerCase();
+    const posAt = email.indexOf('@');
+    let duplicateUserEmail = null;
+    let duplicateUserName = null;
+    if (posAt >= 0) {
+      if (username.length < 1) {
+        username = email.substring(0, posAt);
+        tpl.$('.js-profile-username').text(username);
+      }
+      duplicateUserEmail = Users.findOne({emails: {$elemMatch: {address: email}}});
+      duplicateUserName = Users.findOne({username});
+    }
+
+    const usernameMessageElement = tpl.$('.username-taken');
+    const emailMessageElement = tpl.$('.email-taken');
+
+    $('.user-not-created').closest('label').hide();
+    usernameMessageElement.hide();
+    emailMessageElement.hide();
+    
+    if (duplicateUserEmail && duplicateUserName) {
+      usernameMessageElement.show();
+      emailMessageElement.show();
+    } else if (duplicateUserName) {
+      usernameMessageElement.show();
+    } else if (duplicateUserEmail) {
+      emailMessageElement.show();
+    } else {
+    	const params = {};
+    	params['username'] = username;
+    	params['email'] = email;
+    	params['isAdmin'] = isAdmin;
+    	params['fullname'] = fullname;
+    	params['roleId'] = roleId;
+    	params['roleName'] = roleName;
+      // Create user doc
+      Meteor.call('createNewUser', params, (err, res) => {
+        if (err) {
+          $('.user-not-created').closest('label').show();
+        } else {
+          Popup.close();
+        }
+      });
+    };
+  },
+
+  'click #cancelButton'() {
+    Popup.close();
+  },
+});
 
 Template.peopleRow.helpers({
   userData() {
@@ -166,14 +257,6 @@ Template.editUserPopup.helpers({
     const selected = Users.findOne(userId).authenticationMethod;
     return selected === match;
   },
-  roles() {
-    return Roles.find({});
-  },
-  currentRole(match) {
-    const userId = Template.instance().data.userId;
-    const selected = Users.findOne(userId).roleId;
-    return selected === match;
-  },
   isLdap() {
     const userId = Template.instance().data.userId;
     const selected = Users.findOne(userId).authenticationMethod;
@@ -206,6 +289,11 @@ Template.editUserPopup.events({
     const password = tpl.find('.js-profile-password').value;
     const isAdmin = tpl.find('.js-profile-isadmin').value.trim();
     const roleId = tpl.find('.js-profile-role').value;
+  	const roleName = null;
+    const role = Roles.findOne({_id: roleId});
+    if (role && role.name) {
+    	roleName = role.name;
+    }
     const isActive = tpl.find('.js-profile-isactive').value.trim();
     const email = tpl.find('.js-profile-email').value.trim();
     const authentication = tpl.find('.js-authenticationMethod').value.trim();
@@ -219,6 +307,7 @@ Template.editUserPopup.events({
         'profile.fullname': fullname,
         'isAdmin': isAdmin === 'true',
         'roleId': roleId,
+        'roleName': roleName,
         'loginDisabled': isActive === 'true',
         'authenticationMethod': authentication,
       },
@@ -277,8 +366,45 @@ Template.editUserPopup.events({
   },
 
   'click #deleteButton'() {
-    Users.remove(this.userId);
+  	const oldUserId = this.userId;
+    Users.remove(oldUserId);
+    // Cleanup Boards of this specific no-longer-existing user as a member
+    Boards.find({
+    	archived: false,
+    	'members.userId': oldUserId,
+  	}).forEach((board) => {
+			Boards.update(
+				{ _id: board._id }, 
+				{ $pull: {
+					members: {
+						userId: oldUserId
+					}
+				} }
+			);
+  	});
     Popup.close();
+  },
+});
+
+Template.roleOptions.helpers({
+  currentRole(match) {
+    const userId = Template.instance().data.userId;
+    if (userId) {
+      const selected = Users.findOne(userId).roleId;
+      return selected === match;
+    }
+    return false;
+  },
+  roles() {
+    return Roles.find({});
+  },
+  coachOrCoacheeRoles() {
+    return Roles.find({
+      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
+    });
+  },
+  coacheeRole() {
+    return Roles.findOne({ name: 'Coachee' });
   },
 });
 
@@ -318,13 +444,21 @@ Template.createRolePopup.events({
       permissions.push({group:group, access:access});
     });
     const name = tpl.find('.js-role-name').value.trim();
+    const colour = tpl.$('.fa-check').closest('.palette-color.js-palette-color').data('color');
 
     // insert or update
     if (!this.roleId) {
-      Roles.insert({
+      const newRoleId = Roles.insert({
         'name': name,
         'permissions': permissions,
       });
+      if (colour) {
+      	RoleColors.insert({
+      		roleId: newRoleId, 
+      		color: colour, 
+      		roleName: name
+      	});
+      }
     } else {
       Roles.update(this.roleId, {
         $set: {
@@ -332,9 +466,36 @@ Template.createRolePopup.events({
           'permissions': permissions,
         },
       });
+      if (colour) {
+      	const roleColor = RoleColors.findOne({ roleId: this.roleId });
+      	if (roleColor && roleColor._id) {
+      		RoleColors.update(
+      			{ _id: roleColor._id }, 
+      			{ $set: 
+      				{  color: colour, roleName: name } 
+      			}
+    			);
+      	} else {
+        	RoleColors.insert({
+        		roleId: this.roleId, 
+        		color: colour, 
+        		roleName: name
+        	});
+      	}
+      }
     }
 
     Popup.close();
+  },
+
+  'click .palette-color.js-palette-color'(e) {
+  	if (!$(e.target).hasClass('fa-check')) {
+    	var colorsSelector = $('.palette-color.js-palette-color');
+    	colorsSelector.children().remove();
+    	colorsSelector.css({'padding-left':'8px', 'padding-right':'8px'});
+    	$(e.currentTarget).append('<i class="fa fa-check"></i>');
+    	$(e.currentTarget).css({'padding-left':'5px', 'padding-right':'5px'});
+  	}
   },
 
   'click .js-permission'(evt) {
@@ -345,6 +506,7 @@ Template.createRolePopup.events({
     $target.find('.materialCheckBox').toggleClass('is-checked');
     $target.toggleClass('is-checked');
   },
+
   'click #deleteButton'() {
     Roles.remove(this.roleId);
     Popup.close();
@@ -366,5 +528,37 @@ Template.createRolePopup.helpers({
   },
   role() {
     return Roles.findOne(this.roleId);
+  },
+  managerCoachOrCoacheeDoc(id) {
+  	var role = Roles.findOne({ 
+  		_id: id, 
+  		name: { 
+  			$in: ['Manager', 'Coach', 'Coachee'] 
+  		} 
+  	});
+
+  	if (role) {
+  		return true;
+  	}
+  	return false;
+  },
+  colors() {
+  	return [ 
+  		'green', 'yellow', 'orange', 'red', 
+  		'purple', 'blue', 'sky', 'lime', 
+  		'pink', 'peachpuff', 'crimson', 'plum', 
+  		'darkgreen', 'slateblue', 'magenta', 'gold', 
+  		'navy', 'saddlebrown', 'paleturquoise', 'indigo' 
+  	];
+  },
+  isSelected(id, colour) {
+  	const roleColor = RoleColors.findOne({
+  		roleId: { $exists: true, $eq: id },
+  		color: colour 
+  	});
+  	if (roleColor) {
+  		return true;
+  	}
+  	return false;
   },
 });
