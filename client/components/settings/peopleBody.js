@@ -135,9 +135,76 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click a.js-setting-menu': this.switchMenu,
+      'click #create-user': Popup.open('createNewUser'),
     }];
   },
 }).register('people');
+
+Template.createNewUserPopup.events({
+  submit(evt, tpl) {
+    evt.preventDefault();
+    const fullname = tpl.find('.js-profile-fullname').value.trim();
+    const username = tpl.find('.js-profile-username').value.trim();
+    const isAdmin = false;
+    if (tpl.find('.js-profile-isadmin')) {
+      isAdmin = tpl.find('.js-profile-isadmin').value.trim();
+    }
+    const roleId = tpl.find('.js-profile-role').value;
+  	const roleName = null;
+    const role = Roles.findOne({_id: roleId});
+    if (role && role.name) {
+    	roleName = role.name;
+    }
+    const email = tpl.find('.js-profile-email').value.trim().toLowerCase();
+    const posAt = email.indexOf('@');
+    let duplicateUserEmail = null;
+    let duplicateUserName = null;
+    if (posAt >= 0) {
+      if (username.length < 1) {
+        username = email.substring(0, posAt);
+        tpl.$('.js-profile-username').text(username);
+      }
+      duplicateUserEmail = Users.findOne({emails: {$elemMatch: {address: email}}});
+      duplicateUserName = Users.findOne({username});
+    }
+
+    const usernameMessageElement = tpl.$('.username-taken');
+    const emailMessageElement = tpl.$('.email-taken');
+
+    $('.user-not-created').closest('label').hide();
+    usernameMessageElement.hide();
+    emailMessageElement.hide();
+    
+    if (duplicateUserEmail && duplicateUserName) {
+      usernameMessageElement.show();
+      emailMessageElement.show();
+    } else if (duplicateUserName) {
+      usernameMessageElement.show();
+    } else if (duplicateUserEmail) {
+      emailMessageElement.show();
+    } else {
+    	const params = {};
+    	params['username'] = username;
+    	params['email'] = email;
+    	params['isAdmin'] = isAdmin;
+    	params['fullname'] = fullname;
+    	params['roleId'] = roleId;
+    	params['roleName'] = roleName;
+      // Create user doc
+      Meteor.call('createNewUser', params, (err, res) => {
+        if (err) {
+          $('.user-not-created').closest('label').show();
+        } else {
+          Popup.close();
+        }
+      });
+    };
+  },
+
+  'click #cancelButton'() {
+    Popup.close();
+  },
+});
 
 Template.peopleRow.helpers({
   userData() {
@@ -189,22 +256,6 @@ Template.editUserPopup.helpers({
     const userId = Template.instance().data.userId;
     const selected = Users.findOne(userId).authenticationMethod;
     return selected === match;
-  },
-  roles() {
-    return Roles.find({});
-  },
-  currentRole(match) {
-    const userId = Template.instance().data.userId;
-    const selected = Users.findOne(userId).roleId;
-    return selected === match;
-  },
-  coachOrCoacheeRoles() {
-    return Roles.find({
-      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
-    });
-  },
-  coacheeRole() {
-    return Roles.findOne({ name: 'Coachee' });
   },
   isLdap() {
     const userId = Template.instance().data.userId;
@@ -332,6 +383,28 @@ Template.editUserPopup.events({
 			);
   	});
     Popup.close();
+  },
+});
+
+Template.roleOptions.helpers({
+  currentRole(match) {
+    const userId = Template.instance().data.userId;
+    if (userId) {
+      const selected = Users.findOne(userId).roleId;
+      return selected === match;
+    }
+    return false;
+  },
+  roles() {
+    return Roles.find({});
+  },
+  coachOrCoacheeRoles() {
+    return Roles.find({
+      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
+    });
+  },
+  coacheeRole() {
+    return Roles.findOne({ name: 'Coachee' });
   },
 });
 

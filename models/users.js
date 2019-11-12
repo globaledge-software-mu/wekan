@@ -825,6 +825,34 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+  	createNewUser(params) {
+      check(params, Object);
+
+      const username = params.username;
+      const email = params.email;
+
+      // create new user 
+      const newUserId = Accounts.createUser({username, email});
+
+      // update new user's details
+    	Users.update(
+  			{ _id: newUserId },
+  			{ $set: {
+          'profile.fullname': params.fullname,
+          'isAdmin': params.isAdmin === 'true',
+          'roleId': params.roleId,
+          'roleName': params.roleName,
+          'loginDisabled': false,
+          'authenticationMethod': 'password',
+  			} }
+			);
+
+      // Send new user invite to complete registration by adding his password
+      Accounts.sendEnrollmentEmail(newUserId);
+
+      return newUserId;
+  	},
+
     // we accept userId, username, email
     inviteUserToBoard(username, boardId) {
       check(username, String);
