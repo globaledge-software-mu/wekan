@@ -522,6 +522,19 @@ BlazeComponent.extendComponent({
         $('.emptyFolderMessage').remove();
         $('li.js-add-board-template, li.categorised_boards, li.board_templates').hide();
         $('li.js-add-board, li.uncategorised_boards').show();
+
+      	$('li.uncategorised_boards').draggable({
+      	  revert: 'invalid',
+      	  start: function(event) {
+              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+      	  },
+      	  drag: function() {},
+      	  stop: function() {
+      	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
+            $('p#actionTitle', this).remove();
+      	  }
+      	});
       },
 
       'mouseover a#templatesFolder': function(e) {
