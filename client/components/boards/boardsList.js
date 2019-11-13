@@ -25,33 +25,20 @@ BlazeComponent.extendComponent({
   onRendered() {
   	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
-  	$('li.uncategorised_boards').draggable({
-  	  revert: 'invalid',
-  	  start: function(event) {
-          $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-          $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-  	  },
-  	  drag: function() {},
-  	  stop: function() {
-  	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
-        $('p#actionTitle', this).remove();
-  	  }
-  	});
+  	const folder = Session.get('folder');
 
-  	// part of the codes for the functionality of dragging boards onto boards
-/*  	$('li.board-color-belize').droppable({
-      accept: 'li.board-color-belize', 
-      tolerance: 'pointer',
-      drop: function( event, ui ) {
-    		var draggedBoardId = $(ui.draggable).data('id');
-    		var droppedOnBoardId = $(this).data('id');
-
-  	    Modal.open('createNewFolder');
-
-  	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
-  	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
-  	  }
-  	});*/
+  	if (folder == 'uncategorised') {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+  	} else if (folder == 'templates') {
+      $('a#templatesFolder').trigger('click');
+  	} else {
+  		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		} else {
+  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click()
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		}
+  	}
   },
 
   boards() {

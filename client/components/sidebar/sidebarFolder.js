@@ -205,10 +205,6 @@ BlazeComponent.extendComponent({
         }
       }
     });
-
-    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
-      $('a#uncategorisedBoardsFolder').trigger('click');
-    }
   },
 
   onCreated() {
@@ -437,6 +433,8 @@ BlazeComponent.extendComponent({
           var selectedFolder = Folders.findOne({ _id:folderId }); 
           var folderContents = selectedFolder.contents;
 
+          Session.set('folder', folderId);
+
           $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
           $('.emptyFolderMessage').remove();
 
@@ -484,6 +482,8 @@ BlazeComponent.extendComponent({
 
       'click a#templatesFolder': function() {
         Popup.close();
+        Session.set('folder', 'templates');
+
         $('a.folderOpener, a#uncategorisedBoardsFolder').removeClass('selected');
         $('a#templatesFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
@@ -517,6 +517,8 @@ BlazeComponent.extendComponent({
 
       'click a#uncategorisedBoardsFolder': function() {
         Popup.close();
+        Session.set('folder', 'uncategorised');
+
         $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();

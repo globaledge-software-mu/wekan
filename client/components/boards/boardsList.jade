@@ -8,7 +8,7 @@ template(name="boardList")
         li.js-add-board
           a.board-list-item.label {{_ 'add-board'}}
       if currentUser.hasPermission 'templates' 'insert'
-        li.js-add-board-template
+        li.js-add-board-template.hide
           a.board-list-item.label {{_ 'add-board-template'}}
       each folders
         div.folderDetails(data-folder-id="{{_id}}")
@@ -49,41 +49,40 @@ template(name="boardList")
                         title="{{_ 'archive-board'}}")
 
       each uncategorisedBoards
-        unless isTemplatesBoard
-          li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
-            if isInvited
-              .board-list-item
-                span.details
-                  span.board-list-item-name= title
-                  i.fa.js-star-board(
-                    class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
-                    title="{{_ 'star-board-title'}}")
-                  p.board-list-item-desc {{_ 'just-invited'}}
-                  button.js-accept-invite.primary {{_ 'accept'}}
-                  button.js-decline-invite {{_ 'decline'}}
-            else
-              a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
-                span.details
-                  span.board-list-item-name
-                    +viewer
-                      = title
-                  i.fa.js-star-board(
-                    class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
-                    title="{{_ 'star-board-title'}}")
-                  p.board-list-item-desc
-                    +viewer
-                      = description
-                  if hasSpentTimeCards
-                    i.fa.js-has-spenttime-cards(
-                      class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
-                      title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
-                  if currentUser.hasPermission 'boards' 'insert'
-                    i.fa.js-clone-board(
-                        class="fa-clone"
-                        title="{{_ 'duplicate-board'}}")
-                  i.fa.js-archive-board(
-                      class="fa-archive"
-                      title="{{_ 'archive-board'}}")
+        li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
+          if isInvited
+            .board-list-item
+              span.details
+                span.board-list-item-name= title
+                i.fa.js-star-board(
+                  class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                  title="{{_ 'star-board-title'}}")
+                p.board-list-item-desc {{_ 'just-invited'}}
+                button.js-accept-invite.primary {{_ 'accept'}}
+                button.js-decline-invite {{_ 'decline'}}
+          else
+            a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+              span.details
+                span.board-list-item-name
+                  +viewer
+                    = title
+                i.fa.js-star-board(
+                  class="fa-star{{#if isStarred}} is-star-active{{else}}-o{{/if}}"
+                  title="{{_ 'star-board-title'}}")
+                p.board-list-item-desc
+                  +viewer
+                    = description
+                if hasSpentTimeCards
+                  i.fa.js-has-spenttime-cards(
+                    class="fa-circle{{#if hasOvertimeCards}} has-overtime-card-active{{else}} no-overtime-card-active{{/if}}"
+                    title="{{#if hasOvertimeCards}}{{_ 'has-overtime-cards'}}{{else}}{{_ 'has-spenttime-cards'}}{{/if}}")
+                if currentUser.hasPermission 'boards' 'insert'
+                  i.fa.js-clone-board(
+                      class="fa-clone"
+                      title="{{_ 'duplicate-board'}}")
+                i.fa.js-archive-board(
+                    class="fa-archive"
+                    title="{{_ 'archive-board'}}")
 
       if currentUser.isAdminOrManager
         each everyBoardTemplates
