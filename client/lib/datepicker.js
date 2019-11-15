@@ -19,7 +19,6 @@ DatePicker = BlazeComponent.extendComponent({
     }).on('changeDate', function(evt) {
       this.find('#date').value = moment(evt.date).format('L');
       this.error.set('');
-      this.find('#time').focus();
     }.bind(this));
 
     if (this.date.get().isValid()) {
@@ -82,12 +81,16 @@ DatePicker = BlazeComponent.extendComponent({
       },
       'submit .edit-date'(evt) {
         evt.preventDefault();
-
-        // if no time was given, init with 12:00
-        const time = evt.target.time.value || moment(new Date().setHours(12, 0, 0)).format('LT');
-
-        const dateString = `${evt.target.date.value} ${time}`;
-        const newDate = moment(dateString, 'L LT', true);
+        const newDate = '';
+        if (evt.target.time && evt.target.time.value) {
+          // if no time was given, init with 12:00
+          const time = evt.target.time.value || moment(new Date().setHours(12, 0, 0)).format('LT');
+          const dateString = `${evt.target.date.value} ${time}`;
+          newDate = moment(dateString, 'L LT', true);
+        } else {
+          const dateString = `${evt.target.date.value}`;
+          newDate = moment(dateString, 'L', true);
+        }
         
         if (!newDate.isValid()) {
           this.error.set('invalid-date');

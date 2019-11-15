@@ -19,7 +19,6 @@ BlazeComponent.extendComponent({
     }).on('changeDate', function(evt) {
       this.find('#date').value = moment(evt.date).format('L');
       this.error.set('');
-      this.find('#time').focus();
     }.bind(this));
 
     if (this.date.get().isValid()) {

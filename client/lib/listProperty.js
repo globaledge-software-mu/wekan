@@ -60,7 +60,9 @@ ListProperty = BlazeComponent.extendComponent({
     const property = ListProperties.findOne({listId: this.list._id, i18nKey: i18nKey});
     if (typeof property !== 'undefined') {
       let useTime = (property.hasOwnProperty('useTime')) ? property.useTime : false;
-      return useTime
+      return useTime;
+    } else {
+    	return true;
     }
   },
   
