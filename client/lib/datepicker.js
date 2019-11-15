@@ -112,7 +112,10 @@ DatePicker = BlazeComponent.extendComponent({
         }
         
         this._storeDate(newDate.toDate());
-        this._storeScore(evt.target.score.value);
+
+        if (evt.target && evt.target.score && evt.target.score.value) {
+          this._storeScore(evt.target.score.value);
+        }
         Popup.close();
       },
       'click .js-delete-date'(evt) {
