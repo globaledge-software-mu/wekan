@@ -29,6 +29,16 @@ DatePicker = BlazeComponent.extendComponent({
     Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('LT').toUpperCase(), placeholder: moment.localeData().longDateFormat('LT')}).mask(this.$('#time'));
   },
 
+  removeTimeUI(listIdentifier, key) {
+    const property = ListProperties.findOne({listId: listIdentifier, i18nKey: key});
+    if (typeof property !== 'undefined') {
+      let useTime = (property.hasOwnProperty('useTime')) ? property.useTime : false;
+      if (useTime !== true) {
+      	$('.js-time-field#time').closest('.right').remove();
+      }
+    }
+  },
+
   showDate() {
     if (this.date.get().isValid())
       return this.date.get().format('L');

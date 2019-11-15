@@ -30,6 +30,13 @@ ListProperty = BlazeComponent.extendComponent({
     }
   },
   
+  _storeTime(i18nKey, useTime) {
+    const property = ListProperties.findOne({listId: this.list._id, i18nKey: i18nKey});
+    if (typeof property !== 'undefined') {
+      ListProperties.update({_id: property._id}, {$set: {useTime}})
+    }
+  },
+  
   _storeColor(i18nKey, color) {
     const property = ListProperties.findOne({listId: this.list._id, i18nKey: i18nKey});
     if (typeof property !== 'undefined') {
@@ -46,6 +53,14 @@ ListProperty = BlazeComponent.extendComponent({
     if (typeof property !== 'undefined') {
       let useDateWarnings = (property.hasOwnProperty('useDateWarnings')) ? property.useDateWarnings : false;
       return useDateWarnings
+    }
+  },
+  
+  hasTime(i18nKey) {
+    const property = ListProperties.findOne({listId: this.list._id, i18nKey: i18nKey});
+    if (typeof property !== 'undefined') {
+      let useTime = (property.hasOwnProperty('useTime')) ? property.useTime : false;
+      return useTime
     }
   },
   
@@ -76,6 +91,11 @@ ListProperty = BlazeComponent.extendComponent({
           this._storeDateWarnings(checked);
         }
         
+        if ($('#time').length) {
+          var checked = $('#time .materialCheckBox').hasClass('is-checked');
+          this._storeTime(checked);
+        }
+
         if ($('.fa-check').length) {
           const color = Blaze.getData($('.fa-check').get(0)).color;
           this._storeColor(color);
@@ -86,7 +106,7 @@ ListProperty = BlazeComponent.extendComponent({
       'click .js-cancel-alias-edit' (evt) {
         Popup.back();
       },
-      'click .date-warnings' (evt) {
+      'click .date-warnings, click .use-time' (evt) {
         const value = evt.target.id || $(evt.target).parent()[0].id ||  $(evt.target).parent()[0].parent()[0].id;
         var checked = $(`#${value} .materialCheckBox`).hasClass('is-checked');
         $(`#${value} .materialCheckBox`).toggleClass('is-checked', !checked);

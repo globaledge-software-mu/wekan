@@ -106,6 +106,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-received-score-title')) {
       $('.score').remove();
     }
+    
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Received'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-received');
   }
 
   _storeDate(date) {
@@ -157,6 +161,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-start-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Start'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-start');
   }
 
   _storeDate(date) {
@@ -238,6 +246,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-due-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Due'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-due');
   }
 
   _storeDate(date) {
@@ -301,6 +313,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-end-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'End'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-end');
   }
 
   _storeDate(date) {
