@@ -1326,9 +1326,12 @@ Cards.mutations({
 
     const newBoard = Boards.findOne(boardId);
     const newBoardLabels = newBoard.labels;
-    const newCardLabelIds = _.pluck(_.filter(newBoardLabels, (label) => {
-      return label.name && _.contains(oldCardLabels, label.name);
-    }), '_id');
+    const newCardLabelIds = new Array();
+    newBoardLabels.forEach((boardLabel) => {
+    	if ($.inArray(boardLabel._id, this.labelIds) > -1) {
+    		newCardLabelIds.push(boardLabel._id);
+    	}
+    });
 
     const mutatedFields = {
       boardId,
