@@ -8,8 +8,8 @@ template(name="minicard")
     if labels
       .minicard-labels
         each labels
-          .minicard-label(class="card-label-{{color}}" title="{{name}}")
-    .minicard-title
+          .minicard-label(class="card-label-{{color}}" title="{{name}}" data-label-id="{{_id}}")
+    .minicard-title(data-card-id="{{getId}}")
       .handle
         .fa.fa-arrows
       if $eq 'prefix-with-full-path' currentBoard.presentParentTask

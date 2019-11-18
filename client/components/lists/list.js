@@ -114,7 +114,7 @@ BlazeComponent.extendComponent({
       Tracker.afterFlush(() => {
         $cards.find(itemsSelector).droppable({
           hoverClass: 'draggable-hover-card',
-          accept: '.js-member,.js-label',
+          accept: '.js-member,.js-label,.minicard-label',
           drop(event, ui) {
             const cardId = Blaze.getData(this)._id;
             const card = Cards.findOne(cardId);
