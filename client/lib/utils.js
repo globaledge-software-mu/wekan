@@ -172,9 +172,6 @@ Utils = {
         	$(this).closest('.minicard').find('.minicard-labels').append(displacedlabel);
         	$(this).remove();
         }
-        
-        /////
-        console.log('A')
 
       	// Call method to re-initialise the draggables for the Labels
         Utils.turnLabelsToDraggables();
