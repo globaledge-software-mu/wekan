@@ -1,4 +1,4 @@
-const { calculateIndex, enableClickOnTouch } = Utils;
+const { calculateIndex, enableClickOnTouch, turnLabelsToDraggables } = Utils;
 
 BlazeComponent.extendComponent({
   // Proxy
@@ -123,8 +123,14 @@ BlazeComponent.extendComponent({
               const memberId = Blaze.getData(ui.draggable.get(0)).userId;
               card.assignMember(memberId);
             } else {
-              const labelId = Blaze.getData(ui.draggable.get(0))._id;
-              card.addLabel(labelId);
+            	Tracker.nonreactive(() => {
+	              const labelId = Blaze.getData(ui.draggable.get(0))._id;
+	              card.addLabel(labelId);
+            	});
+            	Tracker.afterFlush(() => {
+	              // Re-initialising the draggables for the Labels
+	            	turnLabelsToDraggables();
+              });
             }
           },
         });
