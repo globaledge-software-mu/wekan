@@ -77,10 +77,12 @@ BlazeComponent.extendComponent({
     if (!lastLabelId)
       return null;
     const lastLabel = Boards.findOne(Session.get('currentBoard')).getLabelById(lastLabelId);
-    if(lastLabel.name === undefined || lastLabel.name === ''){
-      return lastLabel.color;
-    }else{
-      return lastLabel.name;
+    if (lastLabel) {
+      if(lastLabel.name === undefined || lastLabel.name === ''){
+        return lastLabel.color;
+      }else{
+        return lastLabel.name;
+      }
     }
   },
 
