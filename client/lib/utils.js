@@ -148,8 +148,11 @@ Utils = {
 	// Method to help in re-initialising the draggables for the Labels
   turnLabelsToDraggables() {
     $('div.minicard-label').draggable({
+      helper: 'clone',
+      appendTo: 'body',
       start: function(event, ui) {
-        ui.helper.css('z-index', 2000);
+      	ui.helper.css('width', '11px');
+      	ui.helper.css('height', '11px');
       },
       drag: function() {},
       stop: function() {
@@ -168,9 +171,13 @@ Utils = {
     			});
         } else if (stoppedAtCardId === sourceCardId) {
         	// Moved on same card, place it in its correct place
-        	var displacedlabel = '<div class="minicard-label card-label-'+labelColor+'" title="" data-label-id='+labelId+' data-color='+labelColor+' style="position: relative;"></div>';
-        	$(this).closest('.minicard').find('.minicard-labels').append(displacedlabel);
-        	$(this).remove();
+        	Tracker.nonreactive(() => {
+          	var displacedlabel = '<div class="minicard-label card-label-'+labelColor+'" title="" data-label-id='+labelId+' data-color='+labelColor+' style="position: relative;"></div>';
+          	$(this).closest('.minicard').find('.minicard-labels').append(displacedlabel);
+        	});
+        	Tracker.afterFlush(() => {
+          	$(this).remove();
+        	});
         }
 
       	// Call method to re-initialise the draggables for the Labels
