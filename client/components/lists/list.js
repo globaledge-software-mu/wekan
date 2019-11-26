@@ -125,7 +125,23 @@ BlazeComponent.extendComponent({
             } else {
             	Tracker.nonreactive(() => {
 	              const labelId = Blaze.getData(ui.draggable.get(0))._id;
+            		const labelColor = Blaze.getData(ui.draggable.get(0)).color;
+            		const sourceCardId = ui.draggable.closest('.minicard-wrapper').find('.minicard-title').data('card-id');
+            		const stoppedAtCardId = $(event.target).find('.minicard-title').data('card-id');
+
+	              // Add color-label to minicard
 	              card.addLabel(labelId);
+
+	              // Remove color-label from minicard
+	              if (stoppedAtCardId !== sourceCardId) {
+	              	Cards.update({
+	          				_id: sourceCardId
+	          			}, {
+	          				$pull: {
+	          					labelIds: labelId, 
+	        					} 
+	          			});
+	              }
             	});
             	Tracker.afterFlush(() => {
 	              // Re-initialising the draggables for the Labels

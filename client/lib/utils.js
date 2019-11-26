@@ -153,15 +153,34 @@ Utils = {
       start: function(event, ui) {
       	ui.helper.css('width', '11px');
       	ui.helper.css('height', '11px');
+      	ui.helper.addClass('dragging-clone');
       },
-      drag: function() {},
-      stop: function() {
-        var stoppedAtCardId = $(event.target).closest('.minicard-wrapper').find('.minicard-title').data('card-id');
-        var sourceCardId = $(this).closest('.minicard-labels').siblings('.minicard-title').data('card-id');
-        var labelId = $(this).data('label-id');
-        var labelColor = $(this).data('color');
+      drag: function(event, ui) {},
+      stop: function(event, ui) {
+      	// Call method to re-initialise the draggables for the Labels
+        Utils.turnLabelsToDraggables();
 
-        if (stoppedAtCardId !== sourceCardId) {
+      	// Initialise outside of minicard-wrapper to be droppable for 
+      	// minicard-label so that we can remove the minicard-label
+      	Utils.turnAllToDroppableExceptMinicardWrapperElements();
+      }
+    });
+  },
+
+	// Initialise outside of minicard-wrapper to be droppable for 
+	// minicard-label so that we can remove the minicard-label when
+	// it is dropped ouside of a minicard
+  turnAllToDroppableExceptMinicardWrapperElements() {
+    $('.list, .minicards, .placeholder, .js-card-composer, .list-header, .sidebar-content').droppable({
+      accept: '.minicard-label',
+      drop(event, ui) {
+        const labelId = Blaze.getData(ui.draggable.get(0))._id;
+    		const sourceCardId = ui.draggable.closest('.minicard-wrapper').find('.minicard-title').data('card-id');
+    		if ( $(this).hasClass('minicard-wrapper') || $(this).parents('minicard-wrapper').hasClass('minicard-wrapper') ) { 
+    			// have to return false since the color-label was dropped onto a minicard
+    			return false; 
+  			} else {
+          // Remove color-label from minicard
         	Cards.update({
     				_id: sourceCardId
     			}, {
@@ -169,20 +188,8 @@ Utils = {
     					labelIds: labelId, 
   					} 
     			});
-        } else if (stoppedAtCardId === sourceCardId) {
-        	// Moved on same card, place it in its correct place
-        	Tracker.nonreactive(() => {
-          	var displacedlabel = '<div class="minicard-label card-label-'+labelColor+'" title="" data-label-id='+labelId+' data-color='+labelColor+' style="position: relative;"></div>';
-          	$(this).closest('.minicard').find('.minicard-labels').append(displacedlabel);
-        	});
-        	Tracker.afterFlush(() => {
-          	$(this).remove();
-        	});
-        }
-
-      	// Call method to re-initialise the draggables for the Labels
-        Utils.turnLabelsToDraggables();
-      }
+  			}
+      },
     });
   },
 
