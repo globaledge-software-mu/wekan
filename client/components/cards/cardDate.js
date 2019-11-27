@@ -63,9 +63,8 @@ BlazeComponent.extendComponent({
       'submit .edit-date'(evt) {
         evt.preventDefault();
 
-        // if no time was given, init with 12:00
-        const time = evt.target.time.value || moment(new Date().setHours(12, 0, 0)).format('LT');
-
+        // if no time was given, init with 23:59
+        const time = evt.target.time.value || moment(new Date().setHours(23, 59, 0)).format('LT');
         const dateString = `${evt.target.date.value} ${time}`;
         const newDate = moment(dateString, 'L LT', true);
         if (newDate.isValid()) {
