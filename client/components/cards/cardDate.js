@@ -356,7 +356,7 @@ const CardDate = BlazeComponent.extendComponent({
   	const listIdentifier = this.data().list()._id;
     const property = ListProperties.findOne({listId: listIdentifier, i18nKey: key});
     // If Time is disabled, we extract the default time from the text to be displayed
-    if (!property || property && !property.useTime) {
+    if (property && !property.useTime) {
       return (this.date.get().calendar(null, {
       	lastDay : '[Yesterday]',
         sameDay : '[Today]',
