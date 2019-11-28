@@ -350,13 +350,26 @@ const CardDate = BlazeComponent.extendComponent({
     }, 60000);
   },
 
-  showDate() {
-    // this will start working once mquandalle:moment
-    // is updated to at least moment.js 2.10.5
-    // until then, the date is displayed in the "L" format
-    return this.date.get().calendar(null, {
-      sameElse: 'llll',
-    });
+  // this method is ran only when a minicard is opened and has any received or start or due or end date
+  // and when received or start or due or end date gets edited
+  showDate(key) {
+  	const listIdentifier = this.data().list()._id;
+    const property = ListProperties.findOne({listId: listIdentifier, i18nKey: key});
+    // If Time is disabled, we extract the default time from the text to be displayed
+    if (!property || property && !property.useTime) {
+      return (this.date.get().calendar(null, {
+      	lastDay : '[Yesterday]',
+        sameDay : '[Today]',
+        nextDay : '[Tomorrow]',
+        lastWeek : '[last]',
+        nextWeek : '[Next]',
+        sameElse : 'llll',
+      }).split(" at"))[0];
+    } else {
+      return this.date.get().calendar(null, {
+        sameElse: 'llll',
+      });
+    }
   },
 
   showISODate() {
@@ -392,6 +405,10 @@ class CardReceivedDate extends CardDate {
       return 'received-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-received';
   }
 
   showTitle() {
@@ -435,6 +452,10 @@ class CardStartDate extends CardDate {
       return 'start-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-start';
   }
 
   showTitle() {
@@ -482,6 +503,10 @@ class CardDueDate extends CardDate {
     }
     return classes;
   }
+  
+  distinguishDate() {
+  	return 'card-due';
+  }
 
   showTitle() {
     return `${TAPi18n.__('card-due-on')} ${this.date.get().format('LLLL')}`;
@@ -520,6 +545,10 @@ class CardEndDate extends CardDate {
       return 'end-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-end';
   }
 
   showTitle() {
