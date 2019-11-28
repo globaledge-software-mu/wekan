@@ -225,6 +225,7 @@ Template.dateBadge.helpers({
     // The following if condition distinguishes whether the edit button was clicked directly 
     // or it was triggered from the click event of the historical chart's datapoint 
     if (!this.data().dataPointDate) {
+      this.data().getDue() && this.date.set(moment(this.data().getDue()));
       this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
     } else {
       this.data().getDue() && this.date.set(moment(this.data().getDue()));
