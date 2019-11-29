@@ -1,7 +1,7 @@
 template(name="boardList")
-  .row
+  .row#homepageRow
     +foldersWidget
-    ul.col-md-8.board-list.clearfix
+    ul.col-md-9.board-list.clearfix
       a.sidebar-folder-tongue.js-toggle-sidebar(title='Close Sidebar')
         i.fa.fa-angle-left
       if currentUser.hasPermission 'boards' 'insert'

@@ -2,7 +2,7 @@ const defaultView = 'home';
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.InfiniteScrolling, Mixins.PerfectScrollbar];
+    return [Mixins.InfiniteScrolling];
   },
 
   onRendered() {

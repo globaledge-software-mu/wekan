@@ -213,18 +213,30 @@ BlazeComponent.extendComponent({
         });
       },
       'click .sidebar-folder-tongue': function(e) {
-        var selector = $('.sidebar-folder-tongue').children();
+      	var folderTongue = $('.sidebar-folder-tongue');
+        var selector = folderTongue.children();
         if (selector.hasClass('fa-angle-left')) {
           // close sidebar
           $('.board-widget-folders').hide();
-          $('.sidebar-folder-tongue').css('left', '7px');
+          folderTongue.css('left', '7px');
         } else if (selector.hasClass('fa-angle-right')) {
           // open sidebar
           $('.board-widget-folders').show();
-          $('.sidebar-folder-tongue').css('left', '-8px');
+          folderTongue.css('left', '-8px');
         }
         selector.toggleClass('fa-angle-right fa-angle-left');
-        $('.board-list.clearfix').toggleClass('col-md-8 col-md-11');
+        $('.board-list.clearfix').toggleClass('col-md-9 col-md-11');
+        if ($('.board-list.clearfix').hasClass('col-md-11')) {
+        	folderTongue.remove();
+        	$('#homepageRow').append(
+      			'<a class="sidebar-folder-tongue js-toggle-sidebar ui-sortable-handle" title="Open Sidebar"><i class="fa fa-angle-right"></i></a>'
+    			);
+        } else {
+        	folderTongue.remove();
+        	$('.board-list.clearfix').append(
+      			'<a class="sidebar-folder-tongue js-toggle-sidebar ui-sortable-handle" title="Close Sidebar"><i class="fa fa-angle-left"></i></a>'
+    			);
+        }
       },
     }];
   },
