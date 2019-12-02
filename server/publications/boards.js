@@ -2,7 +2,6 @@
 Meteor.publish('templateBoards', function() {
   return Boards.find({
     type: 'template-board',
-    archived: false, 
   });
 });
 
