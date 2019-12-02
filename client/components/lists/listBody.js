@@ -8,7 +8,7 @@ BlazeComponent.extendComponent({
   },
 
   mixins() {
-    return [Mixins.PerfectScrollbar];
+    return [Mixins.InfiniteScrolling];
   },
 
   openForm(options) {
@@ -467,11 +467,14 @@ BlazeComponent.extendComponent({
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.PerfectScrollbar];
+    return [Mixins.InfiniteScrolling];
   },
 
   onCreated() {
-    Meteor.subscribe('cards');
+  	Tracker.nonreactive(() => {
+      Meteor.subscribe('userTemplateContainerBoard');
+      Meteor.subscribe('cards');
+  	});
     this.isCardTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-card-template');
     this.isListTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-list-template');
     this.isSwimlaneTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-open-add-swimlane-menu');
@@ -481,23 +484,27 @@ BlazeComponent.extendComponent({
       this.isSwimlaneTemplateSearch ||
       this.isBoardTemplateSearch;
     let board = {};
-    if (this.isTemplateSearch) {
-      board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
-    } else {
-      // Prefetch first non-current board id
-      board = Boards.findOne({
-        archived: false,
-        'members.userId': Meteor.userId(),
-        _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
-      });
-    }
+  	Tracker.afterFlush(() => {
+      if (this.isTemplateSearch) {
+        board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
+      } else {
+        // Prefetch first non-current board id
+        board = Boards.findOne({
+          archived: false,
+          'members.userId': Meteor.userId(),
+          _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
+        });
+      }
+  	});
     if (!board) {
       Popup.close();
       return;
     }
     const boardId = board._id;
     // Subscribe to this board
-    subManager.subscribe('board', boardId, false);
+    if (boardId) {
+      subManager.subscribe('board', boardId, false);
+    }
     this.selectedBoardId = new ReactiveVar(boardId);
 
     if (!this.isBoardTemplateSearch) {

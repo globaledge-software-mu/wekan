@@ -423,6 +423,33 @@ Migrations.add('add-defaultAuthenticationMethod', () => {
   }, noValidateMulti);
 });
 
+Migrations.add('add-member-to-template-container', () => {
+  Users.find({
+    'profile.templatesBoardId': {
+      $exists: true,
+      $ne: null,
+    },
+  }).forEach((user) => {
+  	var container = Boards.findOne({_id: user.profile.templatesBoardId});
+  	if (container && container.members && container.members.length < 1) {
+	    Boards.update({
+	    	_id: user.profile.templatesBoardId,
+	      type: 'template-container'
+	    }, {
+	    	$push: {
+		      members: {
+	          userId: user._id,
+	          isAdmin: true,
+	          isActive: true,
+	          isNoComments: false,
+	          isCommentOnly: false,
+	        },
+	    	}
+	    });
+  	}
+  });
+})
+
 Migrations.add('add-templates', () => {
   Boards.update({
     type: {

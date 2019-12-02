@@ -20,6 +20,7 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('setting');
     Meteor.subscribe('folders');
     Meteor.subscribe('templateBoards');
+    Meteor.subscribe('cards');
   },
 
   onRendered() {
@@ -39,6 +40,44 @@ BlazeComponent.extendComponent({
     		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
   		}
   	}
+
+  	// Add member to its template-container, case the template-container 
+  	// member is null but the user has the template-container's id
+  	var templatesBoardId = Meteor.user().profile.templatesBoardId;
+  	var container = Boards.findOne({_id: templatesBoardId});
+  	if (container && container.members && container.members.length < 1) {
+	    Boards.update({
+	    	_id: templatesBoardId,
+	      type: 'template-container'
+	    }, {
+	    	$push: {
+		      members: {
+	          userId: Meteor.user()._id,
+	          isAdmin: true,
+	          isActive: true,
+	          isNoComments: false,
+	          isCommentOnly: false,
+	        },
+	    	}
+	    });
+  	}
+
+  	// Archive any card of type "cardType-linkedBoard" whose 
+  	// Board has been archived. 
+  	Boards.find({ 
+  		type: 'template-board',
+  		archived: true,
+		}).forEach((archivedBoard) => {
+  		var cardLinkedBoard = Cards.findOne({linkedId: archivedBoard._id});
+  		if (cardLinkedBoard && !cardLinkedBoard.archived) {
+  			Cards.update(
+					{ _id: cardLinkedBoard._id }, 
+					{ $set: {
+						archived: true,
+					} }
+				);
+  		}
+  	});
   },
 
   boards() {

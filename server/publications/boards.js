@@ -6,6 +6,15 @@ Meteor.publish('templateBoards', function() {
   });
 });
 
+//Publishing the user's TemplateContainerBoard
+Meteor.publish('userTemplateContainerBoard', function() {
+	const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
+  return Boards.find({
+  	_id: userTemplateContainerId,
+    archived: false, 
+  });
+});
+
 // This is the publication used to display the board list. We publish all the
 // non-archived boards:
 // 1. that the user is a member of

@@ -10,7 +10,7 @@ Meteor.startup(() => {
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.InfiniteScrolling, Mixins.PerfectScrollbar];
+    return [Mixins.InfiniteScrolling];
   },
 
   calculateNextPeak() {
