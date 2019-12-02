@@ -67,6 +67,7 @@ BlazeComponent.extendComponent({
   	Boards.find({ 
   		type: 'template-board',
   		archived: true,
+  		'members.userId': Meteor.user()._id
 		}).forEach((archivedBoard) => {
   		var cardLinkedBoard = Cards.findOne({linkedId: archivedBoard._id});
   		if (cardLinkedBoard && !cardLinkedBoard.archived) {
@@ -168,7 +169,9 @@ BlazeComponent.extendComponent({
         _id: { $nin: categorisedBoardIds }, 
         archived: false, 
         'members.userId': Meteor.userId(), 
-        type: {$ne: 'template-board'},
+        type: { 
+        	$nin: [ 'template-board', 'template-container' ]
+        },
       }, 
       {fields: {'_id': 1}}
     ).fetch();

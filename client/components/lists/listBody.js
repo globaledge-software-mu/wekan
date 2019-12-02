@@ -8,7 +8,7 @@ BlazeComponent.extendComponent({
   },
 
   mixins() {
-    return [Mixins.InfiniteScrolling];
+    return [Mixins.PerfectScrollbar];
   },
 
   openForm(options) {
@@ -467,7 +467,7 @@ BlazeComponent.extendComponent({
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.InfiniteScrolling];
+    return [Mixins.PerfectScrollbar];
   },
 
   onCreated() {
@@ -535,6 +535,20 @@ BlazeComponent.extendComponent({
       sort: ['title'],
     });
     return boards;
+  },
+
+  memberOfMoreThanTenTemplates() {
+  	memberTemplates = Boards.find({
+  		type: 'template-board',
+  		'members.userId': Meteor.user()._id,
+  		archived: false,
+  	});
+
+  	if (memberTemplates.count() > 10) {
+  		return true;
+  	} else {
+    	return false;
+  	}
   },
 
   results() {
