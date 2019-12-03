@@ -300,7 +300,7 @@ BlazeComponent.extendComponent({
               labelString: 'Score'
           },
           ticks: {
-            beginAtZero: true
+            beginAtZero: false
           }
         }]
       }
