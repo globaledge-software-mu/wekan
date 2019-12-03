@@ -857,6 +857,12 @@ if (Meteor.isServer) {
         const userId = Meteor.userId();
         const index = board.memberIndex(userId);
         if (index >= 0) {
+          if (board.type && board.type == 'template-board') {
+          	Cards.update(
+        			{ linkedId: board._id }, 
+        			{ $set: { archived: true } }
+      			);
+          }
           board.archive();
           return true;
         } else throw new Meteor.Error('error-board-notAMember');
