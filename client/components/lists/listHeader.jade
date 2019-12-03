@@ -63,7 +63,7 @@ template(name="listActionPopup")
       if cards.count
         li: a.js-select-cards {{_ 'list-select-cards'}}
         hr
-      if currentUser.isBoardAdmin
+      if currentUser.isAdminOrManager
         li: a.js-list-properties {{_ 'listPropertiesPopup-title'}}
         hr
     if currentUser.isBoardMember
