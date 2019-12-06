@@ -230,6 +230,31 @@ BlazeComponent.extendComponent({
     $('#historicScores').hide();
     if (labels.length > 0) {
       $('#historicScores').show();
+    } else {
+    	if (this.currentData().currentScore && this.currentData().currentScore.length > 0
+    			&& this.currentData().startAt && this.currentData().startAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().currentScore,
+          type: 'current',
+          date: this.currentData().startAt
+        });
+        $('#historicScores').show();
+    	}
+    	if (this.currentData().targetScore && this.currentData().targetScore.length > 0
+    			&& this.currentData().dueAt && this.currentData().dueAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().targetScore,
+          type: 'target',
+          date: this.currentData().dueAt
+        });
+        $('#historicScores').show();
+    	}
     }
     let list = this.currentData().list();
     let cardStart = list.getProperty('card-start');
