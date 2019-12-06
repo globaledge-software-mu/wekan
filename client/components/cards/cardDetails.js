@@ -244,6 +244,47 @@ BlazeComponent.extendComponent({
     }
     
     let chartCtx = $('.score-line');
+
+    let receivedScore = '';
+    let currentScore = '';
+    let targetScore = '';
+    let endScore = '';
+
+    if (this.currentData() && this.currentData().initialScore && this.currentData().initialScore.length > 0) {
+    	receivedScore = this.currentData().initialScore;
+    } 
+    if (this.currentData() && this.currentData().currentScore && this.currentData().currentScore.length > 0) {
+    	currentScore = this.currentData().currentScore;
+    }
+    if (this.currentData() && this.currentData().targetScore && this.currentData().targetScore.length > 0) {
+    	targetScore = this.currentData().targetScore;
+    } 
+    if (this.currentData() && this.currentData().endScore && this.currentData().endScore.length > 0) {
+    	endScore = this.currentData().endScore;
+    }
+
+    let fourScores = new Array(receivedScore, currentScore, targetScore, endScore)
+    let scoresIndexes = new Array();
+    let scoreBearers = new Array();
+    for (var i = 0; i < fourScores.length; i++) {
+    	if (fourScores[i] != '') {
+    		scoresIndexes.push(i);
+    	}
+    }
+    for (var j = 0; j < scoresIndexes.length; j++) {
+    	scoreBearers.push(fourScores[j]);
+    }
+
+    // … (three dots) in front of an array will convert array to distinct variables e.g: from [1,2,3] to (1,2,3)
+    let minScore = Math.min(...scoreBearers);
+    let maxScore = Math.max(...scoreBearers);
+    let rangeLogTen = Math.log10(maxScore - minScore);
+    let flooredRangeLogTen = Math.floor(rangeLogTen);
+    let bottomMargin = Math.round(minScore * flooredRangeLogTen) / minScore;
+    let topMargin = Math.round(maxScore * flooredRangeLogTen) / maxScore;
+    let yAxesMinNum = minScore - bottomMargin;
+    let yAxesMaxNum = maxScore - topMargin
+
     scoreChart = new Chart(chartCtx, {
       type: 'line',
       data: {
@@ -298,13 +339,14 @@ BlazeComponent.extendComponent({
             scaleLabel: {
               display: true,
               labelString: 'Score'
-          },
-          ticks: {
-            beginAtZero: false
-          }
-        }]
+		        },
+		        ticks: {
+		        	suggestedMin: yAxesMinNum,
+		        	suggestedMax: yAxesMaxNum
+		        }
+          }]
+        }
       }
-    }
     });
     scoreChart.scales["x-axis-0"].options.ticks.autoSkip = false;
     scoreChart.scales["x-axis-0"].options.ticks.stepSize = 1;
