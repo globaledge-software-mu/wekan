@@ -350,8 +350,7 @@ BlazeComponent.extendComponent({
               labelString: 'Date'
             },
             ticks: {
-              autoSkip: false,
-              stepSize: 1,
+              autoSkip: true,
               minRotation: 45
             }
           }],
