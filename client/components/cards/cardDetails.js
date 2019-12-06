@@ -264,15 +264,11 @@ BlazeComponent.extendComponent({
     }
 
     let fourScores = new Array(receivedScore, currentScore, targetScore, endScore)
-    let scoresIndexes = new Array();
     let scoreBearers = new Array();
     for (var i = 0; i < fourScores.length; i++) {
     	if (fourScores[i] != '') {
-    		scoresIndexes.push(i);
+    		scoreBearers.push(fourScores[i]);
     	}
-    }
-    for (var j = 0; j < scoresIndexes.length; j++) {
-    	scoreBearers.push(fourScores[j]);
     }
 
     // … (three dots) in front of an array will convert array to distinct variables e.g: from [1,2,3] to (1,2,3)
