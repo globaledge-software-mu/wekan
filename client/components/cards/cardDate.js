@@ -110,11 +110,23 @@ Template.dateBadge.helpers({
     this.removeTimeUI(listId, 'card-received');
   }
 
+  // store received date
   _storeDate(date) {
+  	// If start is not set yet, set it too
+  	const startDate = this.data().getStart();
+  	if (!startDate || startDate.length < 1 || startDate == '') {
+  		this.card.setStart(date);
+  	}
     this.card.setReceived(date);
   }
-  
-  _storeScore(score) {
+
+  // store initial score
+  _storeScore(score, date) {
+  	// If CurrentScore is not set yet, set it too
+  	const currentScore = this.data().getCurrentScore();
+  	if (!currentScore || currentScore.length < 1 || currentScore == '') {
+  		this.card.setCurrentScore(score);
+  	}
     this.card.setInitialScore(score);
   }
 
