@@ -281,12 +281,12 @@ Cards.allow({
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
   },
   update(userId, doc) {
-    return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
+    return true;
   },
   remove(userId, doc) {
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
   },
-  fetch: ['boardId'],
+  fetch: [],
 });
 
 Cards.helpers({

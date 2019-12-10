@@ -299,12 +299,20 @@ BlazeComponent.extendComponent({
     // … (three dots) in front of an array will convert array to distinct variables e.g: from [1,2,3] to (1,2,3)
     let minScore = Math.min(...scoreBearers);
     let maxScore = Math.max(...scoreBearers);
-    let rangeLogTen = Math.log10(maxScore - minScore);
-    let flooredRangeLogTen = Math.floor(rangeLogTen);
-    let bottomMargin = Math.round(minScore * flooredRangeLogTen) / minScore;
-    let topMargin = Math.round(maxScore * flooredRangeLogTen) / maxScore;
-    let yAxesMinNum = minScore - bottomMargin;
-    let yAxesMaxNum = maxScore - topMargin
+    let yAxesMinNum;
+    let yAxesMaxNum;
+    let range = maxScore - minScore;
+    if (range === 0) {
+      yAxesMinNum = minScore - 1;
+      yAxesMaxNum = maxScore + 1;
+    } else {
+      let rangeLogTen = Math.log10(maxScore - minScore);
+      let flooredRangeLogTen = Math.floor(rangeLogTen);
+      let bottomMargin = Math.round(minScore * flooredRangeLogTen) / minScore;
+      let topMargin = Math.round(maxScore * flooredRangeLogTen) / maxScore;
+      yAxesMinNum = minScore - bottomMargin;
+      yAxesMaxNum = maxScore + topMargin;
+    }
 
     scoreChart = new Chart(chartCtx, {
       type: 'line',

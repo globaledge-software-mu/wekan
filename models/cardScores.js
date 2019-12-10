@@ -8,7 +8,8 @@ CardScores.attachSchema(new SimpleSchema({
     type: String
   },
   score: {
-    type: String
+    type: String,
+    optional: true,
   },
   type: {
     type: String
@@ -37,5 +38,5 @@ CardScores.allow({
   remove(userId, doc) {
     return userId === doc.userId;
   },
-  fetch: ['userId', 'boardId'],
+  fetch: [],
 });
