@@ -157,7 +157,7 @@ BlazeComponent.extendComponent({
           	var message1 = TAPi18n.__('user-created');
           	var message2 = TAPi18n.__('invite-sent');
             var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-          		message1 + '&' + message2 +
+          		message1 + ' & ' + message2 +
           		'</b></p></div>'
         		);
             $('#header-main-bar').before($successMessage);
