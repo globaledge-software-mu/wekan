@@ -18,7 +18,7 @@ template(name="setting")
               a.js-setting-menu(data-id="announcement-setting") {{_ 'admin-announcement'}}
             li
               a.js-setting-menu(data-id="layout-setting") {{_ 'layout'}}
-        .main-body
+        .main-body.settings-invite
           if loading.get
             +spinner
           else if generalSetting.get
