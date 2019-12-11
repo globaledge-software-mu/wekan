@@ -39,9 +39,11 @@ template(name="general")
         ul
           li
             .title {{_ 'invite-people'}}
+            .enter-valid-email.hide {{_ 'error-emailNotEntered'}}
             textarea#email-to-invite.form-control(rows='5', placeholder="{{_ 'email-addresses'}}")
           li
             .title {{_ 'role'}}
+            .select-role-msg.hide {{_ 'error-roleNotSelected'}}
             select.select-role.js-profile-role
               option(value='', selected='selected') Select One
               // if isAdmin, user gets to choose from all the roles
@@ -57,6 +59,7 @@ template(name="general")
                 option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
           li
             .title {{_ 'to-boards'}}
+            .select-board-msg.hide {{_ 'error-boardNotSelected'}}
             .bg-white
               each boards
                 a.option.flex.js-toggle-board-choose(id= _id)

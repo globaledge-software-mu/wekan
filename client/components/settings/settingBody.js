@@ -137,16 +137,30 @@ BlazeComponent.extendComponent({
           Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, (err, ret) => {
             self.setLoading(false);
             if (err) {
-            	self.setError(err.error);
-            }
-            else if (ret.email) {
-            	self.setError('email-sent');
+            	if (err.errorType === 'Meteor.Error' && err.error) {
+              	var message = TAPi18n.__(err.error);
+                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                $('#header-main-bar').before($errorMessage);
+            	} else {
+              	var message = TAPi18n.__(err);
+                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                $('#header-main-bar').before($errorMessage);
+            	}
+            } else if (ret.email) {
               Users.update(
             		{ _id: ret.userID }, 
             		{ $set: 
             			{ 'roleId': roleId, 'roleName': roleName },
             		}
           		);
+
+          	var message1 = TAPi18n.__('user-created');
+          	var message2 = TAPi18n.__('invite-sent');
+            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+          		message1 + '&' + message2 +
+          		'</b></p></div>'
+        		);
+            $('#header-main-bar').before($successMessage);
             }
           });
       	});
@@ -230,7 +244,46 @@ BlazeComponent.extendComponent({
       'click a.js-toggle-tls': this.toggleTLS,
       'click a.js-setting-menu': this.switchMenu,
       'click a.js-toggle-board-choose': this.checkBoard,
-      'click button.js-email-invite': this.inviteThroughEmail,
+      'click button.js-email-invite'(evt) {
+        evt.preventDefault();
+      	$('.successStatus.inviteSent').remove();
+      	$('.errorStatus.inviteNotSent').remove();
+      	$('.select-role-msg').hide();
+      	$('.select-board-msg').hide();
+      	$('.enter-valid-email').hide();
+        const emails = $('#email-to-invite').val().toLowerCase().trim().split('\n').join(',').split(',');
+        const validEmails = [];
+        emails.forEach((email) => {
+          if (email && SimpleSchema.RegEx.Email.test(email.trim())) {
+            validEmails.push(email.trim());
+          }
+        });
+        var validEmailNotEntered = !validEmails.length;
+      	var roleNotSelected = $('.select-role.js-profile-role option:selected').html() === 'Select One';
+      	var boardNotSelected = !$('.materialCheckBox.is-checked').length; 
+      	if (validEmailNotEntered && !boardNotSelected && !roleNotSelected) {
+        	$('.enter-valid-email').show();
+        } else if (!validEmailNotEntered && !boardNotSelected && roleNotSelected) {
+        	$('.select-role-msg').show();
+        } else if (!validEmailNotEntered && boardNotSelected && !roleNotSelected) {
+        	$('.select-board-msg').show();
+        } else if (validEmailNotEntered && !boardNotSelected && roleNotSelected) {
+        	$('.enter-valid-email').show();
+        	$('.select-role-msg').show();
+        } else if (validEmailNotEntered && boardNotSelected && !roleNotSelected) {
+        	$('.enter-valid-email').show();
+        	$('.select-board-msg').show();
+        } else if (!validEmailNotEntered && boardNotSelected && roleNotSelected) {
+        	$('.select-role-msg').show();
+        	$('.select-board-msg').show();
+        } else if (validEmailNotEntered && boardNotSelected && roleNotSelected) {
+        	$('.select-role-msg').show();
+        	$('.select-board-msg').show();
+        	$('.enter-valid-email').show();
+        } else {
+          this.inviteThroughEmail();
+        }
+      },
       'click button.js-save': this.saveMailServerInfo,
       'click button.js-send-smtp-test-email': this.sendSMTPTestEmail,
       'click a.js-toggle-hide-logo': this.toggleHideLogo,
