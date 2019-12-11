@@ -141,10 +141,23 @@ BlazeComponent.extendComponent({
               	var message = TAPi18n.__(err.error);
                 var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
                 $('#header-main-bar').before($errorMessage);
+                $errorMessage.delay(10000).slideUp(500, function() {
+  	              $(this).remove();
+  	            });
+            	} else if (err.errorType !== 'Meteor.Error' && err.error) {
+              	var message = TAPi18n.__(err.error);
+                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                $('#header-main-bar').before($errorMessage);
+                $errorMessage.delay(10000).slideUp(500, function() {
+  	              $(this).remove();
+  	            });
             	} else {
               	var message = TAPi18n.__(err);
                 var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
                 $('#header-main-bar').before($errorMessage);
+                $errorMessage.delay(10000).slideUp(500, function() {
+  	              $(this).remove();
+  	            });
             	}
             } else if (ret.email) {
               Users.update(
@@ -154,13 +167,16 @@ BlazeComponent.extendComponent({
             		}
           		);
 
-          	var message1 = TAPi18n.__('user-created');
-          	var message2 = TAPi18n.__('invite-sent');
-            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-          		message1 + ' & ' + message2 +
-          		'</b></p></div>'
-        		);
-            $('#header-main-bar').before($successMessage);
+	          	var message1 = TAPi18n.__('user-created');
+	          	var message2 = TAPi18n.__('invite-sent');
+	            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+	          		message1 + ' & ' + message2 +
+	          		'</b></p></div>'
+	        		);
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
             }
           });
       	});
