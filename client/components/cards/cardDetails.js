@@ -215,16 +215,73 @@ BlazeComponent.extendComponent({
         $subtasksDom.sortable('option', 'disabled', !userIsMember());
       }
     });
+
+    /**************/
+
+    var idsToPull = new Array();
+    CardScores.find({
+    	cardId: this.currentData()._id
+  	}).forEach((cardScore) => {
+    	if (cardScore && !cardScore.score || cardScore.score === '' || cardScore.score === null) {
+    		idsToPull.push(cardScore._id);
+    	}
+    });
+    for (var i = 0; i < idsToPull.length; i++) {
+      CardScores.remove({_id: idsToPull[i]});
+    }
+
+    /**************/
+
+    /*********/
+
+		const startScores = CardScores.find({
+			cardId: this.currentData()._id,
+			type: 'current',
+		}, {
+			sort: {date: -1}
+		}).fetch();
+		// If no CardScores and If Cards has initialScore and no currentScore
+		if (startScores.length < 1 && 
+				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null && 
+				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id, 
+        score: this.currentData().initialScore, 
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		} 
+		// else if no CardScores and If Cards has currentScore and no initialScore
+		else if (startScores.length < 1 && 
+				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id, 
+        score: this.currentData().currentScore, 
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		}
+
+    /*********/
+
     const cardScores = this.currentData().scores();
     let labels = []
     let scores = {'current': [], 'target': []};
     cardScores.forEach((cardScore) => {
-      labels.push(cardScore.date);
-      var score = cardScore.score;
-      if (typeof score === 'number') {
-        score = score.toString();
-      }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
+    	if (cardScore && cardScore.score && cardScore.date) {
+        labels.push(cardScore.date);
+        var score = cardScore.score;
+        if (typeof score === 'number') {
+          score = score.toString();
+        }
+        scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
+    	}
     });
     
     $('#historicScores').hide();
@@ -254,6 +311,14 @@ BlazeComponent.extendComponent({
           date: this.currentData().dueAt
         });
         $('#historicScores').show();
+    	}
+    	var hasCardScores = CardScores.findOne({
+    		cardId: this.currentData()._id
+    	});
+    	if (hasCardScores && hasCardScores._id && hasCardScores.score && hasCardScores.date) {
+        $('#historicScores').show();
+    	} else {
+        $('#historicScores').hide();
     	}
     }
     let list = this.currentData().list();

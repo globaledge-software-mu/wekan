@@ -18,6 +18,7 @@ Template.boardListHeaderBar.helpers({
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
+    Meteor.subscribe('mailServer');
     Meteor.subscribe('folders');
     Meteor.subscribe('templateBoards');
     Meteor.subscribe('cards');
@@ -62,6 +63,26 @@ BlazeComponent.extendComponent({
 	    });
   	}
 
+  	/******************/
+
+    const mailSettings = Settings.findOne();
+    if (mailSettings && 
+    		mailSettings.mailServer.host &&
+    		mailSettings.mailServer.port &&
+    		mailSettings.mailServer.username &&
+    		mailSettings.mailServer.password &&
+    		mailSettings.mailServer.enableTLS &&
+    		mailSettings.mailServer.from 
+    ) {
+      Settings.update(mailSettings._id, {
+        $set: {
+          'mailServer.host': mailSettings.mailServer.host, 'mailServer.port': mailSettings.mailServer.port, 'mailServer.username': mailSettings.mailServer.username,
+          'mailServer.password': mailSettings.mailServer.password, 'mailServer.enableTLS': mailSettings.mailServer.enableTLS, 'mailServer.from': mailSettings.mailServer.from,
+        },
+      });
+    }
+
+  	/******************/
   	/**********/
 
   	Cards.find({
@@ -143,15 +164,6 @@ BlazeComponent.extendComponent({
   			if (startScores.length < 1) {
   				// If Cards do not have receivedAt
   				if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
-  					CardScores.insert({
-  			      boardId: card.boardId,
-  			      cardId: card._id,
-  			      score: card.initialScore,
-  			      type: 'current',
-  			      date: new Date(),
-  		        userId: card.userId
-  			    })
-
   					Cards.update(
   						{ _id: card._id }, 
   						{ $set: {
@@ -168,15 +180,6 @@ BlazeComponent.extendComponent({
   							} }
   						);
   					}
-  				} else {
-  					CardScores.insert({
-  						boardId: card.boardId,
-  		        cardId: card._id, 
-  		        score: card.initialScore, 
-  		        type: 'current',
-  		        date: card.receivedAt,
-  		        userId: card.userId
-  					});
   				}
   			}
   		}
