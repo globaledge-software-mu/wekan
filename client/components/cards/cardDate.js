@@ -188,6 +188,13 @@ Template.dateBadge.helpers({
        return false;
     }
     this.card.setStart(date);
+
+  	// If received is not set yet, set it too
+  	const receivedDate = this.data().getStart();
+  	if (!receivedDate || receivedDate.length < 1 || receivedDate == '') {
+  		this.card.setReceived(date);
+  	}
+
     var oldDate = this.data().dataPointDate;
     var oldScore = this.data().dataPointScore;
     // if clicked from chart && date changed
@@ -198,10 +205,16 @@ Template.dateBadge.helpers({
       }
     }
   }
-  
+
+  //store current score
   _storeScore(score) {
     this.card.setCurrentScore(score);
-    this.card.reloadHistoricScoreChart();
+  	// If initial is not set yet, set it too
+  	const initialScore = this.data().getCurrentScore();
+  	if (!initialScore || initialScore.length < 1 || initialScore == '') {
+  		this.card.setInitialScore(score);
+  	}
+  	this.card.reloadHistoricScoreChart();
   }
 
   _deleteDate() {

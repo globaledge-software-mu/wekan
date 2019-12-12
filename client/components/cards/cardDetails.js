@@ -243,7 +243,8 @@ BlazeComponent.extendComponent({
 		// If no CardScores and If Cards has initialScore and no currentScore
 		if (startScores.length < 1 && 
 				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null && 
-				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null
+				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null &&
+				this.currentData().startAt
 		) {
 			CardScores.insert({
 				boardId: this.currentData().boardId,
@@ -256,7 +257,8 @@ BlazeComponent.extendComponent({
 		} 
 		// else if no CardScores and If Cards has currentScore and no initialScore
 		else if (startScores.length < 1 && 
-				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null
+				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null &&
+				this.currentData().startAt
 		) {
 			CardScores.insert({
 				boardId: this.currentData().boardId,
