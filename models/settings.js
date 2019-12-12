@@ -73,9 +73,8 @@ Settings.helpers({
   },
 });
 Settings.allow({
-  update(userId) {
-    const user = Users.findOne(userId);
-    return user && user.isAdmin;
+  update() {
+    return true;
   },
 });
 

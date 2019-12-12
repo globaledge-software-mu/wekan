@@ -18,7 +18,6 @@ Template.boardListHeaderBar.helpers({
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
-    Meteor.subscribe('mailServer');
     Meteor.subscribe('folders');
     Meteor.subscribe('templateBoards');
     Meteor.subscribe('cards');
@@ -65,22 +64,22 @@ BlazeComponent.extendComponent({
 
   	/******************/
 
-    const mailSettings = Settings.findOne();
-    if (mailSettings && 
-    		mailSettings.mailServer.host &&
-    		mailSettings.mailServer.port &&
-    		mailSettings.mailServer.username &&
-    		mailSettings.mailServer.password &&
-    		mailSettings.mailServer.enableTLS &&
-    		mailSettings.mailServer.from 
-    ) {
-      Settings.update(mailSettings._id, {
-        $set: {
-          'mailServer.host': mailSettings.mailServer.host, 'mailServer.port': mailSettings.mailServer.port, 'mailServer.username': mailSettings.mailServer.username,
-          'mailServer.password': mailSettings.mailServer.password, 'mailServer.enableTLS': mailSettings.mailServer.enableTLS, 'mailServer.from': mailSettings.mailServer.from,
-        },
-      });
-    }
+    Meteor.subscribe('mailServerInfo', {
+      onReady() {
+        const mailSettings = Settings.findOne();
+        if (mailSettings && mailSettings.mailServer.host && mailSettings.mailServer.port && mailSettings.mailServer.username && 
+        		mailSettings.mailServer.password && mailSettings.mailServer.enableTLS && mailSettings.mailServer.from 
+        ) {
+          Settings.update(mailSettings._id, {
+            $set: {
+              'mailServer.host': mailSettings.mailServer.host, 'mailServer.port': mailSettings.mailServer.port, 'mailServer.username': mailSettings.mailServer.username,
+              'mailServer.password': mailSettings.mailServer.password, 'mailServer.enableTLS': mailSettings.mailServer.enableTLS, 'mailServer.from': mailSettings.mailServer.from,
+            },
+          });
+        }
+        return this.stop();
+      },
+    });
 
   	/******************/
   	/**********/
