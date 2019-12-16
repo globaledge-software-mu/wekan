@@ -140,71 +140,137 @@ BlazeComponent.extendComponent({
   },
 }).register('people');
 
-Template.createNewUserPopup.events({
-  submit(evt, tpl) {
-    evt.preventDefault();
-    const fullname = tpl.find('.js-profile-fullname').value.trim();
-    const username = tpl.find('.js-profile-username').value.trim();
-    const isAdmin = false;
-    if (tpl.find('.js-profile-isadmin')) {
-      isAdmin = tpl.find('.js-profile-isadmin').value.trim();
-    }
-    const roleId = tpl.find('.js-profile-role').value;
-  	const roleName = null;
-    const role = Roles.findOne({_id: roleId});
-    if (role && role.name) {
-    	roleName = role.name;
-    }
-    const email = tpl.find('.js-profile-email').value.trim().toLowerCase();
-    const posAt = email.indexOf('@');
-    let duplicateUserEmail = null;
-    let duplicateUserName = null;
-    if (posAt >= 0) {
-      if (username.length < 1) {
-        username = email.substring(0, posAt);
-        tpl.$('.js-profile-username').text(username);
-      }
-      duplicateUserEmail = Users.findOne({emails: {$elemMatch: {address: email}}});
-      duplicateUserName = Users.findOne({username});
-    }
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
 
-    const usernameMessageElement = tpl.$('.username-taken');
-    const emailMessageElement = tpl.$('.email-taken');
-
-    $('.user-not-created').closest('label').hide();
-    usernameMessageElement.hide();
-    emailMessageElement.hide();
-    
-    if (duplicateUserEmail && duplicateUserName) {
-      usernameMessageElement.show();
-      emailMessageElement.show();
-    } else if (duplicateUserName) {
-      usernameMessageElement.show();
-    } else if (duplicateUserEmail) {
-      emailMessageElement.show();
-    } else {
-    	const params = {};
-    	params['username'] = username;
-    	params['email'] = email;
-    	params['isAdmin'] = isAdmin;
-    	params['fullname'] = fullname;
-    	params['roleId'] = roleId;
-    	params['roleName'] = roleName;
-      // Create user doc
-      Meteor.call('createNewUser', params, (err, res) => {
-        if (err) {
-          $('.user-not-created').closest('label').show();
-        } else {
-          Popup.close();
+  isLoading() {
+    return this.loading.get();
+  },
+  
+  events() {
+    return [{
+    	submit(evt) {
+        evt.preventDefault();
+        const fullname = this.find('.js-profile-fullname').value.trim();
+        const username = this.find('.js-profile-username').value.trim();
+        const isAdmin = false;
+        if (this.find('.js-profile-isadmin')) {
+          isAdmin = this.find('.js-profile-isadmin').value.trim();
         }
-      });
-    };
-  },
+        const roleId = this.find('.js-profile-role').value;
+      	const roleName = null;
+        const role = Roles.findOne({_id: roleId});
+        if (role && role.name) {
+        	roleName = role.name;
+        }
+        const email = this.find('.js-profile-email').value.trim().toLowerCase();
+        const posAt = email.indexOf('@');
+        let duplicateUserEmail = null;
+        let duplicateUserName = null;
+        if (posAt >= 0) {
+          if (username.length < 1) {
+            username = email.substring(0, posAt);
+            this.$('.js-profile-username').text(username);
+          }
+          duplicateUserEmail = Users.findOne({emails: {$elemMatch: {address: email}}});
+          duplicateUserName = Users.findOne({username});
+        }
 
-  'click #cancelButton'() {
-    Popup.close();
+        var leftBlank = ['undefined', null, ''];
+        var fullnameLeftBlank = leftBlank.indexOf(fullname) > -1;
+        var usernameLeftBlank = leftBlank.indexOf(username) > -1;
+        var roleNotSelected = leftBlank.indexOf(roleId) > -1;
+        var validEmailNotEntered = posAt < 1;
+        $('.user-not-created').hide();
+        if (fullnameLeftBlank) {
+        	this.$('.fullname-blank').show();
+        }
+        if (usernameLeftBlank) {
+        	this.$('.username-blank').show();
+        }
+        if (roleNotSelected) {
+        	this.$('.role-not-selected').show();
+        }
+        if (validEmailNotEntered) {
+        	this.$('.valid-email-not-entered').show();
+        }
+        if (fullnameLeftBlank || usernameLeftBlank || roleNotSelected || validEmailNotEntered) {
+          return false;
+        }
+
+        const usernameMessageElement = this.$('.username-taken');
+        const emailMessageElement = this.$('.email-taken');
+        
+        if (duplicateUserEmail && duplicateUserName) {
+          usernameMessageElement.show();
+          emailMessageElement.show();
+        } else if (duplicateUserName) {
+          usernameMessageElement.show();
+        } else if (duplicateUserEmail) {
+          emailMessageElement.show();
+        } else {
+          this.setLoading(true);
+        	const params = {};
+        	params['username'] = username;
+        	params['email'] = email;
+        	params['isAdmin'] = isAdmin;
+        	params['fullname'] = fullname;
+        	params['roleId'] = roleId;
+        	params['roleName'] = roleName;
+          // Create user doc
+          Meteor.call('createNewUser', params, (err, res) => {
+          	this.setLoading(false);
+            if (err) {
+            	var message = '';
+            	if (err.error) {
+              	message = TAPi18n.__(err.error);
+            	} else {
+              	message = TAPi18n.__(err);
+              	if (message == null || message == '' || typeof message === 'undefined' || message.length < 1) {
+              		message = err;
+              		if (typeof err === 'object') {
+              			message = JSON.stringify(err);
+              		}
+              	}
+            	}
+              var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+              $('#header-main-bar').before($errorMessage);
+              $errorMessage.delay(10000).slideUp(500, function() {
+                $(this).remove();
+              });
+            } else if (res) {
+            	var message1 = TAPi18n.__('user-created');
+            	var message2 = TAPi18n.__('invite-sent');
+              var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+            		message1 + ' & ' + message2 +
+            		'</b></p></div>'
+          		);
+              $('#header-main-bar').before($successMessage);
+              $successMessage.delay(10000).slideUp(500, function() {
+                $(this).remove();
+              });
+              Popup.close();
+            }
+          });
+        };
+      },
+
+      'click #cancelButton'() {
+        Popup.close();
+      },
+    }];
   },
-});
+}).register('createNewUserPopup');
 
 Template.peopleRow.helpers({
   userData() {

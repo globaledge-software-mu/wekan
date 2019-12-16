@@ -137,28 +137,23 @@ BlazeComponent.extendComponent({
           Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, (err, ret) => {
             self.setLoading(false);
             if (err) {
-            	if (err.errorType === 'Meteor.Error' && err.error) {
-              	var message = TAPi18n.__(err.error);
-                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                $('#header-main-bar').before($errorMessage);
-                $errorMessage.delay(10000).slideUp(500, function() {
-  	              $(this).remove();
-  	            });
-            	} else if (err.errorType !== 'Meteor.Error' && err.error) {
-              	var message = TAPi18n.__(err.error);
-                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                $('#header-main-bar').before($errorMessage);
-                $errorMessage.delay(10000).slideUp(500, function() {
-  	              $(this).remove();
-  	            });
+            	var message = '';
+            	if (err.error) {
+              	message = TAPi18n.__(err.error);
             	} else {
-              	var message = TAPi18n.__(err);
-                var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                $('#header-main-bar').before($errorMessage);
-                $errorMessage.delay(10000).slideUp(500, function() {
-  	              $(this).remove();
-  	            });
+              	message = TAPi18n.__(err);
+              	if (message == null || message == '' || typeof message === 'undefined' || message.length < 1) {
+              		message = err;
+              		if (typeof err === 'object') {
+              			message = JSON.stringify(err);
+              		}
+              	}
             	}
+              var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+              $('#header-main-bar').before($errorMessage);
+              $errorMessage.delay(10000).slideUp(500, function() {
+                $(this).remove();
+              });
             } else if (ret.email) {
               Users.update(
             		{ _id: ret.userID }, 
