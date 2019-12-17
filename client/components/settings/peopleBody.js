@@ -294,45 +294,6 @@ Template.roleRow.helpers({
   },
 });
 
-Template.editUserPopup.onCreated(function() {
-  this.authenticationMethods = new ReactiveVar([]);
-  this.errorMessage = new ReactiveVar('');
-
-  Meteor.call('getAuthenticationsEnabled', (_, result) => {
-    if (result) {
-      // TODO : add a management of different languages
-      // (ex {value: ldap, text: TAPi18n.__('ldap', {}, T9n.getLanguage() || 'en')})
-      this.authenticationMethods.set([
-        {value: 'password'},
-        // Gets only the authentication methods availables
-        ...Object.entries(result).filter((e) => e[1]).map((e) => ({value: e[0]})),
-      ]);
-    }
-  });
-});
-
-Template.editUserPopup.helpers({
-  user() {
-    return Users.findOne(this.userId);
-  },
-  authentications() {
-    return Template.instance().authenticationMethods.get();
-  },
-  isSelected(match) {
-    const userId = Template.instance().data.userId;
-    const selected = Users.findOne(userId).authenticationMethod;
-    return selected === match;
-  },
-  isLdap() {
-    const userId = Template.instance().data.userId;
-    const selected = Users.findOne(userId).authenticationMethod;
-    return selected === 'ldap';
-  },
-  errorMessage() {
-    return Template.instance().errorMessage.get();
-  },
-});
-
 BlazeComponent.extendComponent({
   onCreated() {
   },
@@ -346,110 +307,193 @@ BlazeComponent.extendComponent({
   },
 }).register('peopleRow');
 
-Template.editUserPopup.events({
-  submit(evt, tpl) {
-    evt.preventDefault();
-    const user = Users.findOne(this.userId);
-    const fullname = tpl.find('.js-profile-fullname').value.trim();
-    const username = tpl.find('.js-profile-username').value.trim();
-    const password = tpl.find('.js-profile-password').value;
-    const isAdmin = tpl.find('.js-profile-isadmin').value.trim();
-    const roleId = tpl.find('.js-profile-role').value;
-  	const roleName = null;
-    const role = Roles.findOne({_id: roleId});
-    if (role && role.name) {
-    	roleName = role.name;
-    }
-    const isActive = tpl.find('.js-profile-isactive').value.trim();
-    const email = tpl.find('.js-profile-email').value.trim();
-    const authentication = tpl.find('.js-authenticationMethod').value.trim();
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
 
-    const isChangePassword = password.length > 0;
-    const isChangeUserName = username !== user.username;
-    const isChangeEmail = email.toLowerCase() !== user.emails[0].address.toLowerCase();
+  isLoading() {
+    return this.loading.get();
+  },
 
-    Users.update(this.userId, {
-      $set: {
-        'profile.fullname': fullname,
-        'isAdmin': isAdmin === 'true',
-        'roleId': roleId,
-        'roleName': roleName,
-        'loginDisabled': isActive === 'true',
-        'authenticationMethod': authentication,
+  events() {
+    return [{
+      submit(evt) {
+        evt.preventDefault();
+      	$('#editUserPopup').find('.errorStatus').remove();
+        const user_id = Template.instance().data.userId;
+        const user = Users.findOne(user_id);
+        const fullname = this.find('.js-profile-fullname').value.trim();
+        const username = this.find('.js-profile-username').value.trim();
+        const password = this.find('.js-profile-password').value;
+        const isAdmin = this.find('.js-profile-isadmin').value.trim();
+        const roleId = this.find('.js-profile-role').value;
+      	const roleName = null;
+        const role = Roles.findOne({_id: roleId});
+        if (role && role.name) {
+        	roleName = role.name;
+        }
+        const isActive = this.find('.js-profile-isactive').value.trim();
+        const email = this.find('.js-profile-email').value.trim();
+
+        const isChangePassword = password.length > 0;
+        const isChangeUserName = username !== user.username;
+        const isChangeEmail = email.toLowerCase() !== user.emails[0].address.toLowerCase();
+
+        this.setLoading(true);
+
+        Users.update(user_id, {
+          $set: {
+            'profile.fullname': fullname,
+            'isAdmin': isAdmin === 'true',
+            'roleId': roleId,
+            'roleName': roleName,
+            'loginDisabled': isActive === 'true',
+          },
+        }, (err, res) => {
+        	this.setLoading(false);
+          if (err) {
+          	var message = '';
+          	if (err.error) {
+            	message = TAPi18n.__(err.error);
+          	} else {
+            	message = err;
+          	}
+            var $errorMessage = $('<div class="errorStatus" style="padding: 0px; margin: 0px 20px 0px 20px"><p><b>'+message+'</b></p></div>');
+            $('#editUserPopup').prepend($errorMessage);
+          } else if (res) {
+            this.$('.username-taken').hide();
+            this.$('.email-taken').hide();
+
+            if (isChangePassword) {
+              Meteor.call('setPassword', password, user_id);
+            }
+            if (isChangeUserName && isChangeEmail) {
+              Meteor.call('setUsernameAndEmail', username, email.toLowerCase(), user_id, function (error) {
+                if (error) {
+                  const errorElement = error.error;
+                  if (errorElement === 'username-already-taken') {
+                  	this.$('.username-taken').show();
+                  } 
+                  if (errorElement === 'email-already-taken') {
+                  	this.$('.email-taken').show();
+                  }
+                } else {
+                	var message = TAPi18n.__('edit-user-successful');
+                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+                		message +
+                		'</b></p></div>'
+              		);
+                  $('#header-main-bar').before($successMessage);
+                  $successMessage.delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+                  Popup.close();
+                }
+              });
+            } else if (isChangeUserName && !isChangeEmail) {
+              Meteor.call('setUsername', username, user_id, function (error) {
+                if (error) {
+                  const errorElement = error.error;
+                  if (errorElement === 'username-already-taken') {
+                  	this.$('.username-taken').show();
+                  }
+                } else {
+                	var message = TAPi18n.__('edit-user-successful');
+                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+                		message +
+                		'</b></p></div>'
+              		);
+                  $('#header-main-bar').before($successMessage);
+                  $successMessage.delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+                  Popup.close();
+                }
+              });
+            } else if (!isChangeUserName && isChangeEmail) {
+              Meteor.call('setEmail', email.toLowerCase(), user_id, function (error) {
+                if (error) {
+                  const errorElement = error.error;
+                  if (errorElement === 'email-already-taken') {
+                  	this.$('.email-taken').show();
+                  }
+                } else {
+                	var message = TAPi18n.__('edit-user-successful');
+                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+                		message +
+                		'</b></p></div>'
+              		);
+                  $('#header-main-bar').before($successMessage);
+                  $successMessage.delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+                  Popup.close();
+                }
+              });
+            } else {
+            	var message = TAPi18n.__('edit-user-successful');
+              var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+            		message +
+            		'</b></p></div>'
+          		);
+              $('#header-main-bar').before($successMessage);
+              $successMessage.delay(10000).slideUp(500, function() {
+                $(this).remove();
+              });
+              Popup.close();
+            }
+          }
+        });
       },
-    });
 
-    if(isChangePassword){
-      Meteor.call('setPassword', password, this.userId);
-    }
-
-    if (isChangeUserName && isChangeEmail) {
-      Meteor.call('setUsernameAndEmail', username, email.toLowerCase(), this.userId, function (error) {
-        const usernameMessageElement = tpl.$('.username-taken');
-        const emailMessageElement = tpl.$('.email-taken');
-        if (error) {
-          const errorElement = error.error;
-          if (errorElement === 'username-already-taken') {
-            usernameMessageElement.show();
-            emailMessageElement.hide();
-          } else if (errorElement === 'email-already-taken') {
-            usernameMessageElement.hide();
-            emailMessageElement.show();
-          }
-        } else {
-          usernameMessageElement.hide();
-          emailMessageElement.hide();
-          Popup.close();
-        }
-      });
-    } else if (isChangeUserName) {
-      Meteor.call('setUsername', username, this.userId, function (error) {
-        const usernameMessageElement = tpl.$('.username-taken');
-        if (error) {
-          const errorElement = error.error;
-          if (errorElement === 'username-already-taken') {
-            usernameMessageElement.show();
-          }
-        } else {
-          usernameMessageElement.hide();
-          Popup.close();
-        }
-      });
-    } else if (isChangeEmail) {
-      Meteor.call('setEmail', email.toLowerCase(), this.userId, function (error) {
-        const emailMessageElement = tpl.$('.email-taken');
-        if (error) {
-          const errorElement = error.error;
-          if (errorElement === 'email-already-taken') {
-            emailMessageElement.show();
-          }
-        } else {
-          emailMessageElement.hide();
-          Popup.close();
-        }
-      });
-    } else Popup.close();
+      'click #deleteButton'() {
+      	const oldUserId = Template.instance().data.userId;
+        Users.remove(oldUserId);
+        // Cleanup Boards of this specific no-longer-existing user as a member
+        Boards.find({
+        	archived: false,
+        	'members.userId': oldUserId,
+      	}).forEach((board) => {
+    			Boards.update(
+    				{ _id: board._id }, 
+    				{ $pull: {
+    					members: {
+    						userId: oldUserId
+    					}
+    				} }
+    			);
+      	});
+        Popup.close();
+      },
+    }];
   },
+}).register('editUserPopup');
 
-  'click #deleteButton'() {
-  	const oldUserId = this.userId;
-    Users.remove(oldUserId);
-    // Cleanup Boards of this specific no-longer-existing user as a member
-    Boards.find({
-    	archived: false,
-    	'members.userId': oldUserId,
-  	}).forEach((board) => {
-			Boards.update(
-				{ _id: board._id }, 
-				{ $pull: {
-					members: {
-						userId: oldUserId
-					}
-				} }
-			);
-  	});
-    Popup.close();
-  },
+Template.editUserPopup.helpers({
+	user() {
+	  return Users.findOne(this.userId);
+	},
+
+	isSelected(match) {
+	  const userId = Template.instance().data.userId;
+	  const selected = Users.findOne(userId).authenticationMethod;
+	  return selected === match;
+	},
+
+	isLdap() {
+	  const userId = Template.instance().data.userId;
+	  const selected = Users.findOne(userId).authenticationMethod;
+	  return selected === 'ldap';
+	},
 });
 
 Template.roleOptions.helpers({

@@ -122,57 +122,52 @@ template(name="peopleRow")
         | {{_ 'edit'}}
 
 template(name="editUserPopup")
-  form
-    label.hide.userId(type="text" value=user._id)
-    label
-      | {{_ 'fullname'}}
-      input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
-    label
-      | {{_ 'username'}}
-      span.error.hide.username-taken
-        | {{_ 'error-username-taken'}}
-      if isLdap
-        input.js-profile-username(type="text" value=user.username readonly)
-      else
-        input.js-profile-username(type="text" value=user.username)
-    label
-      | {{_ 'email'}}
-      span.error.hide.email-taken
-        | {{_ 'error-email-taken'}}
-      if isLdap
-        input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
-      else
-        input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
-    if currentUser.isAdmin
+  if loading.get
+    +spinner
+  else
+    form#editUserPopup
+      label.hide.userId(type="text" value=user._id)
       label
-        | {{_ 'admin'}}
-        select.select-role.js-profile-isadmin
-          option(value="false") {{_ 'no'}}
-          option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
-    label
-      | {{_ 'role'}}
-      +roleOptions
-    label
-      | {{_ 'active'}}
-      select.select-active.js-profile-isactive
-        option(value="false") {{_ 'yes'}}
-        option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
-    label
-      | {{_ 'authentication-type'}}
-      select.select-authenticationMethod.js-authenticationMethod
-        each authentications
-          if isSelected value
-            option(value="{{value}}" selected) {{_ value}}
-          else
-            option(value="{{value}}") {{_ value}}
-    hr
-    label
-      | {{_ 'password'}}
-      input.js-profile-password(type="password")
-    div.buttonsContainer
-      input.primary.wide(type="submit" value="{{_ 'save'}}")
-      div
-      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+        | {{_ 'fullname'}}
+        input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
+      label
+        | {{_ 'username'}}
+        span.error.hide.username-taken
+          | {{_ 'error-username-taken'}}
+        if isLdap
+          input.js-profile-username(type="text" value=user.username readonly)
+        else
+          input.js-profile-username(type="text" value=user.username)
+      label
+        | {{_ 'email'}}
+        span.error.hide.email-taken
+          | {{_ 'error-email-taken'}}
+        if isLdap
+          input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
+        else
+          input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
+      if currentUser.isAdmin
+        label
+          | {{_ 'admin'}}
+          select.select-role.js-profile-isadmin
+            option(value="false") {{_ 'no'}}
+            option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
+      label
+        | {{_ 'role'}}
+        +roleOptions
+      label
+        | {{_ 'active'}}
+        select.select-active.js-profile-isactive
+          option(value="false") {{_ 'yes'}}
+          option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
+      hr
+      label
+        | {{_ 'password'}}
+        input.js-profile-password(type="password")
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
 
 template(name="roleOptions")
   select.select-role.js-profile-role

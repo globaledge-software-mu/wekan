@@ -270,6 +270,7 @@
     "done": "Done",
     "download": "Download",
     "edit": "Edit",
+    "edit-user-successful": "Successfully edited user",
     "edit-avatar": "Change Avatar",
     "edit-profile": "Edit Profile",
     "edit-wip-limit": "Edit WIP Limit",
