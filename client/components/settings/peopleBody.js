@@ -376,6 +376,17 @@ BlazeComponent.extendComponent({
             if (isChangePassword) {
               Meteor.call('setPassword', password, user_id);
             }
+
+            function displayEditUserSuccessMsg() {
+            	var message = TAPi18n.__('edit-user-successful');
+              var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+              $('#header-main-bar').before($successMessage);
+              $successMessage.delay(10000).slideUp(500, function() {
+                $(this).remove();
+              });
+              Popup.close();
+            };
+
             if (isChangeUserName && isChangeEmail) {
               Meteor.call('setUsernameAndEmail', username, email.toLowerCase(), user_id, function (error) {
                 if (error) {
@@ -387,7 +398,7 @@ BlazeComponent.extendComponent({
                   	this.$('.email-taken').show();
                   }
                 } else {
-                  Meteor.call('displayEditUserSuccessMsg');
+                  displayEditUserSuccessMsg();
                 }
               });
             } else if (isChangeUserName && !isChangeEmail) {
@@ -398,7 +409,7 @@ BlazeComponent.extendComponent({
                   	this.$('.username-taken').show();
                   }
                 } else {
-                  Meteor.call('displayEditUserSuccessMsg');
+                  displayEditUserSuccessMsg();
                 }
               });
             } else if (!isChangeUserName && isChangeEmail) {
@@ -409,11 +420,11 @@ BlazeComponent.extendComponent({
                   	this.$('.email-taken').show();
                   }
                 } else {
-                  Meteor.call('displayEditUserSuccessMsg');
+                  displayEditUserSuccessMsg();
                 }
               });
             } else {
-              Meteor.call('displayEditUserSuccessMsg');
+              displayEditUserSuccessMsg();
             }
           }
         });
