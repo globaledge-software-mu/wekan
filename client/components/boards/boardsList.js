@@ -20,38 +20,172 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('setting');
     Meteor.subscribe('folders');
     Meteor.subscribe('templateBoards');
+    Meteor.subscribe('cards');
   },
 
   onRendered() {
   	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
-  	$('li.uncategorised_boards').draggable({
-  	  revert: 'invalid',
-  	  start: function(event) {
-          $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-          $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-  	  },
-  	  drag: function() {},
-  	  stop: function() {
-  	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
-        $('p#actionTitle', this).remove();
-  	  }
+  	const folder = Session.get('folder');
+
+  	if (folder == 'uncategorised') {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+  	} else if (folder == 'templates') {
+      $('a#templatesFolder').trigger('click');
+  	} else {
+  		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		} else {
+  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click()
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		}
+  	}
+
+  	// Add member to its template-container, case the template-container 
+  	// member is null but the user has the template-container's id
+  	var templatesBoardId = Meteor.user().profile.templatesBoardId;
+  	var container = Boards.findOne({_id: templatesBoardId});
+  	if (container && container.members && container.members.length < 1) {
+	    Boards.update({
+	    	_id: templatesBoardId,
+	      type: 'template-container'
+	    }, {
+	    	$push: {
+		      members: {
+	          userId: Meteor.user()._id,
+	          isAdmin: true,
+	          isActive: true,
+	          isNoComments: false,
+	          isCommentOnly: false,
+	        },
+	    	}
+	    });
+  	}
+
+  	/******************/
+
+    Meteor.subscribe('mailServerInfo', {
+      onReady() {
+        const mailSettings = Settings.findOne();
+        if (mailSettings && mailSettings.mailServer.host && mailSettings.mailServer.port && mailSettings.mailServer.username && 
+        		mailSettings.mailServer.password && mailSettings.mailServer.enableTLS && mailSettings.mailServer.from 
+        ) {
+          Settings.update(mailSettings._id, {
+            $set: {
+              'mailServer.host': mailSettings.mailServer.host, 'mailServer.port': mailSettings.mailServer.port, 'mailServer.username': mailSettings.mailServer.username,
+              'mailServer.password': mailSettings.mailServer.password, 'mailServer.enableTLS': mailSettings.mailServer.enableTLS, 'mailServer.from': mailSettings.mailServer.from,
+            },
+          });
+        }
+        return this.stop();
+      },
+    });
+
+  	/******************/
+  	/**********/
+
+  	Cards.find({
+  		$or: [
+  			{ userId: Meteor.user()._id }, 
+  			{ 'members.userId': Meteor.user()._id }
+			]
+  	}).forEach((card) => {
+  		const startScores = CardScores.find({
+  			cardId: card._id,
+  			type: 'current',
+  			userId: Meteor.user()._id,
+  		}, {
+  			sort: {date: -1}
+  		}).fetch();
+  		// For all current CardScores without initial score/date, pairing them with initial score date
+  		// and also updating the  Card's startAt and currentScore if null
+  		if (startScores.length > 0) {
+  			// If startScores in CardScores && receivedAt in Cards is null
+  			if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						receivedAt: startScores[0].date
+  					} }
+  				);
+  			}
+  			// If startScores in CardScores && initialScore in Cards is null
+  			if (!card.initialScore || card.initialScore == '' || card.initialScore == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						initialScore: startScores[0].score
+  					} }
+  				);
+  			}
+  			// If startScores && startAt in Cards is null
+  			if (!card.startAt || card.startAt == '' || card.startAt == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						startAt: startScores[0].date
+  					} }
+  				);
+  			}
+  			// If startScores && currentScore in Cards is null
+  			if (!card.currentScore || card.currentScore == '' || card.currentScore == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						currentScore: startScores[0].score
+  					} }
+  				);
+  			}
+  		}
+
+  		// If Cards has receivedAt and no startAt
+  		if (card.receivedAt && card.receivedAt != '' && card.receivedAt != null && 
+  				!card.startAt || card.startAt == '' || card.startAt == null
+  		) {
+  			Cards.update(
+  				{ _id: card._id },
+  				{ $set: {
+  					startAt: card.receivedAt
+  				} }
+  			);
+  		}
+  		// If Cards has initialScore and no currentScore
+  		if (card.initialScore && card.initialScore != '' && card.initialScore != null && 
+  				!card.currentScore || card.currentScore == '' || card.currentScore == null
+  		) {
+  			Cards.update(
+  				{ _id: card._id },
+  				{ $set: {
+  					currentScore: card.initialScore
+  				} }
+  			);
+  			// If no CardScores
+  			if (startScores.length < 1) {
+  				// If Cards do not have receivedAt
+  				if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
+  					Cards.update(
+  						{ _id: card._id }, 
+  						{ $set: {
+  							receivedAt: new Date(),
+  						} }
+  					);
+
+  					// If Cards do not have startAt
+  					if (!card.startAt || card.startAt == '' || card.startAt == null) {
+  						Cards.update(
+  							{ _id: card._id }, 
+  							{ $set: {
+  								startAt: new Date(),
+  							} }
+  						);
+  					}
+  				}
+  			}
+  		}
   	});
 
-  	// part of the codes for the functionality of dragging boards onto boards
-/*  	$('li.board-color-belize').droppable({
-      accept: 'li.board-color-belize', 
-      tolerance: 'pointer',
-      drop: function( event, ui ) {
-    		var draggedBoardId = $(ui.draggable).data('id');
-    		var droppedOnBoardId = $(this).data('id');
+  	/**********/
 
-  	    Modal.open('createNewFolder');
-
-  	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
-  	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
-  	  }
-  	});*/
   },
 
   boards() {
@@ -142,7 +276,9 @@ BlazeComponent.extendComponent({
         _id: { $nin: categorisedBoardIds }, 
         archived: false, 
         'members.userId': Meteor.userId(), 
-        type: {$ne: 'template-board'},
+        type: { 
+        	$nin: [ 'template-board', 'template-container' ]
+        },
       }, 
       {fields: {'_id': 1}}
     ).fetch();
@@ -181,6 +317,25 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click .js-add-board, click .js-add-board-template'(evt) {
+      	// First, archive any card of type "cardType-linkedBoard" whose 
+      	// Board has been archived but the card by any chance was not archived 
+      	// Then we open the targetted popup
+      	Boards.find({ 
+      		type: 'template-board',
+      		archived: true,
+      		'members.userId': Meteor.user()._id
+    		}).forEach((archivedBoard) => {
+      		var cardLinkedBoard = Cards.findOne({linkedId: archivedBoard._id});
+      		if (cardLinkedBoard && !cardLinkedBoard.archived) {
+      			Cards.update(
+    					{ _id: cardLinkedBoard._id }, 
+    					{ $set: {
+    						archived: true,
+    					} }
+    				);
+      		}
+      	});
+
       	Popup.open('createBoard')(evt);
       	if ($(evt.target).closest('li').hasClass('js-add-board-template')) {
       		$('.js-new-board-title').addClass('createBoardTemplate');

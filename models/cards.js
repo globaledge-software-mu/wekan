@@ -281,12 +281,12 @@ Cards.allow({
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
   },
   update(userId, doc) {
-    return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
+    return true;
   },
   remove(userId, doc) {
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
   },
-  fetch: ['boardId'],
+  fetch: [],
 });
 
 Cards.helpers({
@@ -1164,23 +1164,35 @@ Cards.helpers({
     }
     let labels = []
     let scores = {'current': [], 'target': []};
+    let showChart = false;
     cardScores.forEach((cardScore) => {
-      labels.push(cardScore.date);
-      var score = cardScore.score;
-      if (typeof score === 'number') {
-        score = score.toString();
-      }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
+    	if (cardScore && cardScore.score && cardScore.date) {
+        labels.push(cardScore.date);
+        var score = cardScore.score;
+        if (typeof score === 'number') {
+          score = score.toString();
+        }
+        scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
+        showChart = true;
+    	} 
     });
     if (cardScores.count() > 0 && scoreChart !== null) {
       scoreChart.data.labels = labels;
       scoreChart.data.datasets[0].data = scores.current;
-      scoreChart.data.datasets[1].data = scores.target;
+      if (scoreChart.data.datasets && scoreChart.data.datasets[1] && scoreChart.data.datasets[1].data) {
+        scoreChart.data.datasets[1].data = scores.target;
+      }
       scoreChart.update();
       $('#historicScores').show();
     } else {
       $('#historicScores').hide();
     }
+
+  	if (showChart) {
+      $('#historicScores').show();
+  	} else {
+      $('#historicScores').hide();
+  	}
   },
   
   getArchived() {
@@ -1326,9 +1338,12 @@ Cards.mutations({
 
     const newBoard = Boards.findOne(boardId);
     const newBoardLabels = newBoard.labels;
-    const newCardLabelIds = _.pluck(_.filter(newBoardLabels, (label) => {
-      return label.name && _.contains(oldCardLabels, label.name);
-    }), '_id');
+    const newCardLabelIds = new Array();
+    newBoardLabels.forEach((boardLabel) => {
+    	if ($.inArray(boardLabel._id, this.labelIds) > -1) {
+    		newCardLabelIds.push(boardLabel._id);
+    	}
+    });
 
     const mutatedFields = {
       boardId,

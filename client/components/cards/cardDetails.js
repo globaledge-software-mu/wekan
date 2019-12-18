@@ -215,21 +215,113 @@ BlazeComponent.extendComponent({
         $subtasksDom.sortable('option', 'disabled', !userIsMember());
       }
     });
+
+    /**************/
+
+    var idsToPull = new Array();
+    CardScores.find({
+    	cardId: this.currentData()._id
+  	}).forEach((cardScore) => {
+    	if (cardScore && !cardScore.score || cardScore.score === '' || cardScore.score === null) {
+    		idsToPull.push(cardScore._id);
+    	}
+    });
+    for (var i = 0; i < idsToPull.length; i++) {
+      CardScores.remove({_id: idsToPull[i]});
+    }
+
+    /**************/
+
+    /*********/
+
+		const startScores = CardScores.find({
+			cardId: this.currentData()._id,
+			type: 'current',
+		}, {
+			sort: {date: -1}
+		}).fetch();
+		// If no CardScores and If Cards has initialScore and no currentScore
+		if (startScores.length < 1 && 
+				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null && 
+				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null &&
+				this.currentData().startAt
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id, 
+        score: this.currentData().initialScore, 
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		} 
+		// else if no CardScores and If Cards has currentScore and no initialScore
+		else if (startScores.length < 1 && 
+				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null &&
+				this.currentData().startAt
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id, 
+        score: this.currentData().currentScore, 
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		}
+
+    /*********/
+
     const cardScores = this.currentData().scores();
     let labels = []
     let scores = {'current': [], 'target': []};
     cardScores.forEach((cardScore) => {
-      labels.push(cardScore.date);
-      var score = cardScore.score;
-      if (typeof score === 'number') {
-        score = score.toString();
-      }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
+    	if (cardScore && cardScore.score && cardScore.date) {
+        labels.push(cardScore.date);
+        var score = cardScore.score;
+        if (typeof score === 'number') {
+          score = score.toString();
+        }
+        scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
+    	}
     });
     
     $('#historicScores').hide();
     if (labels.length > 0) {
       $('#historicScores').show();
+    } else {
+    	if (this.currentData().currentScore && this.currentData().currentScore.length > 0
+    			&& this.currentData().startAt && this.currentData().startAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().currentScore,
+          type: 'current',
+          date: this.currentData().startAt
+        });
+        $('#historicScores').show();
+    	}
+    	if (this.currentData().targetScore && this.currentData().targetScore.length > 0
+    			&& this.currentData().dueAt && this.currentData().dueAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().targetScore,
+          type: 'target',
+          date: this.currentData().dueAt
+        });
+        $('#historicScores').show();
+    	}
+    	var hasCardScores = CardScores.findOne({
+    		cardId: this.currentData()._id
+    	});
+    	if (hasCardScores && hasCardScores._id && hasCardScores.score && hasCardScores.date) {
+        $('#historicScores').show();
+    	} else {
+        $('#historicScores').hide();
+    	}
     }
     let list = this.currentData().list();
     let cardStart = list.getProperty('card-start');
@@ -244,6 +336,51 @@ BlazeComponent.extendComponent({
     }
     
     let chartCtx = $('.score-line');
+
+    let receivedScore = '';
+    let currentScore = '';
+    let targetScore = '';
+    let endScore = '';
+
+    if (this.currentData() && this.currentData().initialScore && this.currentData().initialScore.length > 0) {
+    	receivedScore = this.currentData().initialScore;
+    } 
+    if (this.currentData() && this.currentData().currentScore && this.currentData().currentScore.length > 0) {
+    	currentScore = this.currentData().currentScore;
+    }
+    if (this.currentData() && this.currentData().targetScore && this.currentData().targetScore.length > 0) {
+    	targetScore = this.currentData().targetScore;
+    } 
+    if (this.currentData() && this.currentData().endScore && this.currentData().endScore.length > 0) {
+    	endScore = this.currentData().endScore;
+    }
+
+    let fourScores = new Array(receivedScore, currentScore, targetScore, endScore)
+    let scoreBearers = new Array();
+    for (var i = 0; i < fourScores.length; i++) {
+    	if (fourScores[i] != '') {
+    		scoreBearers.push(fourScores[i]);
+    	}
+    }
+
+    // … (three dots) in front of an array will convert array to distinct variables e.g: from [1,2,3] to (1,2,3)
+    let minScore = Math.min(...scoreBearers);
+    let maxScore = Math.max(...scoreBearers);
+    let yAxesMinNum;
+    let yAxesMaxNum;
+    let range = maxScore - minScore;
+    if (range === 0) {
+      yAxesMinNum = minScore - 1;
+      yAxesMaxNum = maxScore + 1;
+    } else {
+      let rangeLogTen = Math.log10(maxScore - minScore);
+      let flooredRangeLogTen = Math.floor(rangeLogTen);
+      let bottomMargin = Math.round(minScore * flooredRangeLogTen) / minScore;
+      let topMargin = Math.round(maxScore * flooredRangeLogTen) / maxScore;
+      yAxesMinNum = minScore - bottomMargin;
+      yAxesMaxNum = maxScore + topMargin;
+    }
+
     scoreChart = new Chart(chartCtx, {
       type: 'line',
       data: {
@@ -288,8 +425,7 @@ BlazeComponent.extendComponent({
               labelString: 'Date'
             },
             ticks: {
-              autoSkip: false,
-              stepSize: 1,
+              autoSkip: true,
               minRotation: 45
             }
           }],
@@ -298,13 +434,14 @@ BlazeComponent.extendComponent({
             scaleLabel: {
               display: true,
               labelString: 'Score'
-          },
-          ticks: {
-            beginAtZero: true
-          }
-        }]
+		        },
+		        ticks: {
+		        	suggestedMin: yAxesMinNum,
+		        	suggestedMax: yAxesMaxNum
+		        }
+          }]
+        }
       }
-    }
     });
     scoreChart.scales["x-axis-0"].options.ticks.autoSkip = false;
     scoreChart.scales["x-axis-0"].options.ticks.stepSize = 1;

@@ -12,7 +12,7 @@ const viewTitles = {
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.InfiniteScrolling, Mixins.PerfectScrollbar];
+    return [Mixins.PerfectScrollbar];
   },
 
   onCreated() {

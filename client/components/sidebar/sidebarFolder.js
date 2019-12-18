@@ -2,7 +2,7 @@ const defaultView = 'home';
 
 BlazeComponent.extendComponent({
   mixins() {
-    return [Mixins.InfiniteScrolling, Mixins.PerfectScrollbar];
+    return [Mixins.InfiniteScrolling];
   },
 
   onRendered() {
@@ -205,10 +205,6 @@ BlazeComponent.extendComponent({
         }
       }
     });
-
-    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
-      $('a#uncategorisedBoardsFolder').trigger('click');
-    }
   },
 
   onCreated() {
@@ -284,7 +280,7 @@ BlazeComponent.extendComponent({
       'click .create-first-level-folder': function() {
         if ($('.createFirstLevelFolderDiv').hasClass('hide')) {
           $('.createFirstLevelFolderDiv').removeClass('hide');
-          $('#createFirstLevelFolderForm').find('#title').focus();
+          $('#createFirstLevelFolderForm').find('.title').focus();
         } else {
           $('.createFirstLevelFolderDiv').addClass('hide');
           $('#createFirstLevelFolderForm').trigger('reset');
@@ -337,19 +333,19 @@ BlazeComponent.extendComponent({
         var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
         if (selector.find('.createSubFolderFormTAGli').hasClass('hide')) {
           selector.find('.createSubFolderFormTAGli').removeClass('hide');
-          selector.find('#createSubFolderForm').find('#title').focus();
+          selector.find('.createSubFolderForm').find('.title').focus();
         } else {
           selector.find('.createSubFolderFormTAGli').addClass('hide');
-          selector.find('#createSubFolderForm').trigger('reset');
+          selector.find('.createSubFolderForm').trigger('reset');
         }
       },
 
       'click .close-sub-folder-form': function(e) {
         $(e.target).closest('.createSubFolderFormTAGli').addClass('hide');
-        $(e.target).closest('#createSubFolderForm').trigger('reset');
+        $(e.target).closest('.createSubFolderForm').trigger('reset');
       },
 
-      'submit #createSubFolderForm': function(e) {
+      'submit .createSubFolderForm': function(e) {
         e.preventDefault();
         Folders.insert({ 
           name: $(e.target).find('input[name=name]').val(), 
@@ -437,6 +433,8 @@ BlazeComponent.extendComponent({
           var selectedFolder = Folders.findOne({ _id:folderId }); 
           var folderContents = selectedFolder.contents;
 
+          Session.set('folder', folderId);
+
           $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
           $('.emptyFolderMessage').remove();
 
@@ -484,6 +482,8 @@ BlazeComponent.extendComponent({
 
       'click a#templatesFolder': function() {
         Popup.close();
+        Session.set('folder', 'templates');
+
         $('a.folderOpener, a#uncategorisedBoardsFolder').removeClass('selected');
         $('a#templatesFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
@@ -517,11 +517,26 @@ BlazeComponent.extendComponent({
 
       'click a#uncategorisedBoardsFolder': function() {
         Popup.close();
+        Session.set('folder', 'uncategorised');
+
         $('a.folderOpener, a#templatesFolder').removeClass('selected');
         $('a#uncategorisedBoardsFolder').addClass('selected');
         $('.emptyFolderMessage').remove();
         $('li.js-add-board-template, li.categorised_boards, li.board_templates').hide();
         $('li.js-add-board, li.uncategorised_boards').show();
+
+      	$('li.uncategorised_boards').draggable({
+      	  revert: 'invalid',
+      	  start: function(event) {
+              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
+              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+      	  },
+      	  drag: function() {},
+      	  stop: function() {
+      	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
+            $('p#actionTitle', this).remove();
+      	  }
+      	});
       },
 
       'mouseover a#templatesFolder': function(e) {

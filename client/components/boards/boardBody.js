@@ -11,9 +11,11 @@ BlazeComponent.extendComponent({
     // XXX The boardId should be readed from some sort the component "props",
     // unfortunatly, Blaze doesn't have this notion.
     this.autorun(() => {
+      Meteor.subscribe('userTemplateContainerBoard');
       const currentBoardId = Session.get('currentBoard');
-      if (!currentBoardId)
+      if (!currentBoardId) {
         return;
+      }
       const handle = subManager.subscribe('board', currentBoardId, false);
       Tracker.nonreactive(() => {
         Tracker.autorun(() => {

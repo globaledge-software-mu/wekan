@@ -19,7 +19,6 @@ DatePicker = BlazeComponent.extendComponent({
     }).on('changeDate', function(evt) {
       this.find('#date').value = moment(evt.date).format('L');
       this.error.set('');
-      this.find('#time').focus();
     }.bind(this));
 
     if (this.date.get().isValid()) {
@@ -27,6 +26,16 @@ DatePicker = BlazeComponent.extendComponent({
     }
     Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('L').toLowerCase(), placeholder: moment.localeData().longDateFormat('L')}).mask(this.$('#date'));
     Inputmask('datetime', {inputFormat: moment.localeData().longDateFormat('LT').toUpperCase(), placeholder: moment.localeData().longDateFormat('LT')}).mask(this.$('#time'));
+  },
+
+  removeTimeUI(listIdentifier, key) {
+    const property = ListProperties.findOne({listId: listIdentifier, i18nKey: key});
+    if (typeof property !== 'undefined') {
+      let useTime = (property.hasOwnProperty('useTime')) ? property.useTime : false;
+      if (useTime !== true) {
+      	$('.js-time-field#time').closest('.right').remove();
+      }
+    }
   },
 
   showDate() {
@@ -72,12 +81,21 @@ DatePicker = BlazeComponent.extendComponent({
       },
       'submit .edit-date'(evt) {
         evt.preventDefault();
-
-        // if no time was given, init with 12:00
-        const time = evt.target.time.value || moment(new Date().setHours(12, 0, 0)).format('LT');
-
-        const dateString = `${evt.target.date.value} ${time}`;
-        const newDate = moment(dateString, 'L LT', true);
+        const newDate = '';
+        if (evt.target.time && evt.target.time.value) {
+          // if no time was given, init with 23:59
+          const time = evt.target.time.value || moment(new Date().setHours(23, 59, 0)).format('LT');
+          const dateString = `${evt.target.date.value} ${time}`;
+          newDate = moment(dateString, 'L LT', true);
+        } else if (evt.target && !evt.target.time) {
+          // Time is disabled, init with 23:59
+          const time = moment(new Date().setHours(23, 59, 0)).format('LT');
+          const dateString = `${evt.target.date.value} ${time}`;
+          newDate = moment(dateString, 'L LT', true);
+        } else {
+          const dateString = `${evt.target.date.value}`;
+          newDate = moment(dateString, 'L', true);
+        }
         
         if (!newDate.isValid()) {
           this.error.set('invalid-date');
@@ -99,7 +117,10 @@ DatePicker = BlazeComponent.extendComponent({
         }
         
         this._storeDate(newDate.toDate());
-        this._storeScore(evt.target.score.value);
+
+        if (evt.target && evt.target.score && evt.target.score.value) {
+          this._storeScore(evt.target.score.value);
+        }
         Popup.close();
       },
       'click .js-delete-date'(evt) {

@@ -2,6 +2,14 @@
 Meteor.publish('templateBoards', function() {
   return Boards.find({
     type: 'template-board',
+  });
+});
+
+//Publishing the user's TemplateContainerBoard
+Meteor.publish('userTemplateContainerBoard', function() {
+	const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
+  return Boards.find({
+  	_id: userTemplateContainerId,
     archived: false, 
   });
 });

@@ -12,6 +12,10 @@ Meteor.publish('setting', () => {
   });
 });
 
+Meteor.publish('mailServerInfo', function () {
+  return Settings.find();
+});
+
 Meteor.publish('mailServer', function () {
   if (!Match.test(this.userId, String))
     return [];

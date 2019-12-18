@@ -151,6 +151,10 @@ template(name="editPropertyAlias")
       .materialCheckBox(class="{{#if hasDateWarnings}}is-checked{{/if}}")
       span {{_ 'use-date-warnings'}}
     br
+    a#time.flex.use-time
+      .materialCheckBox(class="{{#if hasTime}}is-checked{{/if}}")
+      span {{_ 'use-time'}}
+    br
     .color
       label {{_ "select-color"}}
       .edit-label

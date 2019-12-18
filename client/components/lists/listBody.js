@@ -471,7 +471,10 @@ BlazeComponent.extendComponent({
   },
 
   onCreated() {
-    Meteor.subscribe('cards');
+  	Tracker.nonreactive(() => {
+      Meteor.subscribe('userTemplateContainerBoard');
+      Meteor.subscribe('cards');
+  	});
     this.isCardTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-card-template');
     this.isListTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-list-template');
     this.isSwimlaneTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-open-add-swimlane-menu');
@@ -481,23 +484,27 @@ BlazeComponent.extendComponent({
       this.isSwimlaneTemplateSearch ||
       this.isBoardTemplateSearch;
     let board = {};
-    if (this.isTemplateSearch) {
-      board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
-    } else {
-      // Prefetch first non-current board id
-      board = Boards.findOne({
-        archived: false,
-        'members.userId': Meteor.userId(),
-        _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
-      });
-    }
+  	Tracker.afterFlush(() => {
+      if (this.isTemplateSearch) {
+        board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
+      } else {
+        // Prefetch first non-current board id
+        board = Boards.findOne({
+          archived: false,
+          'members.userId': Meteor.userId(),
+          _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
+        });
+      }
+  	});
     if (!board) {
       Popup.close();
       return;
     }
     const boardId = board._id;
     // Subscribe to this board
-    subManager.subscribe('board', boardId, false);
+    if (boardId) {
+      subManager.subscribe('board', boardId, false);
+    }
     this.selectedBoardId = new ReactiveVar(boardId);
 
     if (!this.isBoardTemplateSearch) {
@@ -530,6 +537,20 @@ BlazeComponent.extendComponent({
     return boards;
   },
 
+  memberOfMoreThanTenTemplates() {
+  	memberTemplates = Boards.find({
+  		type: 'template-board',
+  		'members.userId': Meteor.user()._id,
+  		archived: false,
+  	});
+
+  	if (memberTemplates.count() > 10) {
+  		return true;
+  	} else {
+    	return false;
+  	}
+  },
+
   results() {
     if (!this.selectedBoardId) {
       return [];
@@ -543,36 +564,55 @@ BlazeComponent.extendComponent({
       return board.searchSwimlanes(this.term.get());
     } else if (this.isBoardTemplateSearch) {
     	var boards;
-    	// if Admin or Manager
-    	if (Meteor.user().isAdminOrManager()) {
-      	boards = Cards.find({
-          type: 'cardType-linkedBoard',
-          archived: false, 
-        });
+    	// If user is trying to search for a specific board template
+    	if (this.term.get()) {
+	      const regex = new RegExp(this.term.get(), 'i');
+	      const boardIds = new Array();
+	      const templates = Boards.find({
+	      	type: 'template-board', 
+	    		'members.userId': Meteor.user()._id, 
+	    		archived: false,  
+	    		$or: [
+	          { title: regex },
+	          { description: regex },
+	        ],
+	      }).forEach((template) => {
+	      	boardIds.push(template._id);
+	      }); 
+
+	      const projection = { limit: 15, sort: { createdAt: -1 } };
+
+	      boards = Cards.find({ 
+	      	linkedId: { $in: boardIds }
+	      }, projection);
+    	} else {
+      	// if Admin or Manager
+      	if (Meteor.user().isAdminOrManager()) {
+        	boards = Cards.find({
+            type: 'cardType-linkedBoard',
+            archived: false, 
+          });
+      	} 
+      	// else if Coach or Coachee
+      	else if (Meteor.user().isCoachOrCoachee()) {
+        	const linkedBoardCards = Cards.find({
+            type: 'cardType-linkedBoard',
+            archived: false, 
+          });
+        	var boardIds = [];
+        	linkedBoardCards.forEach((linkedBoardCard) => {
+        		var boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
+        		if (boardTemplate) {
+          		(boardTemplate.members).forEach((member) => {
+          			if (member.userId == Meteor.userId()) {
+          				boardIds.push(linkedBoardCard.linkedId);
+          			}
+          		});
+        		}
+        	});
+    			boards = Cards.find({ linkedId: {$in: boardIds} });
+      	}
     	} 
-    	// else if Coach or Coachee
-    	else if (Meteor.user().isCoachOrCoachee()) {
-      	const linkedBoardCards = Cards.find({
-          type: 'cardType-linkedBoard',
-          archived: false, 
-        });
-      	var boardIds = [];
-      	linkedBoardCards.forEach((linkedBoardCard) => {
-      		var boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
-      		if (boardTemplate) {
-        		(boardTemplate.members).forEach((member) => {
-        			if (member.userId == Meteor.userId()) {
-        				boardIds.push(linkedBoardCard.linkedId);
-        			}
-        		});
-      		}
-      	});
-  			boards = Cards.find({ linkedId: {$in: boardIds} });
-    	} 
-    	// else regular users (they get the original upstream logic)
-    	else {
-	      boards = board.searchBoards(this.term.get());
-    	}
       boards.forEach((board) => {
         subManager.subscribe('board', board.linkedId, false);
       });

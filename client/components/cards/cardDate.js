@@ -19,7 +19,6 @@ BlazeComponent.extendComponent({
     }).on('changeDate', function(evt) {
       this.find('#date').value = moment(evt.date).format('L');
       this.error.set('');
-      this.find('#time').focus();
     }.bind(this));
 
     if (this.date.get().isValid()) {
@@ -64,9 +63,8 @@ BlazeComponent.extendComponent({
       'submit .edit-date'(evt) {
         evt.preventDefault();
 
-        // if no time was given, init with 12:00
-        const time = evt.target.time.value || moment(new Date().setHours(12, 0, 0)).format('LT');
-
+        // if no time was given, init with 23:59
+        const time = evt.target.time.value || moment(new Date().setHours(23, 59, 0)).format('LT');
         const dateString = `${evt.target.date.value} ${time}`;
         const newDate = moment(dateString, 'L LT', true);
         if (newDate.isValid()) {
@@ -106,13 +104,29 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-received-score-title')) {
       $('.score').remove();
     }
+    
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Received'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-received');
   }
 
+  // store received date
   _storeDate(date) {
+  	// If start is not set yet, set it too
+  	const startDate = this.data().getStart();
+  	if (!startDate || startDate.length < 1 || startDate == '') {
+  		this.card.setStart(date);
+  	}
     this.card.setReceived(date);
   }
-  
-  _storeScore(score) {
+
+  // store initial score
+  _storeScore(score, date) {
+  	// If CurrentScore is not set yet, set it too
+  	const currentScore = this.data().getCurrentScore();
+  	if (!currentScore || currentScore.length < 1 || currentScore == '') {
+  		this.card.setCurrentScore(score);
+  	}
     this.card.setInitialScore(score);
   }
 
@@ -157,6 +171,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-start-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Start'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-start');
   }
 
   _storeDate(date) {
@@ -170,6 +188,13 @@ Template.dateBadge.helpers({
        return false;
     }
     this.card.setStart(date);
+
+  	// If received is not set yet, set it too
+  	const receivedDate = this.data().getStart();
+  	if (!receivedDate || receivedDate.length < 1 || receivedDate == '') {
+  		this.card.setReceived(date);
+  	}
+
     var oldDate = this.data().dataPointDate;
     var oldScore = this.data().dataPointScore;
     // if clicked from chart && date changed
@@ -180,10 +205,16 @@ Template.dateBadge.helpers({
       }
     }
   }
-  
+
+  //store current score
   _storeScore(score) {
     this.card.setCurrentScore(score);
-    this.card.reloadHistoricScoreChart();
+  	// If initial is not set yet, set it too
+  	const initialScore = this.data().getCurrentScore();
+  	if (!initialScore || initialScore.length < 1 || initialScore == '') {
+  		this.card.setInitialScore(score);
+  	}
+  	this.card.reloadHistoricScoreChart();
   }
 
   _deleteDate() {
@@ -219,6 +250,7 @@ Template.dateBadge.helpers({
     // The following if condition distinguishes whether the edit button was clicked directly 
     // or it was triggered from the click event of the historical chart's datapoint 
     if (!this.data().dataPointDate) {
+      this.data().getDue() && this.date.set(moment(this.data().getDue()));
       this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
     } else {
       this.data().getDue() && this.date.set(moment(this.data().getDue()));
@@ -238,6 +270,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-due-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Due'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-due');
   }
 
   _storeDate(date) {
@@ -301,6 +337,10 @@ Template.dateBadge.helpers({
     if (!this.data().isPropertyVisible('card-end-score-title')) {
       $('.score').remove();
     }
+
+    //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'End'
+    var listId = this.data().list()._id;
+    this.removeTimeUI(listId, 'card-end');
   }
 
   _storeDate(date) {
@@ -336,13 +376,26 @@ const CardDate = BlazeComponent.extendComponent({
     }, 60000);
   },
 
-  showDate() {
-    // this will start working once mquandalle:moment
-    // is updated to at least moment.js 2.10.5
-    // until then, the date is displayed in the "L" format
-    return this.date.get().calendar(null, {
-      sameElse: 'llll',
-    });
+  // this method is ran only when a minicard is opened and has any received or start or due or end date
+  // and when received or start or due or end date gets edited
+  showDate(key) {
+  	const listIdentifier = this.data().list()._id;
+    const property = ListProperties.findOne({listId: listIdentifier, i18nKey: key});
+    // If Time is disabled, we extract the default time from the text to be displayed
+    if (property && !property.useTime) {
+      return (this.date.get().calendar(null, {
+      	lastDay : '[Yesterday]',
+        sameDay : '[Today]',
+        nextDay : '[Tomorrow]',
+        lastWeek : '[last]',
+        nextWeek : '[Next]',
+        sameElse : 'llll',
+      }).split(" at"))[0];
+    } else {
+      return this.date.get().calendar(null, {
+        sameElse: 'llll',
+      });
+    }
   },
 
   showISODate() {
@@ -378,6 +431,10 @@ class CardReceivedDate extends CardDate {
       return 'received-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-received';
   }
 
   showTitle() {
@@ -421,6 +478,10 @@ class CardStartDate extends CardDate {
       return 'start-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-start';
   }
 
   showTitle() {
@@ -468,6 +529,10 @@ class CardDueDate extends CardDate {
     }
     return classes;
   }
+  
+  distinguishDate() {
+  	return 'card-due';
+  }
 
   showTitle() {
     return `${TAPi18n.__('card-due-on')} ${this.date.get().format('LLLL')}`;
@@ -506,6 +571,10 @@ class CardEndDate extends CardDate {
       return 'end-date card-label-' + property.color + ' date';
     }
     return classes;
+  }
+  
+  distinguishDate() {
+  	return 'card-end';
   }
 
   showTitle() {

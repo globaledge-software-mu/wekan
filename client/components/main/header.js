@@ -47,8 +47,4 @@ Template.header.events({
   'click .closeStatus': function() {
 	  $('.closeStatus').parent('div').remove();
   },
-
-  'click a.goToAllBoards': function(e) {
-    $('a#uncategorisedBoardsFolder').trigger('click');
-  },
 });

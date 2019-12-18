@@ -2,9 +2,9 @@ template(name="dateBadge")
   if currentUser.canAlterCard
     a.js-edit-date.card-date(title="{{showTitle}}" class="{{classes}}")
       time(datetime="{{showISODate}}")
-        | {{showDate}}
+        | {{showDate distinguishDate}}
   else
     a.card-date(title="{{showTitle}}" class="{{classes}}")
       time(datetime="{{showISODate}}")
-        | {{showDate}}
+        | {{showDate distinguishDate}}
 

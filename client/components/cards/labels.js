@@ -1,3 +1,5 @@
+const { turnLabelsToDraggables } = Utils;
+
 let labelColors;
 Meteor.startup(() => {
   labelColors = Boards.simpleSchema()._schema['labels.$.color'].allowedValues;
@@ -41,7 +43,15 @@ Template.cardLabelsPopup.events({
   'click .js-select-label'(evt) {
     const card = Cards.findOne(Session.get('currentCard'));
     const labelId = this._id;
-    card.toggleLabel(labelId);
+
+  	Tracker.nonreactive(() => {
+      card.toggleLabel(labelId);
+  	});
+  	Tracker.afterFlush(() => {
+      // Re-initialising the draggables for the Labels
+    	turnLabelsToDraggables();
+  	});
+
     evt.preventDefault();
   },
   'click .js-edit-label': Popup.open('editLabel'),

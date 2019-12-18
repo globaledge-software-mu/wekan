@@ -480,27 +480,6 @@ Boards.helpers({
     return _id;
   },
 
-  searchBoards(term) {
-    check(term, Match.OneOf(String, null, undefined));
-
-    const query = { boardId: this._id };
-    query.type = 'cardType-linkedBoard';
-    query.archived = false;
-
-    const projection = { limit: 10, sort: { createdAt: -1 } };
-
-    if (term) {
-      const regex = new RegExp(term, 'i');
-
-      query.$or = [
-        { title: regex },
-        { description: regex },
-      ];
-    }
-
-    return Cards.find(query, projection);
-  },
-
   searchSwimlanes(term) {
     check(term, Match.OneOf(String, null, undefined));
 
@@ -870,9 +849,7 @@ if (Meteor.isServer) {
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
-  });
 
-  Meteor.methods({
     archiveBoard(boardId) {
       check(boardId, String);
       const board = Boards.findOne(boardId);
@@ -880,13 +857,18 @@ if (Meteor.isServer) {
         const userId = Meteor.userId();
         const index = board.memberIndex(userId);
         if (index >= 0) {
+          if (board.type && board.type == 'template-board') {
+          	Cards.update(
+        			{ linkedId: board._id }, 
+        			{ $set: { archived: true } }
+      			);
+          }
           board.archive();
           return true;
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
   });
-
 }
 
 if (Meteor.isServer) {

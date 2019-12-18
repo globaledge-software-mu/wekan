@@ -776,6 +776,7 @@ Users.mutations({
 Meteor.methods({
   setUsername(username, userId) {
     check(username, String);
+    check(userId, String);
     const nUsersWithUsername = Users.find({username}).count();
     if (nUsersWithUsername > 0) {
       throw new Meteor.Error('username-already-taken');
@@ -793,6 +794,7 @@ Meteor.methods({
   },
   setEmail(email, userId) {
     check(email, String);
+    check(userId, String);
     const existingUser = Users.findOne({'emails.address': email}, {fields: {_id: 1}});
     if (existingUser) {
       throw new Meteor.Error('email-already-taken');

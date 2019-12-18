@@ -8,7 +8,8 @@ CardScores.attachSchema(new SimpleSchema({
     type: String
   },
   score: {
-    type: String
+    type: String,
+    optional: true,
   },
   type: {
     type: String
@@ -31,11 +32,11 @@ CardScores.allow({
   insert(userId, doc) {
     return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
   },
-  update(userId, doc) {
-    return userId === doc.userId;
+  update() {
+    return true;
   },
-  remove(userId, doc) {
-    return userId === doc.userId;
+  remove() {
+    return true;
   },
-  fetch: ['userId', 'boardId'],
+  fetch: [],
 });

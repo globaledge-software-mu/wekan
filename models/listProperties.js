@@ -21,6 +21,10 @@ ListProperties.attachSchema(new SimpleSchema({
     type: Boolean,
     defaultValue: false
   },
+  useTime: {
+    type: Boolean,
+    defaultValue: true
+  },
   color: {
     type: String,
     optional: true
