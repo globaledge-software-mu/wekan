@@ -387,16 +387,7 @@ BlazeComponent.extendComponent({
                   	this.$('.email-taken').show();
                   }
                 } else {
-                	var message = TAPi18n.__('edit-user-successful');
-                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-                		message +
-                		'</b></p></div>'
-              		);
-                  $('#header-main-bar').before($successMessage);
-                  $successMessage.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-                  Popup.close();
+                  Meteor.call('displayEditUserSuccessMsg');
                 }
               });
             } else if (isChangeUserName && !isChangeEmail) {
@@ -407,16 +398,7 @@ BlazeComponent.extendComponent({
                   	this.$('.username-taken').show();
                   }
                 } else {
-                	var message = TAPi18n.__('edit-user-successful');
-                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-                		message +
-                		'</b></p></div>'
-              		);
-                  $('#header-main-bar').before($successMessage);
-                  $successMessage.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-                  Popup.close();
+                  Meteor.call('displayEditUserSuccessMsg');
                 }
               });
             } else if (!isChangeUserName && isChangeEmail) {
@@ -427,29 +409,11 @@ BlazeComponent.extendComponent({
                   	this.$('.email-taken').show();
                   }
                 } else {
-                	var message = TAPi18n.__('edit-user-successful');
-                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-                		message +
-                		'</b></p></div>'
-              		);
-                  $('#header-main-bar').before($successMessage);
-                  $successMessage.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-                  Popup.close();
+                  Meteor.call('displayEditUserSuccessMsg');
                 }
               });
             } else {
-            	var message = TAPi18n.__('edit-user-successful');
-              var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
-            		message +
-            		'</b></p></div>'
-          		);
-              $('#header-main-bar').before($successMessage);
-              $successMessage.delay(10000).slideUp(500, function() {
-                $(this).remove();
-              });
-              Popup.close();
+              Meteor.call('displayEditUserSuccessMsg');
             }
           }
         });

@@ -823,6 +823,18 @@ Meteor.methods({
       Accounts.setPassword(userId, newPassword);
     }
   },
+  displayEditUserSuccessMsg() {
+  	var message = TAPi18n.__('edit-user-successful');
+    var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+
+  		message +
+  		'</b></p></div>'
+		);
+    $('#header-main-bar').before($successMessage);
+    $successMessage.delay(10000).slideUp(500, function() {
+      $(this).remove();
+    });
+    Popup.close();
+  },
 });
 
 if (Meteor.isServer) {
