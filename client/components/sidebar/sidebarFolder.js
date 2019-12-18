@@ -280,7 +280,7 @@ BlazeComponent.extendComponent({
       'click .create-first-level-folder': function() {
         if ($('.createFirstLevelFolderDiv').hasClass('hide')) {
           $('.createFirstLevelFolderDiv').removeClass('hide');
-          $('#createFirstLevelFolderForm').find('#title').focus();
+          $('#createFirstLevelFolderForm').find('.title').focus();
         } else {
           $('.createFirstLevelFolderDiv').addClass('hide');
           $('#createFirstLevelFolderForm').trigger('reset');
@@ -333,19 +333,19 @@ BlazeComponent.extendComponent({
         var selector = $(e.target).closest('ul.nav.nav-second-level.collapse');
         if (selector.find('.createSubFolderFormTAGli').hasClass('hide')) {
           selector.find('.createSubFolderFormTAGli').removeClass('hide');
-          selector.find('#createSubFolderForm').find('#title').focus();
+          selector.find('.createSubFolderForm').find('.title').focus();
         } else {
           selector.find('.createSubFolderFormTAGli').addClass('hide');
-          selector.find('#createSubFolderForm').trigger('reset');
+          selector.find('.createSubFolderForm').trigger('reset');
         }
       },
 
       'click .close-sub-folder-form': function(e) {
         $(e.target).closest('.createSubFolderFormTAGli').addClass('hide');
-        $(e.target).closest('#createSubFolderForm').trigger('reset');
+        $(e.target).closest('.createSubFolderForm').trigger('reset');
       },
 
-      'submit #createSubFolderForm': function(e) {
+      'submit .createSubFolderForm': function(e) {
         e.preventDefault();
         Folders.insert({ 
           name: $(e.target).find('input[name=name]').val(), 
