@@ -274,23 +274,29 @@ BlazeComponent.extendComponent({
       	var boardNotSelected = !$('.materialCheckBox.is-checked').length; 
       	if (validEmailNotEntered && !boardNotSelected && !roleNotSelected) {
         	$('.enter-valid-email').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else if (!validEmailNotEntered && !boardNotSelected && roleNotSelected) {
         	$('.select-role-msg').show();
         } else if (!validEmailNotEntered && boardNotSelected && !roleNotSelected) {
         	$('.select-board-msg').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else if (validEmailNotEntered && !boardNotSelected && roleNotSelected) {
         	$('.enter-valid-email').show();
         	$('.select-role-msg').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else if (validEmailNotEntered && boardNotSelected && !roleNotSelected) {
         	$('.enter-valid-email').show();
         	$('.select-board-msg').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else if (!validEmailNotEntered && boardNotSelected && roleNotSelected) {
         	$('.select-role-msg').show();
         	$('.select-board-msg').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else if (validEmailNotEntered && boardNotSelected && roleNotSelected) {
         	$('.select-role-msg').show();
         	$('.select-board-msg').show();
         	$('.enter-valid-email').show();
+        	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);
         } else {
           this.inviteThroughEmail();
         }
