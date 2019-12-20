@@ -427,8 +427,15 @@ if (Meteor.isClient) {
 
     isCoachAndNotAdmin() {
       const coach = Roles.findOne({ name: 'Coach' });
-      const coachAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: coach._id, isAdmin: false });
-      if (coachAndNotAdmin) {
+      const coachAndNotAdmin = Users.find({ 
+      	_id: Meteor.user()._id, 
+      	roleId: coach._id, 
+      	$or: [ 
+      		{ isAdmin: { $exists: false } }, 
+      		{ isAdmin: false } 
+  			]
+    	});
+      if (coachAndNotAdmin && coachAndNotAdmin.count() > 0) {
         return true;
       }
       return false;
