@@ -68,4 +68,35 @@ AssignedUserGroups.allow({
   fetch: [],
 })
 
+if (Meteor.isServer) {
+  Meteor.startup(() => {
+  	const assignedGroup = AssignedUserGroups.findOne();
+  	if (!assignedGroup) {
+  		Users.find().forEach((user) => {
+  			UserGroups.find({
+  				type: 'default-trial'
+				}).forEach((userGroup) => {
+					AssignedUserGroups.insert({
+						userId: user._id,
+					  userGroupId: userGroup._id,
+					  groupOrder: 'primary',
+					  quota_used: 0
+					});
+				});
+  			if (user && user.isAdmin) {
+    			UserGroups.find({
+    				type: 'admin-default-trial'
+  				}).forEach((userGroup) => {
+  					AssignedUserGroups.insert({
+  						userId: user._id,
+  					  userGroupId: userGroup._id,
+  					  groupOrder: 'primary',
+  					  quota_used: 0
+  					});
+  				});
+  			}
+  		});
+  	}
+  });
+}
 
