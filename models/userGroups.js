@@ -86,15 +86,26 @@ if (Meteor.isServer) {
     const group = UserGroups.findOne();
     if (group && !group.type) {
     	UserGroups.remove({});
+    } 
+
+    const adminGroup = UserGroups.findOne({type: 'admin-default-trial'});
+    if (!adminGroup) {
+    	UserGroups.remove({});
     }
+
     const userGroup = UserGroups.findOne();
     //	if collection 'user_groups' exists but it do not contain any documents
     if (!userGroup) {
+    	//Default Trial CRUD Users User Groups
+    	UserGroups.insert({title: 'Create 10 Users', action: 'create', quota: 10, resource: 'users', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Read 10 Users',   action: 'read',   quota: 10, resource: 'users', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Update 10 Users', action: 'update', quota: 10, resource: 'users', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Delete 10 Users', action: 'delete', quota: 10, resource: 'users', type: 'admin-default-trial'});
     	//Default Trial CRUD Template Boards User Groups
-    	UserGroups.insert({title: 'Create 10 Template Boards', action: 'create', quota: 10, resource: 'template boards', type: 'default-trial'});
-    	UserGroups.insert({title: 'Read 10 Template Boards',   action: 'read',   quota: 10, resource: 'template boards', type: 'default-trial'});
-    	UserGroups.insert({title: 'Update 10 Template Boards', action: 'update', quota: 10, resource: 'template boards', type: 'default-trial'});
-    	UserGroups.insert({title: 'Delete 10 Template Boards', action: 'delete', quota: 10, resource: 'template boards', type: 'default-trial'});
+    	UserGroups.insert({title: 'Create 10 Template Boards', action: 'create', quota: 10, resource: 'template boards', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Read 10 Template Boards',   action: 'read',   quota: 10, resource: 'template boards', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Update 10 Template Boards', action: 'update', quota: 10, resource: 'template boards', type: 'admin-default-trial'});
+    	UserGroups.insert({title: 'Delete 10 Template Boards', action: 'delete', quota: 10, resource: 'template boards', type: 'admin-default-trial'});
     	//Default Trial CRUD Regular Boards User Groups
     	UserGroups.insert({title: 'Create 10 Regular Boards', action: 'create', quota: 10, resource: 'regular boards', type: 'default-trial'});
     	UserGroups.insert({title: 'Read 10 Regular Boards',   action: 'read',   quota: 10, resource: 'regular boards', type: 'default-trial'});
@@ -105,11 +116,6 @@ if (Meteor.isServer) {
     	UserGroups.insert({title: 'Read 10 Regular Cards',   action: 'read',   quota: 10, resource: 'regular cards', type: 'default-trial'});
     	UserGroups.insert({title: 'Update 10 Regular Cards', action: 'update', quota: 10, resource: 'regular cards', type: 'default-trial'});
     	UserGroups.insert({title: 'Delete 10 Regular Cards', action: 'delete', quota: 10, resource: 'regular cards', type: 'default-trial'});
-    	//Default Trial CRUD Users User Groups
-    	UserGroups.insert({title: 'Create 10 Users', action: 'create', quota: 10, resource: 'users', type: 'default-trial'});
-    	UserGroups.insert({title: 'Read 10 Users',   action: 'read',   quota: 10, resource: 'users', type: 'default-trial'});
-    	UserGroups.insert({title: 'Update 10 Users', action: 'update', quota: 10, resource: 'users', type: 'default-trial'});
-    	UserGroups.insert({title: 'Delete 10 Users', action: 'delete', quota: 10, resource: 'users', type: 'default-trial'});
     	//Default Trial CRUD Folders User Groups
     	UserGroups.insert({title: 'Create 10 Folders', action: 'create', quota: 10, resource: 'folders', type: 'default-trial'});
     	UserGroups.insert({title: 'Read 10 Folders',   action: 'read',   quota: 10, resource: 'folders', type: 'default-trial'});
@@ -126,11 +132,16 @@ if (Meteor.isServer) {
     	UserGroups.insert({title: 'Update 10 Lists', action: 'update', quota: 10, resource: 'lists', type: 'default-trial'});
     	UserGroups.insert({title: 'Delete 10 Lists', action: 'delete', quota: 10, resource: 'lists', type: 'default-trial'});
 
+    	//Default Premium CRUD Users User Groups
+    	UserGroups.insert({title: 'Create unlimited Users', action: 'create', quota: -1, resource: 'users', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Read unlimited Users',   action: 'read',   quota: -1, resource: 'users', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Update unlimited Users', action: 'update', quota: -1, resource: 'users', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Delete unlimited Users', action: 'delete', quota: -1, resource: 'users', type: 'admin-default-premium'});
     	//Default Premium CRUD Template Boards User Groups
-    	UserGroups.insert({title: 'Create unlimited Template Boards', action: 'create', quota: -1, resource: 'template boards', type: 'default-premium'});
-    	UserGroups.insert({title: 'Read unlimited Template Boards',   action: 'read',   quota: -1, resource: 'template boards', type: 'default-premium'});
-    	UserGroups.insert({title: 'Update unlimited Template Boards', action: 'update', quota: -1, resource: 'template boards', type: 'default-premium'});
-    	UserGroups.insert({title: 'Delete unlimited Template Boards', action: 'delete', quota: -1, resource: 'template boards', type: 'default-premium'});
+    	UserGroups.insert({title: 'Create unlimited Template Boards', action: 'create', quota: -1, resource: 'template boards', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Read unlimited Template Boards',   action: 'read',   quota: -1, resource: 'template boards', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Update unlimited Template Boards', action: 'update', quota: -1, resource: 'template boards', type: 'admin-default-premium'});
+    	UserGroups.insert({title: 'Delete unlimited Template Boards', action: 'delete', quota: -1, resource: 'template boards', type: 'admin-default-premium'});
     	//Default Premium CRUD Regular Boards User Groups
     	UserGroups.insert({title: 'Create unlimited Regular Boards', action: 'create', quota: -1, resource: 'regular boards', type: 'default-premium'});
     	UserGroups.insert({title: 'Read unlimited Regular Boards',   action: 'read',   quota: -1, resource: 'regular boards', type: 'default-premium'});
@@ -141,11 +152,6 @@ if (Meteor.isServer) {
     	UserGroups.insert({title: 'Read unlimited Regular Cards',   action: 'read',   quota: -1, resource: 'regular cards', type: 'default-premium'});
     	UserGroups.insert({title: 'Update unlimited Regular Cards', action: 'update', quota: -1, resource: 'regular cards', type: 'default-premium'});
     	UserGroups.insert({title: 'Delete unlimited Regular Cards', action: 'delete', quota: -1, resource: 'regular cards', type: 'default-premium'});
-    	//Default Premium CRUD Users User Groups
-    	UserGroups.insert({title: 'Create unlimited Users', action: 'create', quota: -1, resource: 'users', type: 'default-premium'});
-    	UserGroups.insert({title: 'Read unlimited Users',   action: 'read',   quota: -1, resource: 'users', type: 'default-premium'});
-    	UserGroups.insert({title: 'Update unlimited Users', action: 'update', quota: -1, resource: 'users', type: 'default-premium'});
-    	UserGroups.insert({title: 'Delete unlimited Users', action: 'delete', quota: -1, resource: 'users', type: 'default-premium'});
     	//Default Premium CRUD Folders User Groups
     	UserGroups.insert({title: 'Create unlimited Folders', action: 'create', quota: -1, resource: 'folders', type: 'default-premium'});
     	UserGroups.insert({title: 'Read unlimited Folders',   action: 'read',   quota: -1, resource: 'folders', type: 'default-premium'});

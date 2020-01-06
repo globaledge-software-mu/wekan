@@ -854,6 +854,20 @@ if (Meteor.isServer) {
             quota_used: 0,
           });
         });
+        const newUser = Users.find({ _id: newUserId });
+        if (newUser && newUser.isAdmin) {
+          // Assign the admin default Trial user groups to the newly created admin
+          UserGroups.find({
+          	type: 'admin-default-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: newUserId,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+        }
       }
 
       // update new user's details
@@ -933,6 +947,20 @@ if (Meteor.isServer) {
               quota_used: 0,
             });
           });
+          const newUser = Users.find({ _id: newUserId });
+          if (newUser && newUser.isAdmin) {
+            // Assign the admin default Trial user groups to the newly created admin
+            UserGroups.find({
+            	type: 'admin-default-trial'
+            }).forEach((userGroup) => {
+              AssignedUserGroups.insert({
+              	userId: newUserId,
+                userGroupId: userGroup._id,
+                groupOrder: 'Primary',
+                quota_used: 0,
+              });
+            });
+          }
         }
         if (!newUserId) {
         	throw new Meteor.Error('error-user-notCreated');
@@ -1536,6 +1564,20 @@ if (Meteor.isServer) {
             quota_used: 0,
           });
         });
+        const newUser = Users.find({ _id: id });
+        if (newUser && newUser.isAdmin) {
+          // Assign the admin default Trial user groups to the newly created admin
+          UserGroups.find({
+          	type: 'admin-default-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: id,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+        }
       }
       JsonRoutes.sendResult(res, {
         code: 200,
