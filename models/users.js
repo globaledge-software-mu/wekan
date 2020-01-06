@@ -1566,6 +1566,12 @@ if (Meteor.isServer) {
     try {
       Authentication.checkUserId(req.userId);
       const id = req.params.userId;
+      // Removing the user from any user groups he/she was assigned to
+      AssignedUserGroups.find({
+      	userId: id
+      }).forEach((assignedGroup) => {
+      	AssignedUserGroups.remove({_id: assignedGroup._id});
+      });
       Meteor.users.remove({ _id: id });
       JsonRoutes.sendResult(res, {
         code: 200,
