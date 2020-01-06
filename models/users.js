@@ -842,6 +842,19 @@ if (Meteor.isServer) {
 
       // create new user 
       const newUserId = Accounts.createUser({username, email});
+      if (newUserId) {
+        // Assign the default Trial user groups to the newly created user
+        UserGroups.find({
+        	type: 'default-trial'
+        }).forEach((userGroup) => {
+          AssignedUserGroups.insert({
+          	userId: newUserId,
+            userGroupId: userGroup._id,
+            groupOrder: 'Primary',
+            quota_used: 0,
+          });
+        });
+      }
 
       // update new user's details
     	Users.update(
@@ -908,6 +921,19 @@ if (Meteor.isServer) {
         username = email.substring(0, posAt);
         // Create user doc
         const newUserId = Accounts.createUser({username, email});
+        if (newUserId) {
+          // Assign the default Trial user groups to the newly created user
+          UserGroups.find({
+          	type: 'default-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: newUserId,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+        }
         if (!newUserId) {
         	throw new Meteor.Error('error-user-notCreated');
         }
@@ -1498,6 +1524,19 @@ if (Meteor.isServer) {
         password: req.body.password,
         from: 'admin',
       });
+      if (id) {
+        // Assign the default Trial user groups to the newly created user
+        UserGroups.find({
+        	type: 'default-trial'
+        }).forEach((userGroup) => {
+          AssignedUserGroups.insert({
+          	userId: id,
+            userGroupId: userGroup._id,
+            groupOrder: 'Primary',
+            quota_used: 0,
+          });
+        });
+      }
       JsonRoutes.sendResult(res, {
         code: 200,
         data: {
