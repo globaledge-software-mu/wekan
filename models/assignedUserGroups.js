@@ -85,7 +85,7 @@ if (Meteor.isServer) {
 				});
   			if (user && user.isAdmin) {
     			UserGroups.find({
-    				type: 'admin-default-trial'
+    				type: 'default-admin-trial'
   				}).forEach((userGroup) => {
   					AssignedUserGroups.insert({
   						userId: user._id,

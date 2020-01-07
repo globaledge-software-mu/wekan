@@ -858,7 +858,7 @@ if (Meteor.isServer) {
         if (newUser && newUser.isAdmin) {
           // Assign the admin default Trial user groups to the newly created admin
           UserGroups.find({
-          	type: 'admin-default-trial'
+          	type: 'default-admin-trial'
           }).forEach((userGroup) => {
             AssignedUserGroups.insert({
             	userId: newUserId,
@@ -951,7 +951,7 @@ if (Meteor.isServer) {
           if (newUser && newUser.isAdmin) {
             // Assign the admin default Trial user groups to the newly created admin
             UserGroups.find({
-            	type: 'admin-default-trial'
+            	type: 'default-admin-trial'
             }).forEach((userGroup) => {
               AssignedUserGroups.insert({
               	userId: newUserId,
@@ -1568,7 +1568,7 @@ if (Meteor.isServer) {
         if (newUser && newUser.isAdmin) {
           // Assign the admin default Trial user groups to the newly created admin
           UserGroups.find({
-          	type: 'admin-default-trial'
+          	type: 'default-admin-trial'
           }).forEach((userGroup) => {
             AssignedUserGroups.insert({
             	userId: id,
