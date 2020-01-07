@@ -13,8 +13,10 @@ template(name="people")
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
             if currentUser.isAdmin
-              li.active
+              li.active.hide
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+              li.active
+                a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
         .main-body
           if loading.get
             +spinner
@@ -22,6 +24,8 @@ template(name="people")
             +peopleGeneral
           else if roles.get
             +rolesGeneral
+          else if userGroups.get
+            +userGroupsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -261,3 +265,98 @@ template(name="createRolePopup")
       div
       unless managerCoachOrCoacheeDoc role._id
         input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="userGroupsGeneral")
+  button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
+  table
+    tbody
+      tr 
+        th {{_ 'title'}}
+        th {{_ 'quota'}}
+        th {{_ 'resource'}}
+        th {{_ 'category'}}     
+        th {{_ 'createdAt'}}
+        th {{_ 'action'}}
+      // if isAdmin
+      if currentUser.isAdmin
+        each userGroup in userGroupsList
+          +userGroupRow(userGroupId=userGroup._id)
+
+template(name="userGroupRow")
+  tr
+    td {{ userGroupData.title }}
+    if $eq userGroupData.quota -1
+      td {{_ 'unlimited'}}
+    else
+      td {{ userGroupData.quota }}
+    td {{ userGroupData.resource }}
+    td {{ userGroupData.category }}
+    td {{ moment userGroupData.createdAt 'LLL' }}
+    td
+      a.edit-user-group
+        | {{_ 'edit'}}
+
+template(name="createUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-created
+          | {{_ 'error-title-blank'}}
+        input.js-user-group-title(type="text" value="" autofocus)
+      label
+        | {{_ 'quota'}}
+        span.error.hide.quota-blank.user-group-not-created
+          | {{_ 'error-quota-blank'}}
+        input.js-user-group-quota(type="text" value="")
+      label
+        | {{_ 'resource'}}
+        span.error.hide.resource-blank.user-group-not-created
+          | {{_ 'error-resource-blank'}}
+        input.js-user-group-resource(type="text" value="")
+      label
+        | {{_ 'category'}}
+        span.error.hide.category-taken.user-group-not-created
+          | {{_ 'error-category-taken'}}
+        input.js-user-group-category(type="text" value="")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form#editUserGroupPopup
+      label.hide.userGroupId(type="text" value=userGroup._id)
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-edited
+          | {{_ 'error-title-blank'}}
+        input.js-user-group-title(type="text" value=userGroup.title autofocus)
+      label
+        | {{_ 'quota'}}
+        span.error.hide.quota-blank.user-group-not-created
+          | {{_ 'error-quota-blank'}}
+        input.js-user-group-quota(type="text" value=userGroup.quota)
+      label
+        | {{_ 'resource'}}
+        span.error.hide.resource-blank.user-group-not-created
+          | {{_ 'error-resource-blank'}}
+        input.js-user-group-resource(type="text" value=userGroup.resource)
+      label
+        | {{_ 'category'}}
+        span.error.hide.category-taken.user-group-not-created
+          | {{_ 'error-category-taken'}}
+        input.js-user-group-category(type="text" value=userGroup.category)
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+        
+        

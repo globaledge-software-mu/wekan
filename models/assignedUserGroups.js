@@ -74,7 +74,7 @@ if (Meteor.isServer) {
   	if (!assignedGroup) {
   		Users.find().forEach((user) => {
   			UserGroups.find({
-  				type: 'default-trial'
+  				category: 'default-trial'
 				}).forEach((userGroup) => {
 					AssignedUserGroups.insert({
 						userId: user._id,
@@ -85,7 +85,7 @@ if (Meteor.isServer) {
 				});
   			if (user && user.isAdmin) {
     			UserGroups.find({
-    				type: 'default-admin-trial'
+    				category: 'default-admin-trial'
   				}).forEach((userGroup) => {
   					AssignedUserGroups.insert({
   						userId: user._id,

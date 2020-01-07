@@ -226,6 +226,7 @@
     "comment-only-desc": "Can comment on cards only.",
     "create-folder": "Create folder",
     "create-sub-folder": "Create sub-folder",
+    "create-user-group": "Create User-Group",
     "no-comments": "No comments",
     "no-comments-desc": "Can not see comments and activities.",
     "computer": "Computer",
@@ -339,6 +340,13 @@
     "hide-system-messages": "Hide system messages",
     "headerBarCreateBoardPopup-title": "Create Board",
     "home": "Home",
+    "id": "ID",
+    "title": "Title",
+    "action": "Action",
+    "quota": "Quota",
+    "used-quota": "Used quota",
+    "category": "Category",
+    "resource": "Resource",
     "import": "Import",
     "link": "Link",
     "import-board": "import board",
@@ -499,6 +507,7 @@
     "upload": "Upload",
     "upload-avatar": "Upload an avatar",
     "uploaded-avatar": "Uploaded an avatar",
+    "user-groups": "User Groups",
     "username": "Username",
     "use-date-warnings": "Use Date Warnings",
     "use-time": "Use Time",
@@ -757,5 +766,6 @@
     "swimlane-delete-pop": "All actions will be removed from the activity feed and you won't be able to recover the swimlane. There is no undo.",
     "restore-all": "Restore all",
     "delete-all": "Delete all",
-    "loading": "Loading, please wait."
+    "loading": "Loading, please wait.",
+    "unlimited": "Unlimited"
 }

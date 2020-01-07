@@ -225,6 +225,7 @@
     "comment-only-desc": "Kan alleen op kaarten reageren.",
     "create-folder": "map aanmaken",
     "create-sub-folder": "maak een submap aan",
+    "create-user-group": "Creëer gebruikersgroep",
     "no-comments": "No comments",
     "no-comments-desc": "Can not see comments and activities.",
     "computer": "Computer",
@@ -336,6 +337,13 @@
     "hide-system-messages": "Verberg systeemberichten",
     "headerBarCreateBoardPopup-title": "Bord aanmaken",
     "home": "Voorpagina",
+    "id": "ID",
+    "title": "Titel",
+    "action": "Actie",
+    "quota": "quotum",
+    "used-quota": "Gebruikt quotum",
+    "category": "Categorie",
+    "resource": "hulpbron",
     "folders": "Folders",
     "add-subfolder": "voeg een submap toe",
     "import": "Importeer",
@@ -499,6 +507,7 @@
     "upload": "Upload",
     "upload-avatar": "Upload een avatar",
     "uploaded-avatar": "Avatar is geüpload",
+    "user-groups": "gebruikersgroepen",
     "username": "Gebruikersnaam",
     "use-date-warnings": "Gebruik Datum Waarschuwingen",
     "use-time": "gebruik tijd",
@@ -750,5 +759,6 @@
     "swimlane-delete-pop": "All actions will be removed from the activity feed and you won't be able to recover the swimlane. There is no undo.",
     "restore-all": "Restore all",
     "delete-all": "Delete all",
-    "loading": "Loading, please wait."
+    "loading": "Loading, please wait.",
+    "unlimited": "Onbeperkt"
 }

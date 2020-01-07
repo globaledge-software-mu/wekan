@@ -9,6 +9,7 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
+    this.userGroups = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -31,6 +32,7 @@ BlazeComponent.extendComponent({
       this.subscribe('roles');
       Meteor.subscribe('users');
       Meteor.subscribe('role_colors');
+      this.subscribe('user_groups');
     });
   },
   events() {
@@ -135,6 +137,7 @@ BlazeComponent.extendComponent({
       const targetID = target.data('id');
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
+      this.userGroups.set('user-groups-setting' === targetID);
     }
   },
   events() {
@@ -652,3 +655,101 @@ Template.createRolePopup.helpers({
   	return false;
   },
 });
+  
+BlazeComponent.extendComponent({
+  userGroupsList() {
+  	return UserGroups.find();
+  },
+  events() {
+	  return [{
+	    'click button#create-user-group': Popup.open('createUserGroup'),
+	  }];
+	}
+}).register('userGroupsGeneral');
+
+BlazeComponent.extendComponent({
+	userGroup() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+  events() {
+	  return [{
+	   'click a.edit-user-group': Popup.open('editUserGroup'),
+	  }];
+	}
+}).register('userGroupRow');
+
+Template.userGroupRow.helpers({
+	userGroupData() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+  
+  events() {
+    return [{
+    	submit(evt) {
+        evt.preventDefault();
+        const title = this.find('.js-user-group-title').value.trim();
+        const quota = this.find('.js-user-group-quota').value.trim();
+        const resource = this.find('.js-user-group-resource').value.trim();
+        const category = this.find('.js-user-group-category').value.trim();
+        
+        //
+      },
+
+      'click #cancelUserGroupCreation'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('createUserGroupPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  events() {
+    return [{
+      submit(evt) {
+        evt.preventDefault();
+      	$('#editUserGroupPopup').find('.errorStatus').remove();
+        const userGroupId = Template.instance().data.userGroupId;
+      	//
+      },
+
+      'click #deleteButton'() {
+      	//
+        Popup.close();
+      },
+    }];
+  },
+}).register('editUserGroupPopup');

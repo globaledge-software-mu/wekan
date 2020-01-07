@@ -845,7 +845,7 @@ if (Meteor.isServer) {
       if (newUserId) {
         // Assign the default Trial user groups to the newly created user
         UserGroups.find({
-        	type: 'default-trial'
+        	category: 'default-trial'
         }).forEach((userGroup) => {
           AssignedUserGroups.insert({
           	userId: newUserId,
@@ -858,7 +858,7 @@ if (Meteor.isServer) {
         if (newUser && newUser.isAdmin) {
           // Assign the admin default Trial user groups to the newly created admin
           UserGroups.find({
-          	type: 'default-admin-trial'
+          	category: 'default-admin-trial'
           }).forEach((userGroup) => {
             AssignedUserGroups.insert({
             	userId: newUserId,
@@ -938,7 +938,7 @@ if (Meteor.isServer) {
         if (newUserId) {
           // Assign the default Trial user groups to the newly created user
           UserGroups.find({
-          	type: 'default-trial'
+          	category: 'default-trial'
           }).forEach((userGroup) => {
             AssignedUserGroups.insert({
             	userId: newUserId,
@@ -951,7 +951,7 @@ if (Meteor.isServer) {
           if (newUser && newUser.isAdmin) {
             // Assign the admin default Trial user groups to the newly created admin
             UserGroups.find({
-            	type: 'default-admin-trial'
+            	category: 'default-admin-trial'
             }).forEach((userGroup) => {
               AssignedUserGroups.insert({
               	userId: newUserId,
@@ -1555,7 +1555,7 @@ if (Meteor.isServer) {
       if (id) {
         // Assign the default Trial user groups to the newly created user
         UserGroups.find({
-        	type: 'default-trial'
+        	category: 'default-trial'
         }).forEach((userGroup) => {
           AssignedUserGroups.insert({
           	userId: id,
@@ -1568,7 +1568,7 @@ if (Meteor.isServer) {
         if (newUser && newUser.isAdmin) {
           // Assign the admin default Trial user groups to the newly created admin
           UserGroups.find({
-          	type: 'default-admin-trial'
+          	category: 'default-admin-trial'
           }).forEach((userGroup) => {
             AssignedUserGroups.insert({
             	userId: id,
