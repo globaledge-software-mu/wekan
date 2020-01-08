@@ -15,7 +15,7 @@ template(name="people")
             if currentUser.isAdmin
               li.active.hide
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
-              li.active
+              li.active.hide
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
         .main-body
           if loading.get
@@ -171,7 +171,8 @@ template(name="editUserPopup")
       div.buttonsContainer
         input.primary.wide(type="submit" value="{{_ 'save'}}")
         div
-        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+        if currentUser.isAdmin
+          input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
 
 template(name="roleOptions")
   select.select-role.js-profile-role
