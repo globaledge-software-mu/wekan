@@ -662,9 +662,6 @@ BlazeComponent.extendComponent({
 }).register('userGroupsGeneral');
 
 BlazeComponent.extendComponent({
-	userGroup() {
-    return UserGroups.findOne(this.userGroupId);
-  },
   events() {
 	  return [{
 	   'click a.edit-user-group': Popup.open('editUserGroup'),
@@ -727,35 +724,33 @@ BlazeComponent.extendComponent({
         }
 
         this.setLoading(true);
-        UserGroups.insert({ 
-          title, 
-          quota, 
-          resource, 
-          category
-        }, (err, res) => {
-        	this.setLoading(false);
-          if (err) {
-          	var message = '';
-          	if (err.error) {
-            	message = TAPi18n.__(err.error);
-          	} else {
-          		message = err;
-          	}
-            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-            $('#header-main-bar').before($errorMessage);
-            $errorMessage.delay(10000).slideUp(500, function() {
-              $(this).remove();
-            });
-          } else if (res) {
-          	var message = TAPi18n.__('user-group-created');
-            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-            $('#header-main-bar').before($successMessage);
-            $successMessage.delay(10000).slideUp(500, function() {
-              $(this).remove();
-            });
-            Popup.close();
-          }
-        });
+        UserGroups.insert(
+      		{ title, quota, resource, category }, 
+          (err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-created');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+        );
       },
 
       'click #cancelUserGroupCreation'() {
@@ -790,11 +785,59 @@ BlazeComponent.extendComponent({
     return [{
       submit(evt) {
         evt.preventDefault();
-      	$('#editUserGroupPopup').find('.errorStatus').remove();
         const userGroupId = Template.instance().data.userGroupId;
-        
-      	//
-        
+        const title = this.find('.js-user-group-title').value.trim();
+        const quota = this.find('.js-user-group-quota').value.trim();
+        const resource = this.find('.js-user-group-resource').value.trim();
+        const category = this.find('.js-user-group-category').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var titleLeftBlank = leftBlank.indexOf(title) > -1;
+        var quotaLeftBlank = leftBlank.indexOf(quota) > -1;
+        var resourceNotSelected = leftBlank.indexOf(resource) > -1;
+        $('.user-group-not-edited').hide();
+        if (titleLeftBlank) {
+        	this.$('.title-blank').show();
+        }
+        if (quotaLeftBlank) {
+        	this.$('.quota-blank').show();
+        }
+        if (resourceNotSelected) {
+        	this.$('.resource-not-selected').show();
+        }
+        if (titleLeftBlank || quotaLeftBlank || resourceNotSelected) {
+          return false;
+        }
+
+        this.setLoading(true);
+        UserGroups.update(
+      		{ _id: userGroupId }, 
+      		{ $set: { title, quota, resource, category } }, 
+      		(err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-edited');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+    		);
       },
 
       'click #deleteButton'() {
@@ -808,6 +851,10 @@ BlazeComponent.extendComponent({
 }).register('editUserGroupPopup');
 
 Template.editUserGroupPopup.helpers({
+	userGroup() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+
   currentResource(option) {
     const userGroupId = Template.instance().data.userGroupId;
     if (userGroupId) {

@@ -315,6 +315,7 @@
     "error-user-notCreated": "Deze gebruiker is niet aangemaakt",
     "user-created": "Gebruiker succesvol aangemaakt",
     "user-group-created": "Gebruikersgroep succesvol aangemaakt",
+    "user-group-edited": "Gebruikersgroep succesvol bijgewerkt",
     "error-username-taken": "Deze gebruikersnaam is al bezet",
     "error-email-taken": "Deze e-mail is al eerder gebruikt",
     "error-fullname-blank": "Vul de volledige naam van de gebruiker in",

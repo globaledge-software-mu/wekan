@@ -316,6 +316,7 @@
     "error-user-notCreated": "This user is not created",
     "user-created": "User successfully created",
     "user-group-created": "User-Group successfully created",
+    "user-group-edited": "User-Group successfully updated",
     "error-username-taken": "This username is already taken",
     "error-email-taken": "Email has already been taken",
     "error-fullname-blank": "Please fill in user's fullname",
