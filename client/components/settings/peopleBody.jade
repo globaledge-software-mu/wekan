@@ -275,7 +275,7 @@ template(name="userGroupsGeneral")
         th {{_ 'quota'}}
         th {{_ 'resource'}}
         th {{_ 'category'}}     
-        th {{_ 'createdAt'}}
+        th {{_ 'createdAt'}} 
         th {{_ 'action'}}
       // if isAdmin
       if currentUser.isAdmin
@@ -313,13 +313,14 @@ template(name="createUserGroupPopup")
         input.js-user-group-quota(type="text" value="")
       label
         | {{_ 'resource'}}
-        span.error.hide.resource-blank.user-group-not-created
-          | {{_ 'error-resource-blank'}}
-        input.js-user-group-resource(type="text" value="")
+        span.error.hide.resource-not-selected.user-group-not-created
+          | {{_ 'error-resource-not-selected'}}
+        select.select-resource.js-user-group-resource
+          option(value='', selected='selected') Select One
+          each resource in resources
+            option(value='{{resource}}') {{resource}}
       label
         | {{_ 'category'}}
-        span.error.hide.category-taken.user-group-not-created
-          | {{_ 'error-category-taken'}}
         input.js-user-group-category(type="text" value="")
       hr
       div.buttonsContainer
@@ -340,18 +341,22 @@ template(name="editUserGroupPopup")
         input.js-user-group-title(type="text" value=userGroup.title autofocus)
       label
         | {{_ 'quota'}}
-        span.error.hide.quota-blank.user-group-not-created
+        span.error.hide.quota-blank.user-group-not-edited
           | {{_ 'error-quota-blank'}}
         input.js-user-group-quota(type="text" value=userGroup.quota)
       label
         | {{_ 'resource'}}
-        span.error.hide.resource-blank.user-group-not-created
-          | {{_ 'error-resource-blank'}}
-        input.js-user-group-resource(type="text" value=userGroup.resource)
+        span.error.hide.resource-not-selected.user-group-not-edited
+          | {{_ 'error-resource-not-selected'}}
+        select.select-resource.js-user-group-resource
+          option(value='', selected='selected') Select One
+          each resource in resources
+            if currentResource resource
+              option(value='{{resource}}' selected) {{resource}}
+            else
+              option(value='{{resource}}') {{resource}}
       label
         | {{_ 'category'}}
-        span.error.hide.category-taken.user-group-not-created
-          | {{_ 'error-category-taken'}}
         input.js-user-group-category(type="text" value=userGroup.category)
       hr
       div.buttonsContainer

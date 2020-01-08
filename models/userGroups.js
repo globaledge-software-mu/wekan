@@ -85,22 +85,22 @@ if (Meteor.isServer) {
     //	if collection 'user_groups' exists but it do not contain any documents
     if (!userGroup) {
     	//Default Trial User Groups
-    	UserGroups.insert({category: 'default-admin-trial', quota: 5, 	title: 'Trial - 5 Users', 					resource: 'users'});
-    	UserGroups.insert({category: 'default-admin-trial', quota: 5, 	title: 'Trial - 5 Template Boards', resource: 'template boards'});
-    	UserGroups.insert({category: 'default-trial', 			quota: 5, 	title: 'Trial - 5 Folders', 				resource: 'folders'});
-    	UserGroups.insert({category: 'default-trial', 			quota: 5, 	title: 'Trial - 5 Subfolders', 			resource: 'subfolders'});
-    	UserGroups.insert({category: 'default-trial', 			quota: 10, 	title: 'Trial - 10 Regular Boards', resource: 'regular boards'});
-    	UserGroups.insert({category: 'default-trial', 			quota: 25, 	title: 'Trial - 25 Regular Cards', 	resource: 'regular cards'});
-    	UserGroups.insert({category: 'default-trial', 			quota: 25, 	title: 'Trial - 25 Lists', 					resource: 'lists'});
+    	UserGroups.insert({category: 'default-admin-trial', quota: 5, 	title: 'Trial - 5 Users', 					resource: 'Users'});
+    	UserGroups.insert({category: 'default-admin-trial', quota: 5, 	title: 'Trial - 5 Template Boards', resource: 'Template Boards'});
+    	UserGroups.insert({category: 'default-trial', 			quota: 5, 	title: 'Trial - 5 Folders', 				resource: 'Folders'});
+    	UserGroups.insert({category: 'default-trial', 			quota: 5, 	title: 'Trial - 5 Subfolders', 			resource: 'Subfolders'});
+    	UserGroups.insert({category: 'default-trial', 			quota: 10, 	title: 'Trial - 10 Regular Boards', resource: 'Regular Boards'});
+    	UserGroups.insert({category: 'default-trial', 			quota: 25, 	title: 'Trial - 25 Regular Cards', 	resource: 'Regular Cards'});
+    	UserGroups.insert({category: 'default-trial', 			quota: 25, 	title: 'Trial - 25 Lists', 					resource: 'Lists'});
 
     	//Default Premium User Groups
-    	UserGroups.insert({category: 'default-admin-premium', quota: -1, title: 'Premium - Unlimited Users', 						resource: 'users'});
-    	UserGroups.insert({category: 'default-admin-premium', quota: -1, title: 'Premium - Unlimited Template Boards', 	resource: 'template boards'});
-    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Regular Boards', 	resource: 'regular boards'});
-    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Regular Cards', 		resource: 'regular cards'});
-    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Folders', 					resource: 'folders'});
-    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Subfolders', 			resource: 'subfolders'});
-    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Lists', 						resource: 'lists'});
+    	UserGroups.insert({category: 'default-admin-premium', quota: -1, title: 'Premium - Unlimited Users', 						resource: 'Users'});
+    	UserGroups.insert({category: 'default-admin-premium', quota: -1, title: 'Premium - Unlimited Template Boards', 	resource: 'Template Boards'});
+    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Regular Boards', 	resource: 'Regular Boards'});
+    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Regular Cards', 		resource: 'Regular Cards'});
+    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Folders', 					resource: 'Folders'});
+    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Subfolders', 			resource: 'Subfolders'});
+    	UserGroups.insert({category: 'default-premium', 			quota: -1, title: 'Premium - Unlimited Lists', 						resource: 'Lists'});
     }
   });
 }
