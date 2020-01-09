@@ -1,3 +1,5 @@
+import swal from 'sweetalert';
+
 const usersPerPage = 25;
 
 BlazeComponent.extendComponent({
@@ -841,10 +843,32 @@ BlazeComponent.extendComponent({
       },
 
       'click #deleteButton'() {
-      	
-      	//
-      	
-        Popup.close();
+        swal({
+          title: 'Confirm Delete User-Group!',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            const userGroupId = Template.instance().data.userGroupId;
+            UserGroups.remove({_id: userGroupId}, (err, res) => {
+            	if (err) {
+            		swal(err, {
+                  icon: "success",
+                });
+            	} else if (res) {
+            		swal("User-Group has been deleted!", {
+                  icon: "success",
+                });
+            	}
+              Popup.close();
+            });
+          } else {
+            return false;
+          }
+        });
       },
     }];
   },
