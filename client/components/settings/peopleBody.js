@@ -436,22 +436,35 @@ BlazeComponent.extendComponent({
 
       'click #deleteButton'() {
       	const oldUserId = Template.instance().data.userId;
-        Users.remove(oldUserId);
-        // Cleanup Boards of this specific no-longer-existing user as a member
-        Boards.find({
-        	archived: false,
-        	'members.userId': oldUserId,
-      	}).forEach((board) => {
-    			Boards.update(
-    				{ _id: board._id }, 
-    				{ $pull: {
-    					members: {
-    						userId: oldUserId
-    					}
-    				} }
-    			);
-      	});
         Popup.close();
+        swal({
+          title: 'Confirm Delete User!',
+          text: 'Are you sure?',
+          icon: 'warning',
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            Users.remove(oldUserId);
+            // Cleanup Boards of this specific no-longer-existing user as a member
+            Boards.find({
+            	archived: false,
+            	'members.userId': oldUserId,
+          	}).forEach((board) => {
+        			Boards.update(
+        				{ _id: board._id }, 
+        				{ $pull: {
+        					members: {
+        						userId: oldUserId
+        					}
+        				} }
+        			);
+          	});
+          } else {
+            return false;
+          }
+        });
       },
     }];
   },
