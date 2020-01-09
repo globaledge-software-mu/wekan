@@ -1075,11 +1075,12 @@ if (Meteor.isServer) {
 }
 
 if (Meteor.isServer) {
-  // Let mongoDB ensure username unicity
   Meteor.startup(() => {
+    // Let mongoDB ensure username unicity
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
+    //____________________________________
 
     // Cleanup old boards of all the non-existing users as members
     const allBoards = Boards.find({archived: false});
@@ -1100,6 +1101,143 @@ if (Meteor.isServer) {
     		});
     	}
     });
+    //____________________________________
+
+    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
+    // out of its own members make one of them an admin of the board, preferably the member with the highest role.
+    const adminBoardIds = new Array();
+    Boards.find({
+    	'members.isAdmin': true,
+    	archived: false
+    }).forEach((board) => {
+    	adminBoardIds.push(board._id);
+    });
+    const nonAdminBoards = Boards.find({
+    	_id: {$nin: adminBoardIds}, 
+    	archived: false
+  	});
+    nonAdminBoards.forEach((nonAdminBoard) => {
+    	const memberIds = new Array();
+    	nonAdminBoard.members.forEach((member) => {
+    		memberIds.push(member.userId);
+    	});
+    	if (memberIds.length > 0) {
+    		const adminRoleMember = Users.findOne({
+      		_id: {$in: memberIds},
+      		isAdmin: true
+      	});
+      	if (!adminRoleMember) {
+      		const managerRole = Roles.findOne({name: 'Manager'});
+      		if (managerRole && managerRole._id) {
+      			const managerRoleMember = Users.findOne({
+          		_id: {$in: memberIds},
+          		roleId: managerRole._id
+          	});
+          	if (!managerRoleMember) {
+          		const coachRole = Roles.findOne({name: 'Coach'});
+          		if (coachRole && coachRole._id) {
+          			const coachRoleMember = Users.findOne({
+              		_id: {$in: memberIds},
+              		roleId: coachRole._id
+              	});
+              	if (!coachRoleMember) {
+              		const randomMemberId = memberIds[0].userId;
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              	} else {
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              	}
+          		}
+          	} else {
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $pull: {
+                    members: {
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $push: {
+                    members: {
+                      isAdmin: true,
+                      isActive: true,
+                      isCommentOnly: false,
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          	}
+      		}
+      	} else {
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $pull: {
+                members: {
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $push: {
+                members: {
+                  isAdmin: true,
+                  isActive: true,
+                  isCommentOnly: false,
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      	}
+    	}
+    });
+    //____________________________________
+  	
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,
