@@ -843,6 +843,8 @@ BlazeComponent.extendComponent({
       },
 
       'click #deleteButton'() {
+        const userGroupId = Template.instance().data.userGroupId;
+        Popup.close();
         swal({
           title: 'Confirm Delete User-Group!',
           text: 'Are you sure?',
@@ -852,7 +854,6 @@ BlazeComponent.extendComponent({
         })
         .then((okDelete) => {
           if (okDelete) {
-            const userGroupId = Template.instance().data.userGroupId;
             UserGroups.remove({_id: userGroupId}, (err, res) => {
             	if (err) {
             		swal(err, {
@@ -863,7 +864,6 @@ BlazeComponent.extendComponent({
                   icon: "success",
                 });
             	}
-              Popup.close();
             });
           } else {
             return false;
