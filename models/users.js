@@ -999,7 +999,18 @@ if (Meteor.isServer) {
 //      } catch (e) {
 //        throw new Meteor.Error('email-fail', e.message);
 //      }
-      return {userID: user._id, username: user.username, email: user.emails[0].address};
+
+      // Since above we've commented the part where an email is sent even when an existing user is 
+      // invited to a board, so now the response will defer on the successful execution of this method,
+      // as email is being sent in only One case out of 2.
+      // Below we need to perform a small verification to know when this method was 
+      // called (when inviting a freshly created user [password is not set at this point] or when inviting
+      // an existing user to a board [naturally his password would have been set])
+      if (user && user.services && user.services.password && user.services.password.bcrypt) {
+        return {userID: user._id, username: user.username, email: user.emails[0].address, passwordIsSet: true};
+      } else {
+        return {userID: user._id, username: user.username, email: user.emails[0].address};
+      }
     },
   });
   Accounts.onCreateUser((options, user) => {
@@ -1104,24 +1115,27 @@ if (Meteor.isServer) {
     //____________________________________
 
     // Find all boards and any of the board that do not have an admin (the user who had created the board), 
-    // out of its own members make one of them an admin of the board, preferably the member with the highest role.
+    // out of its own members make one of them an admin of the board, preferably the member with the highest role,
+    // only if there is no other boardadmin for that specific board
     const adminBoardIds = new Array();
     Boards.find({
-    	'members.isAdmin': true,
-    	archived: false
+    	'members.isAdmin': true
     }).forEach((board) => {
     	adminBoardIds.push(board._id);
     });
     const nonAdminBoards = Boards.find({
-    	_id: {$nin: adminBoardIds}, 
-    	archived: false
+    	_id: {$nin: adminBoardIds}
   	});
     nonAdminBoards.forEach((nonAdminBoard) => {
     	const memberIds = new Array();
+			const hasOtherBoardAdmin = false;
     	nonAdminBoard.members.forEach((member) => {
     		memberIds.push(member.userId);
+				if (member.isAdmin === true) {
+					hasOtherBoardAdmin = true;
+				}
     	});
-    	if (memberIds.length > 0) {
+    	if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
     		const adminRoleMember = Users.findOne({
       		_id: {$in: memberIds},
       		isAdmin: true
@@ -1256,6 +1270,17 @@ if (Meteor.isServer) {
   //      }
   //    });
   //});
+
+  Users.before.remove((userId, doc) => {
+    // Removing the user from any user groups he/she was assigned to
+    AssignedUserGroups.find({
+    	userId: userId
+    }).forEach((assignedGroup) => {
+    	if (assignedGroup) {
+      	AssignedUserGroups.remove({_id: assignedGroup._id});
+    	}
+    });
+  });
 
   // Each board document contains the de-normalized number of users that have
   // starred it. If the user star or unstar a board, we need to update this
@@ -1746,12 +1771,6 @@ if (Meteor.isServer) {
     try {
       Authentication.checkUserId(req.userId);
       const id = req.params.userId;
-      // Removing the user from any user groups he/she was assigned to
-      AssignedUserGroups.find({
-      	userId: id
-      }).forEach((assignedGroup) => {
-      	AssignedUserGroups.remove({_id: assignedGroup._id});
-      });
       Meteor.users.remove({ _id: id });
       JsonRoutes.sendResult(res, {
         code: 200,

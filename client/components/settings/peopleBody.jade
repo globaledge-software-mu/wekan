@@ -15,7 +15,7 @@ template(name="people")
             if currentUser.isAdmin
               li.active.hide
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
-              li.active.hide
+              li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
         .main-body
           if loading.get
