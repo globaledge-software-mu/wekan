@@ -1288,6 +1288,48 @@ if (Meteor.isServer) {
   // We need to run this code on the server only, otherwise the incrementation
   // will be done twice.
   Users.after.update(function (userId, user, fieldNames) {
+
+  	// When a user doc is updated, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = user.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	const userIsManager = false;
+    	if (doc.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		const isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === userId) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                    userId: userId,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
+
+
     // The `starredBoards` list is hosted on the `profile` field. If this
     // field hasn't been modificated we don't need to run this hook.
     if (!_.contains(fieldNames, 'profile'))
@@ -1398,6 +1440,46 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
+  	
+  	// When a new user is created, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = doc.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	const userIsManager = false;
+    	if (doc.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		const isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === doc._id) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                    userId: doc._id,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
 
     if (doc.createdThroughApi) {
       // The admin user should be able to create a user despite disabling registration because
