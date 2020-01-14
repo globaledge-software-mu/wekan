@@ -489,6 +489,7 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.error = new ReactiveVar('');
     this.loading = new ReactiveVar(false);
+    this.subscribe('roles');
   },
 
   onRendered() {
@@ -526,13 +527,14 @@ BlazeComponent.extendComponent({
       self.setLoading(false);
       if (err) {
       	self.setError(err.error);
+      	return false;
       } else if (ret.email && ret.passwordIsSet && ret.passwordIsSet === true) {
       	self.setError('invite-sent');
       } else if (ret.email && !ret.passwordIsSet) {
       	self.setError('email-sent');
-      } else {
-      	Popup.close();
       }
+      Popup.close();
+      return ret.userID;
     });
   },
 
@@ -549,10 +551,56 @@ BlazeComponent.extendComponent({
         }
       },
       'click .js-email-invite'() {
+        $('.invite-not-sent').hide();
+
+        const roleId = this.find('.js-profile-role').value;
+        const role = Roles.findOne({_id: roleId});
+      	const roleName = null;
+        if (role && role.name) {
+        	roleName = role.name;
+        }
+        var leftBlank = ['undefined', null, ''];
+        var roleNotSelected = leftBlank.indexOf(roleId) > -1;
+        if (roleNotSelected) {
+        	this.$('.role-not-selected').show();
+        }
+
+        const email = this.find('.js-search-member input').value.trim().toLowerCase();
+        const posAt = email.indexOf('@');
+        var validEmailNotEntered = posAt < 1;
+        if (validEmailNotEntered) {
+        	this.$('.valid-email-not-entered').show();
+        }
+
+        let duplicateUserEmail = null;
+        if (posAt >= 0) {
+          duplicateUserEmail = Users.findOne({emails: {$elemMatch: {address: email}}});
+        }
+        const emailMessageElement = this.$('.email-taken');
+        if (duplicateUserEmail) {
+          emailMessageElement.show();
+        }
+
+        if (roleNotSelected || validEmailNotEntered || duplicateUserEmail) {
+        	return false;
+        }
+        
+
         const idNameEmail = $('.js-search-member input').val();
         if (idNameEmail.indexOf('@')<0 || this.isValidEmail(idNameEmail)) {
-          this.inviteUser(idNameEmail);
-        } else this.setError('email-invalid');
+          const userID = this.inviteUser(idNameEmail);
+        	const newlyCreatedUser = Users.findOne({_id: userID});
+          if (newlyCreatedUser && newlyCreatedUser._id > 0) {
+            Users.update(
+          		{ _id: userID }, 
+          		{ $set: 
+          			{ roleId: roleId, roleName: roleName } 
+          		}
+        		);
+          }
+        } else {
+        	this.setError('email-invalid');
+      	}
       },
     }];
   },

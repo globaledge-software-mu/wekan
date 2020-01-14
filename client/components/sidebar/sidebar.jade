@@ -252,6 +252,10 @@ template(name="leaveBoardPopup")
 
 template(name="addMemberPopup")
   .js-search-member
+    p.error.hide.valid-email-not-entered.invite-not-sent
+      | {{_ 'error-valid-email-not-entered'}}
+    p.error.hide.email-taken.invite-not-sent
+      | {{_ 'error-email-taken'}}
     +esInput(index="users")
 
   if loading.get
@@ -276,9 +280,16 @@ template(name="addMemberPopup")
       +ifEsHasNoResults(index="users")
         .manage-member-section
           p.quiet {{_ 'no-results'}}
-    unless currentUser.isCoachee
-      // Directly from board
-      button.js-email-invite.primary.full {{_ 'email-invite'}}
+        hr
+        unless currentUser.isCoachee
+          .js-set-role
+            label
+              | {{_ 'role'}}
+              span.error.hide.role-not-selected.invite-not-sent
+                | {{_ 'error-role-not-selected'}}
+              +roleOptions
+          // Invite directly from board's sidebar
+          button.js-email-invite.primary.full {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

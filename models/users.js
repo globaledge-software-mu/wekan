@@ -1087,11 +1087,56 @@ if (Meteor.isServer) {
 
 if (Meteor.isServer) {
   Meteor.startup(() => {
+  	
+  	// Find any duplicate board members in a board and cleanup the duplicate
+  	Boards.find().forEach((board) => {
+    	const memberIds = new Array();
+  		board.members.forEach((member) => {
+  			memberIds.push(member.userId);
+  		});
+  		for (var i = 0; i < memberIds.length; i++) {
+    	  var AA = {};
+    		AA[i] = memberIds.slice();
+    		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
+  			const elementToBeRemovedUserId = memberIds[i]; 
+    	  if (AA[i].includes(elementToBeRemovedUserId)) {
+    	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
+    	  	const elementToBeRemovedIsActive = board.members[i].isActive;
+    	  	const elementToBeRemovedIsNoComments = board.members[i].isNoComments;
+    	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
+    	  	Boards.update(
+  	  			{ _id: board._id },
+            { $pull: 
+            	{ members: 
+            		{ userId: elementToBeRemovedUserId, },
+            	},
+            }
+    	  	);
+    	  	Boards.update(
+  	  			{ _id: board._id }, {
+  	  				$push: {
+            		members: {
+            			userId: elementToBeRemovedUserId, 
+            			isAdmin: elementToBeRemovedIsAdmin, 
+            			isActive: elementToBeRemovedIsActive, 
+            			isNoComments: elementToBeRemovedIsNoComments, 
+            			isCommentOnly: elementToBeRemovedIsCommentOnly,
+            		},
+            	},
+            }
+    	  	);
+    	  }
+  		}
+  	});
+    //____________________________________
+  	
+  	
     // Let mongoDB ensure username unicity
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
     //____________________________________
+
 
     // Cleanup old boards of all the non-existing users as members
     const allBoards = Boards.find({archived: false});
@@ -1113,6 +1158,7 @@ if (Meteor.isServer) {
     	}
     });
     //____________________________________
+
 
     // Find all boards and any of the board that do not have an admin (the user who had created the board), 
     // out of its own members make one of them an admin of the board, preferably the member with the highest role,
@@ -1299,7 +1345,7 @@ if (Meteor.isServer) {
   	const managerRole = Roles.findOne({name: 'Manager'});
   	if (managerRole && managerRole._id) {
     	const userIsManager = false;
-    	if (doc.roleId === managerRole._id) {
+    	if (user.roleId === managerRole._id) {
     		userIsManager = true;
     	}
     	if (userIsAdmin || userIsManager) {
