@@ -288,8 +288,10 @@ template(name="addMemberPopup")
               span.error.hide.role-not-selected.invite-not-sent
                 | {{_ 'error-role-not-selected'}}
               +roleOptions
+          if loadingAfterSelectedRole.get
+            +spinner
           // Invite directly from board's sidebar
-          button.js-email-invite.primary.full {{_ 'email-invite'}}
+          button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

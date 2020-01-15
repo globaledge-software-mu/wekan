@@ -890,9 +890,10 @@ if (Meteor.isServer) {
   	},
 
     // we accept userId, username, email
-    inviteUserToBoard(username, boardId) {
+    inviteUserToBoard(username, boardId, roleId) {
       check(username, String);
       check(boardId, String);
+      check(roleId, String);
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
@@ -979,6 +980,21 @@ if (Meteor.isServer) {
 
         board.addMember(user._id);
         user.addInvite(boardId);
+
+        // If roleId is not null, update the newly created user's role
+        if (roleId) {
+          const role = Roles.findOne({_id: roleId});
+        	var roleName = null;
+          if (user && role && role.name) {
+          	roleName = role.name;
+            Users.update(
+          		{ _id: newUserId }, 
+          		{ $set: 
+          			{ roleId: roleId, roleName: roleName } 
+          		}
+        		);
+          }
+        }
       }
 
       // Send Invite 'Login To Accept Invite To Board'
@@ -1012,7 +1028,9 @@ if (Meteor.isServer) {
         return {userID: user._id, username: user.username, email: user.emails[0].address};
       }
     },
+
   });
+
   Accounts.onCreateUser((options, user) => {
     const userCount = Users.find().count();
     if (userCount === 0) {
