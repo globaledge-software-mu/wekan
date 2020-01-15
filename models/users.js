@@ -1107,14 +1107,12 @@ if (Meteor.isServer) {
   Meteor.startup(() => {
   	
   	// Find any duplicate board members in a board and cleanup the duplicate
-  	Boards.find({
-  		archived: false,
-  	}).forEach((board) => {
+  	Boards.find().forEach((board) => {
     	const memberIds = new Array();
   		board.members.forEach((member) => {
   			memberIds.push(member.userId);
   		});
-  		if (memberIds.length > 1) {
+      if (memberIds.length > 1) {
     		for (var i = 0; i < memberIds.length; i++) {
       	  var AA = {};
       		AA[i] = memberIds.slice();
@@ -1148,7 +1146,7 @@ if (Meteor.isServer) {
       	  	);
       	  }
     		}
-  		}
+      }
   	});
     //____________________________________
   	
@@ -1177,6 +1175,145 @@ if (Meteor.isServer) {
 						);
     			}
     		});
+    	}
+    });
+    //____________________________________
+
+
+    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
+    // out of its own members make one of them an admin of the board, preferably the member with the highest role,
+    // only if there is no other boardadmin for that specific board
+    const adminBoardIds = new Array();
+    Boards.find({
+    	'members.isAdmin': true
+    }).forEach((board) => {
+    	adminBoardIds.push(board._id);
+    });
+    const nonAdminBoards = Boards.find({
+    	_id: {$nin: adminBoardIds}
+  	});
+    nonAdminBoards.forEach((nonAdminBoard) => {
+    	const memberIds = new Array();
+			var hasOtherBoardAdmin = false;
+    	nonAdminBoard.members.forEach((member) => {
+    		memberIds.push(member.userId);
+				if (member.isAdmin === true) {
+					hasOtherBoardAdmin = true;
+				}
+    	});
+    	if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
+    		const adminRoleMember = Users.findOne({
+      		_id: {$in: memberIds},
+      		isAdmin: true
+      	});
+      	if (!adminRoleMember) {
+      		const managerRole = Roles.findOne({name: 'Manager'});
+      		if (managerRole && managerRole._id) {
+      			const managerRoleMember = Users.findOne({
+          		_id: {$in: memberIds},
+          		roleId: managerRole._id
+          	});
+          	if (!managerRoleMember) {
+          		const coachRole = Roles.findOne({name: 'Coach'});
+          		if (coachRole && coachRole._id) {
+          			const coachRoleMember = Users.findOne({
+              		_id: {$in: memberIds},
+              		roleId: coachRole._id
+              	});
+              	if (!coachRoleMember) {
+              		const randomMemberId = memberIds[0].userId;
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              	} else {
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              	}
+          		}
+          	} else {
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $pull: {
+                    members: {
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $push: {
+                    members: {
+                      isAdmin: true,
+                      isActive: true,
+                      isCommentOnly: false,
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          	}
+      		}
+      	} else {
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $pull: {
+                members: {
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $push: {
+                members: {
+                  isAdmin: true,
+                  isActive: true,
+                  isCommentOnly: false,
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      	}
     	}
     });
     //____________________________________
@@ -1227,15 +1364,15 @@ if (Meteor.isServer) {
   	const userIsAdmin = user.isAdmin;
   	const managerRole = Roles.findOne({name: 'Manager'});
   	if (managerRole && managerRole._id) {
-    	const userIsManager = false;
+    	var userIsManager = false;
     	if (user.roleId === managerRole._id) {
     		userIsManager = true;
     	}
     	if (userIsAdmin || userIsManager) {
       	templateBoards.forEach((templateBoard) => {
-      		const isMemberAlready = false;
+      		var isMemberAlready = false;
       		templateBoard.members.forEach((member) => {
-      			if (member.userId === userId) {
+      			if (member.userId === user._id) {
       				isMemberAlready = true;
       			}
       		});
@@ -1244,10 +1381,10 @@ if (Meteor.isServer) {
               { _id: templateBoard._id },
               { $push: {
                   members: {
+                    userId: user._id,
                     isAdmin: false,
                     isActive: true,
                     isCommentOnly: false,
-                    userId: userId,
                   },
                 },
               }
