@@ -7,11 +7,15 @@ Meteor.publish('templateBoards', function() {
 
 //Publishing the user's TemplateContainerBoard
 Meteor.publish('userTemplateContainerBoard', function() {
-	const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
-  return Boards.find({
-  	_id: userTemplateContainerId,
-    archived: false, 
-  });
+	if (Meteor.user() && Meteor.user().profile && Meteor.user().profile.templatesBoardId) {
+		const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
+	  return Boards.find({
+	  	_id: userTemplateContainerId,
+	    archived: false, 
+	  });
+	} else {
+		return null; 
+	}
 });
 
 // This is the publication used to display the board list. We publish all the

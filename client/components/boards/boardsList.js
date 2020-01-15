@@ -186,6 +186,144 @@ BlazeComponent.extendComponent({
 
   	/**********/
 
+    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
+    // out of its own members make one of them an admin of the board, preferably the member with the highest role,
+    // only if there is no other boardadmin for that specific board
+    const adminBoardIds = new Array();
+    Boards.find({
+    	'members.isAdmin': true
+    }).forEach((board) => {
+    	adminBoardIds.push(board._id);
+    });
+    const nonAdminBoards = Boards.find({
+    	_id: {$nin: adminBoardIds}
+  	});
+    nonAdminBoards.forEach((nonAdminBoard) => {
+    	const memberIds = new Array();
+			var hasOtherBoardAdmin = false;
+    	nonAdminBoard.members.forEach((member) => {
+    		memberIds.push(member.userId);
+				if (member.isAdmin === true) {
+					hasOtherBoardAdmin = true;
+				}
+    	});
+    	if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
+    		const adminRoleMember = Users.findOne({
+      		_id: {$in: memberIds},
+      		isAdmin: true
+      	});
+      	if (!adminRoleMember) {
+      		const managerRole = Roles.findOne({name: 'Manager'});
+      		if (managerRole && managerRole._id) {
+      			const managerRoleMember = Users.findOne({
+          		_id: {$in: memberIds},
+          		roleId: managerRole._id
+          	});
+          	if (!managerRoleMember) {
+          		const coachRole = Roles.findOne({name: 'Coach'});
+          		if (coachRole && coachRole._id) {
+          			const coachRoleMember = Users.findOne({
+              		_id: {$in: memberIds},
+              		roleId: coachRole._id
+              	});
+              	if (!coachRoleMember) {
+              		const randomMemberId = memberIds[0].userId;
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          userId: randomMemberId,
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                        },
+                      },
+                    }
+          				);
+              	} else {
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          userId: coachRoleMember._id,
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                        },
+                      },
+                    }
+          				);
+              	}
+          		}
+          	} else {
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $pull: {
+                    members: {
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $push: {
+                    members: {
+                      userId: managerRoleMember._id,
+                      isAdmin: true,
+                      isActive: true,
+                      isCommentOnly: false,
+                    },
+                  },
+                }
+      				);
+          	}
+      		}
+      	} else {
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $pull: {
+                members: {
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $push: {
+                members: {
+                  userId: adminRoleMember._id,
+                  isAdmin: true,
+                  isActive: true,
+                  isCommentOnly: false,
+                },
+              },
+            }
+  				);
+      	}
+    	}
+    });
+    //____________________________________
+
   },
 
   boards() {
