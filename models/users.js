@@ -1107,43 +1107,47 @@ if (Meteor.isServer) {
   Meteor.startup(() => {
   	
   	// Find any duplicate board members in a board and cleanup the duplicate
-  	Boards.find().forEach((board) => {
+  	Boards.find({
+  		archived: false,
+  	}).forEach((board) => {
     	const memberIds = new Array();
   		board.members.forEach((member) => {
   			memberIds.push(member.userId);
   		});
-  		for (var i = 0; i < memberIds.length; i++) {
-    	  var AA = {};
-    		AA[i] = memberIds.slice();
-    		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
-  			const elementToBeRemovedUserId = memberIds[i]; 
-    	  if (AA[i].includes(elementToBeRemovedUserId)) {
-    	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
-    	  	const elementToBeRemovedIsActive = board.members[i].isActive;
-    	  	const elementToBeRemovedIsNoComments = board.members[i].isNoComments;
-    	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
-    	  	Boards.update(
-  	  			{ _id: board._id },
-            { $pull: 
-            	{ members: 
-            		{ userId: elementToBeRemovedUserId, },
-            	},
-            }
-    	  	);
-    	  	Boards.update(
-  	  			{ _id: board._id }, {
-  	  				$push: {
-            		members: {
-            			userId: elementToBeRemovedUserId, 
-            			isAdmin: elementToBeRemovedIsAdmin, 
-            			isActive: elementToBeRemovedIsActive, 
-            			isNoComments: elementToBeRemovedIsNoComments, 
-            			isCommentOnly: elementToBeRemovedIsCommentOnly,
-            		},
-            	},
-            }
-    	  	);
-    	  }
+  		if (memberIds.length > 1) {
+    		for (var i = 0; i < memberIds.length; i++) {
+      	  var AA = {};
+      		AA[i] = memberIds.slice();
+      		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
+    			const elementToBeRemovedUserId = memberIds[i]; 
+      	  if (AA[i].includes(elementToBeRemovedUserId)) {
+      	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
+      	  	const elementToBeRemovedIsActive = board.members[i].isActive;
+      	  	const elementToBeRemovedIsNoComments = board.members[i].isNoComments;
+      	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
+      	  	Boards.update(
+    	  			{ _id: board._id },
+              { $pull: 
+              	{ members: 
+              		{ userId: elementToBeRemovedUserId, },
+              	},
+              }
+      	  	);
+      	  	Boards.update(
+    	  			{ _id: board._id }, {
+    	  				$push: {
+              		members: {
+              			userId: elementToBeRemovedUserId, 
+              			isAdmin: elementToBeRemovedIsAdmin, 
+              			isActive: elementToBeRemovedIsActive, 
+              			isNoComments: elementToBeRemovedIsNoComments, 
+              			isCommentOnly: elementToBeRemovedIsCommentOnly,
+              		},
+              	},
+              }
+      	  	);
+      	  }
+    		}
   		}
   	});
     //____________________________________
@@ -1173,145 +1177,6 @@ if (Meteor.isServer) {
 						);
     			}
     		});
-    	}
-    });
-    //____________________________________
-
-
-    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
-    // out of its own members make one of them an admin of the board, preferably the member with the highest role,
-    // only if there is no other boardadmin for that specific board
-    const adminBoardIds = new Array();
-    Boards.find({
-    	'members.isAdmin': true
-    }).forEach((board) => {
-    	adminBoardIds.push(board._id);
-    });
-    const nonAdminBoards = Boards.find({
-    	_id: {$nin: adminBoardIds}
-  	});
-    nonAdminBoards.forEach((nonAdminBoard) => {
-    	const memberIds = new Array();
-			const hasOtherBoardAdmin = false;
-    	nonAdminBoard.members.forEach((member) => {
-    		memberIds.push(member.userId);
-				if (member.isAdmin === true) {
-					hasOtherBoardAdmin = true;
-				}
-    	});
-    	if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
-    		const adminRoleMember = Users.findOne({
-      		_id: {$in: memberIds},
-      		isAdmin: true
-      	});
-      	if (!adminRoleMember) {
-      		const managerRole = Roles.findOne({name: 'Manager'});
-      		if (managerRole && managerRole._id) {
-      			const managerRoleMember = Users.findOne({
-          		_id: {$in: memberIds},
-          		roleId: managerRole._id
-          	});
-          	if (!managerRoleMember) {
-          		const coachRole = Roles.findOne({name: 'Coach'});
-          		if (coachRole && coachRole._id) {
-          			const coachRoleMember = Users.findOne({
-              		_id: {$in: memberIds},
-              		roleId: coachRole._id
-              	});
-              	if (!coachRoleMember) {
-              		const randomMemberId = memberIds[0].userId;
-              		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
-                    { $pull: {
-                        members: {
-                          userId: randomMemberId,
-                        },
-                      },
-                    }
-          				);
-              		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
-                    { $push: {
-                        members: {
-                          isAdmin: true,
-                          isActive: true,
-                          isCommentOnly: false,
-                          userId: randomMemberId,
-                        },
-                      },
-                    }
-          				);
-              	} else {
-              		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
-                    { $pull: {
-                        members: {
-                          userId: coachRoleMember._id,
-                        },
-                      },
-                    }
-          				);
-              		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
-                    { $push: {
-                        members: {
-                          isAdmin: true,
-                          isActive: true,
-                          isCommentOnly: false,
-                          userId: coachRoleMember._id,
-                        },
-                      },
-                    }
-          				);
-              	}
-          		}
-          	} else {
-          		Boards.update(
-        				{ _id: nonAdminBoard._id }, 
-                { $pull: {
-                    members: {
-                      userId: managerRoleMember._id,
-                    },
-                  },
-                }
-      				);
-          		Boards.update(
-        				{ _id: nonAdminBoard._id }, 
-                { $push: {
-                    members: {
-                      isAdmin: true,
-                      isActive: true,
-                      isCommentOnly: false,
-                      userId: managerRoleMember._id,
-                    },
-                  },
-                }
-      				);
-          	}
-      		}
-      	} else {
-      		Boards.update(
-    				{ _id: nonAdminBoard._id }, 
-            { $pull: {
-                members: {
-                  userId: adminRoleMember._id,
-                },
-              },
-            }
-  				);
-      		Boards.update(
-    				{ _id: nonAdminBoard._id }, 
-            { $push: {
-                members: {
-                  isAdmin: true,
-                  isActive: true,
-                  isCommentOnly: false,
-                  userId: adminRoleMember._id,
-                },
-              },
-            }
-  				);
-      	}
     	}
     });
     //____________________________________
