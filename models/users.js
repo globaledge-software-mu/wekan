@@ -842,33 +842,6 @@ if (Meteor.isServer) {
 
       // create new user 
       const newUserId = Accounts.createUser({username, email});
-      if (newUserId) {
-        // Assign the default Trial user groups to the newly created user
-        UserGroups.find({
-        	category: 'default-trial'
-        }).forEach((userGroup) => {
-          AssignedUserGroups.insert({
-          	userId: newUserId,
-            userGroupId: userGroup._id,
-            groupOrder: 'Primary',
-            quota_used: 0,
-          });
-        });
-        const newUser = Users.find({ _id: newUserId });
-        if (newUser && newUser.isAdmin) {
-          // Assign the admin default Trial user groups to the newly created admin
-          UserGroups.find({
-          	category: 'default-admin-trial'
-          }).forEach((userGroup) => {
-            AssignedUserGroups.insert({
-            	userId: newUserId,
-              userGroupId: userGroup._id,
-              groupOrder: 'Primary',
-              quota_used: 0,
-            });
-          });
-        }
-      }
 
       // update new user's details
     	Users.update(
@@ -936,33 +909,6 @@ if (Meteor.isServer) {
         username = email.substring(0, posAt);
         // Create user doc
         const newUserId = Accounts.createUser({username, email});
-        if (newUserId) {
-          // Assign the default Trial user groups to the newly created user
-          UserGroups.find({
-          	category: 'default-trial'
-          }).forEach((userGroup) => {
-            AssignedUserGroups.insert({
-            	userId: newUserId,
-              userGroupId: userGroup._id,
-              groupOrder: 'Primary',
-              quota_used: 0,
-            });
-          });
-          const newUser = Users.find({ _id: newUserId });
-          if (newUser && newUser.isAdmin) {
-            // Assign the admin default Trial user groups to the newly created admin
-            UserGroups.find({
-            	category: 'default-admin-trial'
-            }).forEach((userGroup) => {
-              AssignedUserGroups.insert({
-              	userId: newUserId,
-                userGroupId: userGroup._id,
-                groupOrder: 'Primary',
-                quota_used: 0,
-              });
-            });
-          }
-        }
         if (!newUserId) {
         	throw new Meteor.Error('error-user-notCreated');
         }
@@ -1199,14 +1145,7 @@ if (Meteor.isServer) {
   //});
 
   Users.before.remove((userId, doc) => {
-    // Removing the user from any user groups he/she was assigned to
-    AssignedUserGroups.find({
-    	userId: userId
-    }).forEach((assignedGroup) => {
-    	if (assignedGroup) {
-      	AssignedUserGroups.remove({_id: assignedGroup._id});
-    	}
-    });
+    // 
   });
 
   // Each board document contains the de-normalized number of users that have
@@ -1724,33 +1663,6 @@ if (Meteor.isServer) {
         password: req.body.password,
         from: 'admin',
       });
-      if (id) {
-        // Assign the default Trial user groups to the newly created user
-        UserGroups.find({
-        	category: 'default-trial'
-        }).forEach((userGroup) => {
-          AssignedUserGroups.insert({
-          	userId: id,
-            userGroupId: userGroup._id,
-            groupOrder: 'Primary',
-            quota_used: 0,
-          });
-        });
-        const newUser = Users.find({ _id: id });
-        if (newUser && newUser.isAdmin) {
-          // Assign the admin default Trial user groups to the newly created admin
-          UserGroups.find({
-          	category: 'default-admin-trial'
-          }).forEach((userGroup) => {
-            AssignedUserGroups.insert({
-            	userId: id,
-              userGroupId: userGroup._id,
-              groupOrder: 'Primary',
-              quota_used: 0,
-            });
-          });
-        }
-      }
       JsonRoutes.sendResult(res, {
         code: 200,
         data: {
