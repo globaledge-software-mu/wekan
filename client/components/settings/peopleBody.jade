@@ -15,6 +15,8 @@ template(name="people")
             if currentUser.isAdmin
               li.active.hide
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+              li.active
+                a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
         .main-body
           if loading.get
             +spinner
@@ -22,6 +24,8 @@ template(name="people")
             +peopleGeneral
           else if roles.get
             +rolesGeneral
+          else if userGroups.get
+            +userGroupsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -262,5 +266,84 @@ template(name="createRolePopup")
       div
       unless managerCoachOrCoacheeDoc role._id
         input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="userGroupsGeneral")
+  button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
+  table
+    tbody
+      tr
+        th {{_ 'title'}}
+        th {{_ 'boards-quota'}}
+        th {{_ 'users-quota'}}    
+        th {{_ 'createdAt'}} 
+        th {{_ 'action'}}
+      // if isAdmin
+      if currentUser.isAdmin
+        each userGroup in userGroupsList
+          +userGroupRow(userGroupId=userGroup._id)
+
+template(name="userGroupRow")
+  tr
+    td {{ userGroupData.title }}
+    td {{ userGroupData.boardsQuota }}
+    td {{ userGroupData.usersQuota }}
+    td {{ moment userGroupData.createdAt 'LLL' }}
+    td
+      a.edit-user-group
+        | {{_ 'edit'}}
+
+template(name="createUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-created
+          | {{_ 'error-title-blank'}}
+        input.js-user-group-title(type="text" value="" autofocus)
+      label
+        | {{_ 'boards-quota'}}
+        span.error.hide.boards-quota-blank.user-group-not-created
+          | {{_ 'error-boards-quota-blank'}}
+        input.js-user-group-boards-quota(type="text" value="")
+      label
+        | {{_ 'users-quota'}}
+        span.error.hide.users-quota-blank.user-group-not-created
+          | {{_ 'error-users-quota-blank'}}
+        input.js-user-group-users-quota(type="text" value="")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form#editUserGroupPopup
+      label.hide.userGroupId(type="text" value=userGroup._id)
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-edited
+          | {{_ 'error-title-blank'}}
+        input.js-user-group-title(type="text" value=userGroup.title autofocus)
+      label
+        | {{_ 'boards-quota'}}
+        span.error.hide.boards-quota-blank.user-group-not-edited
+          | {{_ 'error-boards-quota-blank'}}
+        input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+      label
+        | {{_ 'users-quota'}}
+        span.error.hide.users-quota-blank.user-group-not-edited
+          | {{_ 'error-users-quota-blank'}}
+        input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        if notAsssignedToAnyUser
+          input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
         
         

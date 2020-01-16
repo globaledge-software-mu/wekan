@@ -4,10 +4,10 @@ UserGroups.attachSchema(new SimpleSchema({
   title: {
     type: String,
   },
-  boards_quota: {
+  boardsQuota: {
     type: Number,
   },
-  users_quota: {
+  usersQuota: {
     type: String,
   },
   createdAt: {

@@ -11,6 +11,7 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
+    this.userGroups = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -33,6 +34,8 @@ BlazeComponent.extendComponent({
       this.subscribe('roles');
       Meteor.subscribe('users');
       Meteor.subscribe('role_colors');
+      Meteor.subscribe('user_groups');
+      Meteor.subscribe('assigned_user_groups');
     });
   },
   events() {
@@ -137,6 +140,7 @@ BlazeComponent.extendComponent({
       const targetID = target.data('id');
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
+      this.userGroups.set('user-groups-setting' === targetID);
     }
   },
   events() {
@@ -806,5 +810,230 @@ Template.createRolePopup.helpers({
   	return false;
   },
 });
+  
+BlazeComponent.extendComponent({
+  userGroupsList() {
+  	return UserGroups.find();
+  },
+  events() {
+	  return [{
+	    'click button#create-user-group': Popup.open('createUserGroup'),
+	  }];
+	}
+}).register('userGroupsGeneral');
 
+BlazeComponent.extendComponent({
+  events() {
+	  return [{
+	   'click a.edit-user-group': Popup.open('editUserGroup'),
+	  }];
+	}
+}).register('userGroupRow');
 
+Template.userGroupRow.helpers({
+	userGroupData() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+  
+  events() {
+    return [{
+    	submit(evt) {
+        evt.preventDefault();
+        const title = this.find('.js-user-group-title').value.trim();
+        const boardsQuota = this.find('.js-user-group-boards-quota').value.trim();
+        const usersQuota = this.find('.js-user-group-users-quota').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var titleLeftBlank = leftBlank.indexOf(title) > -1;
+        var boardsQuotaLeftBlank = leftBlank.indexOf(boardsQuota) > -1;
+        var usersQuotaLeftBlank = leftBlank.indexOf(usersQuota) > -1;
+        $('.user-group-not-created').hide();
+        if (titleLeftBlank) {
+        	this.$('.title-blank').show();
+        }
+        if (boardsQuotaLeftBlank) {
+        	this.$('.boards-quota-blank').show();
+        }
+        if (usersQuotaLeftBlank) {
+        	this.$('.users-quota-blank').show();
+        }
+        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank) {
+          return false;
+        }
+        this.setLoading(true);
+
+        UserGroups.insert({ 
+        	title, boardsQuota, usersQuota
+      	}, (err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-created');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+        );
+      },
+
+      'click #cancelUserGroupCreation'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('createUserGroupPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  events() {
+    return [{
+      submit(evt) {
+        evt.preventDefault();
+        const userGroupId = Template.instance().data.userGroupId;
+        const title = this.find('.js-user-group-title').value.trim();
+        const boardsQuota = this.find('.js-user-group-boards-quota').value.trim();
+        const usersQuota = this.find('.js-user-group-users-quota').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var titleLeftBlank = leftBlank.indexOf(title) > -1;
+        var boardsQuotaLeftBlank = leftBlank.indexOf(boardsQuota) > -1;
+        var usersQuotaLeftBlank = leftBlank.indexOf(usersQuota) > -1;
+        $('.user-group-not-edited').hide();
+        if (titleLeftBlank) {
+        	this.$('.title-blank').show();
+        }
+        if (boardsQuotaLeftBlank) {
+        	this.$('.boards-quota-blank').show();
+        }
+        if (usersQuotaLeftBlank) {
+        	this.$('.users-quota-blank').show();
+        }
+        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank) {
+          return false;
+        }
+        this.setLoading(true);
+
+        UserGroups.update(
+      		{ _id: userGroupId }, 
+      		{ $set: { title, boardsQuota, usersQuota } }, 
+      		(err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-edited');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+    		);
+      },
+
+      'click #deleteButton'() {
+        const userGroupId = Template.instance().data.userGroupId;
+        Popup.close();
+        swal({
+          title: 'Confirm Delete User-Group!',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            UserGroups.remove({_id: userGroupId}, (err, res) => {
+            	if (err) {
+            		swal(err, {
+                  icon: "success",
+                });
+            	} else if (res) {
+            		swal("User-Group has been deleted!", {
+                  icon: "success",
+                });
+            	}
+            });
+          } else {
+            return false;
+          }
+        });
+      },
+    }];
+  },
+}).register('editUserGroupPopup');
+
+Template.editUserGroupPopup.helpers({
+	userGroup() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+
+  notAsssignedToAnyUser() {
+  	const assignedGroup = AssignedUserGroups.findOne({userGroupId: this.userGroupId});
+  	if (!assignedGroup) {
+  		return true;
+  	} else {
+    	return false;
+  	}
+  },
+});

@@ -134,6 +134,8 @@
     "board-view-cal": "Calendar",
     "board-view-swimlanes": "Swimlanes",
     "board-view-lists": "Lijsten",
+    "boards-quota": "Plankenquotum",
+    "users-quota": "Gebruikersquotum",
     "bucket-example": "Zoals \"Bucket List\" bijvoorbeeld",
     "cancel": "Annuleren",
     "card-archived": "This card is moved to Archive.",

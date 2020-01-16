@@ -133,6 +133,8 @@
     "board-view-cal": "Calendar",
     "board-view-swimlanes": "Swimlanes",
     "board-view-lists": "Lists",
+    "boards-quota": "Boards Quota",
+    "users-quota": "Users Quota",
     "bucket-example": "Like “Bucket List” for example",
     "cancel": "Cancel",
     "card-archived": "This card is moved to Archive.",
