@@ -571,10 +571,10 @@ if (Meteor.isClient) {
             { _id: boardIdentifier },
             { $push: {
 	              members: {
+	                userId: adminOrManagerId,
 	                isAdmin: false,
 	                isActive: true,
 	                isCommentOnly: false,
-	                userId: adminOrManagerId,
 	              },
 	            },
             }
@@ -842,6 +842,33 @@ if (Meteor.isServer) {
 
       // create new user 
       const newUserId = Accounts.createUser({username, email});
+      if (newUserId) {
+        // Assign the default Trial user groups to the newly created user
+        UserGroups.find({
+        	category: 'default-trial'
+        }).forEach((userGroup) => {
+          AssignedUserGroups.insert({
+          	userId: newUserId,
+            userGroupId: userGroup._id,
+            groupOrder: 'Primary',
+            quota_used: 0,
+          });
+        });
+        const newUser = Users.find({ _id: newUserId });
+        if (newUser && newUser.isAdmin) {
+          // Assign the admin default Trial user groups to the newly created admin
+          UserGroups.find({
+          	category: 'default-admin-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: newUserId,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+        }
+      }
 
       // update new user's details
     	Users.update(
@@ -863,9 +890,10 @@ if (Meteor.isServer) {
   	},
 
     // we accept userId, username, email
-    inviteUserToBoard(username, boardId) {
+    inviteUserToBoard(username, boardId, roleId) {
       check(username, String);
       check(boardId, String);
+      check(roleId, String);
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
@@ -908,6 +936,33 @@ if (Meteor.isServer) {
         username = email.substring(0, posAt);
         // Create user doc
         const newUserId = Accounts.createUser({username, email});
+        if (newUserId) {
+          // Assign the default Trial user groups to the newly created user
+          UserGroups.find({
+          	category: 'default-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: newUserId,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+          const newUser = Users.find({ _id: newUserId });
+          if (newUser && newUser.isAdmin) {
+            // Assign the admin default Trial user groups to the newly created admin
+            UserGroups.find({
+            	category: 'default-admin-trial'
+            }).forEach((userGroup) => {
+              AssignedUserGroups.insert({
+              	userId: newUserId,
+                userGroupId: userGroup._id,
+                groupOrder: 'Primary',
+                quota_used: 0,
+              });
+            });
+          }
+        }
         if (!newUserId) {
         	throw new Meteor.Error('error-user-notCreated');
         }
@@ -925,6 +980,21 @@ if (Meteor.isServer) {
 
         board.addMember(user._id);
         user.addInvite(boardId);
+
+        // If roleId is not null, update the newly created user's role
+        if (roleId) {
+          const role = Roles.findOne({_id: roleId});
+        	var roleName = null;
+          if (user && role && role.name) {
+          	roleName = role.name;
+            Users.update(
+          		{ _id: newUserId }, 
+          		{ $set: 
+          			{ roleId: roleId, roleName: roleName } 
+          		}
+        		);
+          }
+        }
       }
 
       // Send Invite 'Login To Accept Invite To Board'
@@ -945,9 +1015,22 @@ if (Meteor.isServer) {
 //      } catch (e) {
 //        throw new Meteor.Error('email-fail', e.message);
 //      }
-      return {userID: user._id, username: user.username, email: user.emails[0].address};
+
+      // Since above we've commented the part where an email is sent even when an existing user is 
+      // invited to a board, so now the response will defer on the successful execution of this method,
+      // as email is being sent in only One case out of 2.
+      // Below we need to perform a small verification to know when this method was 
+      // called (when inviting a freshly created user [password is not set at this point] or when inviting
+      // an existing user to a board [naturally his password would have been set])
+      if (user && user.services && user.services.password && user.services.password.bcrypt) {
+        return {userID: user._id, username: user.username, email: user.emails[0].address, passwordIsSet: true};
+      } else {
+        return {userID: user._id, username: user.username, email: user.emails[0].address};
+      }
     },
+
   });
+
   Accounts.onCreateUser((options, user) => {
     const userCount = Users.find().count();
     if (userCount === 0) {
@@ -1021,11 +1104,59 @@ if (Meteor.isServer) {
 }
 
 if (Meteor.isServer) {
-  // Let mongoDB ensure username unicity
   Meteor.startup(() => {
+  	
+  	// Find any duplicate board members in a board and cleanup the duplicate
+  	Boards.find().forEach((board) => {
+    	const memberIds = new Array();
+  		board.members.forEach((member) => {
+  			memberIds.push(member.userId);
+  		});
+      if (memberIds.length > 1) {
+    		for (var i = 0; i < memberIds.length; i++) {
+      	  var AA = {};
+      		AA[i] = memberIds.slice();
+      		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
+    			const elementToBeRemovedUserId = memberIds[i]; 
+      	  if (AA[i].includes(elementToBeRemovedUserId)) {
+      	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
+      	  	const elementToBeRemovedIsActive = board.members[i].isActive;
+      	  	const elementToBeRemovedIsNoComments = board.members[i].isNoComments;
+      	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
+      	  	Boards.update(
+    	  			{ _id: board._id },
+              { $pull: 
+              	{ members: 
+              		{ userId: elementToBeRemovedUserId, },
+              	},
+              }
+      	  	);
+      	  	Boards.update(
+    	  			{ _id: board._id }, {
+    	  				$push: {
+              		members: {
+              			userId: elementToBeRemovedUserId, 
+              			isAdmin: elementToBeRemovedIsAdmin, 
+              			isActive: elementToBeRemovedIsActive, 
+              			isNoComments: elementToBeRemovedIsNoComments, 
+              			isCommentOnly: elementToBeRemovedIsCommentOnly,
+              		},
+              	},
+              }
+      	  	);
+      	  }
+    		}
+      }
+  	});
+    //____________________________________
+  	
+  	
+    // Let mongoDB ensure username unicity
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
+    //____________________________________
+
 
     // Cleanup old boards of all the non-existing users as members
     const allBoards = Boards.find({archived: false});
@@ -1046,6 +1177,8 @@ if (Meteor.isServer) {
     		});
     	}
     });
+    //____________________________________
+  	
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,
@@ -1065,12 +1198,65 @@ if (Meteor.isServer) {
   //    });
   //});
 
+  Users.before.remove((userId, doc) => {
+    // Removing the user from any user groups he/she was assigned to
+    AssignedUserGroups.find({
+    	userId: userId
+    }).forEach((assignedGroup) => {
+    	if (assignedGroup) {
+      	AssignedUserGroups.remove({_id: assignedGroup._id});
+    	}
+    });
+  });
+
   // Each board document contains the de-normalized number of users that have
   // starred it. If the user star or unstar a board, we need to update this
   // counter.
   // We need to run this code on the server only, otherwise the incrementation
   // will be done twice.
   Users.after.update(function (userId, user, fieldNames) {
+
+  	// When a user doc is updated, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = user.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	var userIsManager = false;
+    	if (user.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		var isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === user._id) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    userId: user._id,
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
+
+
     // The `starredBoards` list is hosted on the `profile` field. If this
     // field hasn't been modificated we don't need to run this hook.
     if (!_.contains(fieldNames, 'profile'))
@@ -1181,6 +1367,46 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
+  	
+  	// When a new user is created, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = doc.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	const userIsManager = false;
+    	if (doc.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		const isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === doc._id) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                    userId: doc._id,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
 
     if (doc.createdThroughApi) {
       // The admin user should be able to create a user despite disabling registration because
@@ -1498,6 +1724,33 @@ if (Meteor.isServer) {
         password: req.body.password,
         from: 'admin',
       });
+      if (id) {
+        // Assign the default Trial user groups to the newly created user
+        UserGroups.find({
+        	category: 'default-trial'
+        }).forEach((userGroup) => {
+          AssignedUserGroups.insert({
+          	userId: id,
+            userGroupId: userGroup._id,
+            groupOrder: 'Primary',
+            quota_used: 0,
+          });
+        });
+        const newUser = Users.find({ _id: id });
+        if (newUser && newUser.isAdmin) {
+          // Assign the admin default Trial user groups to the newly created admin
+          UserGroups.find({
+          	category: 'default-admin-trial'
+          }).forEach((userGroup) => {
+            AssignedUserGroups.insert({
+            	userId: id,
+              userGroupId: userGroup._id,
+              groupOrder: 'Primary',
+              quota_used: 0,
+            });
+          });
+        }
+      }
       JsonRoutes.sendResult(res, {
         code: 200,
         data: {

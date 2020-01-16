@@ -1,3 +1,5 @@
+import swal from 'sweetalert';
+
 const usersPerPage = 25;
 
 BlazeComponent.extendComponent({
@@ -9,6 +11,7 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
+    this.userGroups = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -31,6 +34,7 @@ BlazeComponent.extendComponent({
       this.subscribe('roles');
       Meteor.subscribe('users');
       Meteor.subscribe('role_colors');
+      this.subscribe('user_groups');
     });
   },
   events() {
@@ -135,6 +139,7 @@ BlazeComponent.extendComponent({
       const targetID = target.data('id');
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
+      this.userGroups.set('user-groups-setting' === targetID);
     }
   },
   events() {
@@ -240,13 +245,7 @@ BlazeComponent.extendComponent({
             	if (err.error) {
               	message = TAPi18n.__(err.error);
             	} else {
-              	message = TAPi18n.__(err);
-              	if (message == null || message == '' || typeof message === 'undefined' || message.length < 1) {
-              		message = err;
-              		if (typeof err === 'object') {
-              			message = JSON.stringify(err);
-              		}
-              	}
+            		message = err;
             	}
               var $errorMessage = $('<div class="errorStatus inviteNotSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
               $('#header-main-bar').before($errorMessage);
@@ -370,7 +369,7 @@ BlazeComponent.extendComponent({
           	if (err.error) {
             	message = TAPi18n.__(err.error);
           	} else {
-            	message = err;
+          		message = err;
           	}
             var $errorMessage = $('<div class="errorStatus" style="padding: 0px; margin: 0px 20px 0px 20px"><p><b>'+message+'</b></p></div>');
             $('#editUserPopup').prepend($errorMessage);
@@ -436,23 +435,181 @@ BlazeComponent.extendComponent({
       },
 
       'click #deleteButton'() {
-      	const oldUserId = Template.instance().data.userId;
-        Users.remove(oldUserId);
-        // Cleanup Boards of this specific no-longer-existing user as a member
-        Boards.find({
-        	archived: false,
-        	'members.userId': oldUserId,
-      	}).forEach((board) => {
-    			Boards.update(
-    				{ _id: board._id }, 
-    				{ $pull: {
-    					members: {
-    						userId: oldUserId
-    					}
-    				} }
-    			);
-      	});
+      	const toBeDeletedUserId = Template.instance().data.userId;
         Popup.close();
+        swal({
+          title: 'Confirm Delete User!',
+          text: 'Are you sure?',
+          icon: 'warning',
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+        		// If the user to be deleted was an admin of a board, we need to
+          	// make one of the would-be remaining members of that board an admin of those specific boards, 
+          	// only if there is no other boardadmin for that specific board,
+          	// preferably a member with the highest user role of the board
+            Boards.find({
+            	'members.userId': toBeDeletedUserId,
+            	'members.isAdmin': true,
+          	}).forEach((board) => {
+          		Boards.update(
+        				{ _id: board._id }, 
+                { $pull: {
+                    members: {
+                      userId: toBeDeletedUserId,
+                    },
+                  },
+                }
+      				);
+          		const memberIds = new Array();
+        			const hasOtherBoardAdmin = false;
+        			board.members.forEach((member) => {
+        				if (toBeDeletedUserId !== member.userId) {
+          				memberIds.push(member.userId);
+          				if (member.isAdmin === true) {
+          					hasOtherBoardAdmin = true;
+          				}
+        				}
+        			});
+        			if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
+          			const adminRoleMember = Users.findOne({
+              		_id: {$in: memberIds},
+              		isAdmin: true
+              	});
+              	if (adminRoleMember) {
+              		Boards.update(
+            				{ _id: board._id }, 
+                    { $pull: {
+                        members: {
+                          userId: adminRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: board._id }, 
+                    { $push: {
+                        members: {
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                          userId: adminRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              	} else {
+              		const managerRole = Roles.findOne({name: 'Manager'});
+              		if (managerRole && managerRole._id) {
+              			const managerRoleMember = Users.findOne({
+                  		_id: {$in: memberIds},
+                  		roleId: managerRole._id
+                  	});
+                  	if (!managerRoleMember) {
+                  		const coachRole = Roles.findOne({name: 'Coach'});
+                  		if (coachRole && coachRole._id) {
+                  			const coachRoleMember = Users.findOne({
+                      		_id: {$in: memberIds},
+                      		roleId: coachRole._id
+                      	});
+                      	if (!coachRoleMember) {
+                      		const randomMemberId = memberIds[0].userId;
+                      		Boards.update(
+                    				{ _id: board._id }, 
+                            { $pull: {
+                                members: {
+                                  userId: randomMemberId,
+                                },
+                              },
+                            }
+                  				);
+                      		Boards.update(
+                    				{ _id: board._id }, 
+                            { $push: {
+                                members: {
+                                  isAdmin: true,
+                                  isActive: true,
+                                  isCommentOnly: false,
+                                  userId: randomMemberId,
+                                },
+                              },
+                            }
+                  				);
+                      	} else {
+                      		Boards.update(
+                    				{ _id: board._id }, 
+                            { $pull: {
+                                members: {
+                                  userId: coachRoleMember._id,
+                                },
+                              },
+                            }
+                  				);
+                      		Boards.update(
+                    				{ _id: board._id }, 
+                            { $push: {
+                                members: {
+                                  isAdmin: true,
+                                  isActive: true,
+                                  isCommentOnly: false,
+                                  userId: coachRoleMember._id,
+                                },
+                              },
+                            }
+                  				);
+                      	}
+                  		}
+                  	} else {
+                  		Boards.update(
+                				{ _id: board._id }, 
+                        { $pull: {
+                            members: {
+                              userId: managerRoleMember._id,
+                            },
+                          },
+                        }
+              				);
+                  		Boards.update(
+                				{ _id: board._id }, 
+                        { $push: {
+                            members: {
+                              isAdmin: true,
+                              isActive: true,
+                              isCommentOnly: false,
+                              userId: managerRoleMember._id,
+                            },
+                          },
+                        }
+              				);
+                  	}
+              		}
+              	}
+        			}
+          	});
+
+          	// Remove deleting user as a member of any board he was a member of.
+            Boards.find({
+            	'members.userId': toBeDeletedUserId,
+          	}).forEach((board) => {
+          		Boards.update(
+        				{ _id: board._id }, 
+                { $pull: {
+                    members: {
+                      userId: toBeDeletedUserId,
+                    },
+                  },
+                }
+      				);
+          	});
+            
+            // Remove User
+            Users.remove(toBeDeletedUserId);
+          } else {
+            return false;
+          }
+        });
       },
     }];
   },
@@ -650,5 +807,245 @@ Template.createRolePopup.helpers({
   		return true;
   	}
   	return false;
+  },
+});
+  
+BlazeComponent.extendComponent({
+  userGroupsList() {
+  	return UserGroups.find();
+  },
+  events() {
+	  return [{
+	    'click button#create-user-group': Popup.open('createUserGroup'),
+	  }];
+	}
+}).register('userGroupsGeneral');
+
+BlazeComponent.extendComponent({
+  events() {
+	  return [{
+	   'click a.edit-user-group': Popup.open('editUserGroup'),
+	  }];
+	}
+}).register('userGroupRow');
+
+Template.userGroupRow.helpers({
+	userGroupData() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  resources() {
+    return ['Template Boards', 'Regular Boards', 'Regular Cards', 'Users', 'Folders', 'Subfolders', 'Lists'];
+  },
+  
+  events() {
+    return [{
+    	submit(evt) {
+        evt.preventDefault();
+        const title = this.find('.js-user-group-title').value.trim();
+        const quota = this.find('.js-user-group-quota').value.trim();
+        const resource = this.find('.js-user-group-resource').value.trim();
+        const category = this.find('.js-user-group-category').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var titleLeftBlank = leftBlank.indexOf(title) > -1;
+        var quotaLeftBlank = leftBlank.indexOf(quota) > -1;
+        var resourceNotSelected = leftBlank.indexOf(resource) > -1;
+        $('.user-group-not-created').hide();
+        if (titleLeftBlank) {
+        	this.$('.title-blank').show();
+        }
+        if (quotaLeftBlank) {
+        	this.$('.quota-blank').show();
+        }
+        if (resourceNotSelected) {
+        	this.$('.resource-not-selected').show();
+        }
+        if (titleLeftBlank || quotaLeftBlank || resourceNotSelected) {
+          return false;
+        }
+
+        this.setLoading(true);
+        UserGroups.insert(
+      		{ title, quota, resource, category }, 
+          (err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-created');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+        );
+      },
+
+      'click #cancelUserGroupCreation'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('createUserGroupPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  resources() {
+    return ['Template Boards', 'Regular Boards', 'Regular Cards', 'Users', 'Folders', 'Subfolders', 'Lists'];
+  },
+
+  events() {
+    return [{
+      submit(evt) {
+        evt.preventDefault();
+        const userGroupId = Template.instance().data.userGroupId;
+        const title = this.find('.js-user-group-title').value.trim();
+        const quota = this.find('.js-user-group-quota').value.trim();
+        const resource = this.find('.js-user-group-resource').value.trim();
+        const category = this.find('.js-user-group-category').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var titleLeftBlank = leftBlank.indexOf(title) > -1;
+        var quotaLeftBlank = leftBlank.indexOf(quota) > -1;
+        var resourceNotSelected = leftBlank.indexOf(resource) > -1;
+        $('.user-group-not-edited').hide();
+        if (titleLeftBlank) {
+        	this.$('.title-blank').show();
+        }
+        if (quotaLeftBlank) {
+        	this.$('.quota-blank').show();
+        }
+        if (resourceNotSelected) {
+        	this.$('.resource-not-selected').show();
+        }
+        if (titleLeftBlank || quotaLeftBlank || resourceNotSelected) {
+          return false;
+        }
+
+        this.setLoading(true);
+        UserGroups.update(
+      		{ _id: userGroupId }, 
+      		{ $set: { title, quota, resource, category } }, 
+      		(err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('user-group-edited');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+    		);
+      },
+
+      'click #deleteButton'() {
+        const userGroupId = Template.instance().data.userGroupId;
+        Popup.close();
+        swal({
+          title: 'Confirm Delete User-Group!',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            UserGroups.remove({_id: userGroupId}, (err, res) => {
+            	if (err) {
+            		swal(err, {
+                  icon: "success",
+                });
+            	} else if (res) {
+            		swal("User-Group has been deleted!", {
+                  icon: "success",
+                });
+            	}
+            });
+          } else {
+            return false;
+          }
+        });
+      },
+    }];
+  },
+}).register('editUserGroupPopup');
+
+Template.editUserGroupPopup.helpers({
+	userGroup() {
+    return UserGroups.findOne(this.userGroupId);
+  },
+
+  currentResource(option) {
+    const userGroupId = Template.instance().data.userGroupId;
+    if (userGroupId) {
+      const userGroup = UserGroups.findOne(userGroupId);
+      if (userGroup && userGroup.resource) {
+        return userGroup.resource === option;
+      }
+      return false;
+    }
+    return false;
   },
 });

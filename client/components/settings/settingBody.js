@@ -134,7 +134,7 @@ BlazeComponent.extendComponent({
 
       validEmails.forEach((validEmail) => {
       	boardsToInvite.forEach((inviteToBoard) => {
-          Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, (err, ret) => {
+          Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, roleId, (err, ret) => {
             self.setLoading(false);
             if (err) {
             	var message = '';
