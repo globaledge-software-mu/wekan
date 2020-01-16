@@ -34,7 +34,6 @@ BlazeComponent.extendComponent({
       this.subscribe('roles');
       Meteor.subscribe('users');
       Meteor.subscribe('role_colors');
-      this.subscribe('user_groups');
     });
   },
   events() {
