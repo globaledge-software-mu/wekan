@@ -563,7 +563,7 @@ BlazeComponent.extendComponent({
         const userId = this.currentData()._id;
         const currentBoard = Boards.findOne(Session.get('currentBoard'));
         if (!currentBoard.hasMember(userId)) {
-          this.inviteUser(userId, null);
+          this.inviteUser(userId, '');
         }
       },
       'click .js-email-invite'() {
