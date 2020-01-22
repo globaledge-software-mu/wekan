@@ -680,6 +680,15 @@ Users.helpers({
   remove() {
     User.remove({ _id: this._id});
   },
+
+  defaultTrialUsersQuota() {
+    return 5;
+  },
+
+  defaultTrialBoardsQuota() {
+    return 10;
+  },
+
 });
 
 Users.mutations({
