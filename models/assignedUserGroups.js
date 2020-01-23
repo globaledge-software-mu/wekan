@@ -10,12 +10,6 @@ AssignedUserGroups.attachSchema(new SimpleSchema({
   groupOrder: {
     type: String,
   },
-  boards_quota_used: {
-    type: Number,
-  },
-  users_quota_used: {
-    type: Number,
-  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return

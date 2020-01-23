@@ -4,11 +4,21 @@ UserGroups.attachSchema(new SimpleSchema({
   title: {
     type: String,
   },
+  usersQuota: {
+    type: String,
+  },
+  usedUsersQuota: {
+    type: String,
+    optional: true,
+    defaultValue: 0,
+  },
   boardsQuota: {
     type: Number,
   },
-  usersQuota: {
-    type: String,
+  usedBoardsQuota: {
+    type: Number,
+    optional: true,
+    defaultValue: 0,
   },
   createdAt: {
     type: Date,

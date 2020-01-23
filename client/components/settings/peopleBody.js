@@ -12,6 +12,7 @@ BlazeComponent.extendComponent({
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
     this.userGroups = new ReactiveVar(false);
+    this.assignedUserGroups = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -141,6 +142,7 @@ BlazeComponent.extendComponent({
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
       this.userGroups.set('user-groups-setting' === targetID);
+      this.assignedUserGroups.set('assigned-user-groups-setting' === targetID);
     }
   },
   events() {
@@ -1035,5 +1037,271 @@ Template.editUserGroupPopup.helpers({
   	} else {
     	return false;
   	}
+  },
+});
+
+BlazeComponent.extendComponent({
+	assignedUserGroupsList() {
+  	return AssignedUserGroups.find();
+  },
+  events() {
+	  return [{
+	    'click button#assign-user-to-user-group': Popup.open('assignUserToUserGroup'),
+	  }];
+	}
+}).register('assignedUserGroupsGeneral');
+
+BlazeComponent.extendComponent({
+  events() {
+	  return [{
+	   'click a.edit-assigned-user-group': Popup.open('editAssignedUserGroup'),
+	  }];
+	}
+}).register('assignedUserGroupRow');
+
+Template.assignedUserGroupRow.helpers({
+	assignedUserGroupData() {
+    const data = AssignedUserGroups.findOne(this.assignedUserGroupId);
+    if (data && data._id) {
+    	const user = Users.findOne({_id: data.userId});
+    	if (user && user._id) {
+        data.username = user.username;
+        if (user.emails && user.emails[0] && user.emails[0].address) {
+          data.email = user.emails[0].address;
+        }
+    	}
+    	const userGroup = UserGroups.findOne({_id: data.userGroupId});
+    	if (userGroup && userGroup._id) {
+        data.userGroupTitle = userGroup.title;
+    	}
+    }
+    return data;
+  },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  users() {
+    return Users.find();
+  },
+
+  userGroups() {
+    return UserGroups.find();
+  },
+  
+  events() {
+    return [{
+    	submit(evt) {
+        evt.preventDefault();
+        const userId = this.find('.js-select-user').value;
+        const userGroupId = this.find('.js-select-user-group').value;
+        const groupOrder = this.find('.js-group-order').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var userNotSelected = leftBlank.indexOf(userId) > -1;
+        var userGroupNotSelected = leftBlank.indexOf(userGroupId) > -1;
+        var groupOrderLeftBlank = leftBlank.indexOf(groupOrder) > -1;
+        $('assigned-user-group-not-created').hide();
+        if (userNotSelected) {
+        	this.$('.select-user-msg').show();
+        }
+        if (userGroupNotSelected) {
+        	this.$('.select-user-group-msg').show();
+        }
+        if (groupOrderLeftBlank) {
+        	this.$('.group-order-blank').show();
+        }
+        if (userNotSelected || userGroupNotSelected || groupOrderLeftBlank) {
+          return false;
+        }
+        this.setLoading(true);
+
+        AssignedUserGroups.insert({ 
+        	userId, userGroupId, groupOrder
+      	}, (err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('assigned-user-to-user-group');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+        );
+      },
+
+      'click #cancelAssignedUserGroupCreation'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('assignUserToUserGroupPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  users() {
+    return Users.find();
+  },
+
+  userGroups() {
+    return UserGroups.find();
+  },
+
+  events() {
+    return [{
+      submit(evt) {
+        evt.preventDefault();
+        const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
+        const userId = this.find('.js-select-user').value;
+        const userGroupId = this.find('.js-select-user-group').value;
+        const groupOrder = this.find('.js-group-order').value.trim();
+
+        var leftBlank = ['undefined', null, ''];
+        var userNotSelected = leftBlank.indexOf(userId) > -1;
+        var userGroupNotSelected = leftBlank.indexOf(userGroupId) > -1;
+        var groupOrderLeftBlank = leftBlank.indexOf(groupOrder) > -1;
+        $('assigned-user-group-not-edited').hide();
+        if (userNotSelected) {
+        	this.$('.select-user-msg').show();
+        }
+        if (userGroupNotSelected) {
+        	this.$('.select-user-group-msg').show();
+        }
+        if (groupOrderLeftBlank) {
+        	this.$('.group-order-blank').show();
+        }
+        if (userNotSelected || userGroupNotSelected || groupOrderLeftBlank) {
+          return false;
+        }
+        this.setLoading(true);
+
+        AssignedUserGroups.update(
+      		{ _id: assignedUserGroupId }, 
+      		{ $set: { userId, userGroupId, groupOrder } }, 
+      		(err, res) => {
+	        	this.setLoading(false);
+	          if (err) {
+	          	var message = '';
+	          	if (err.error) {
+	            	message = TAPi18n.__(err.error);
+	          	} else {
+	          		message = err;
+	          	}
+	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($errorMessage);
+	            $errorMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	          } else if (res) {
+	          	var message = TAPi18n.__('assigned-user-group-edited');
+	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	            $('#header-main-bar').before($successMessage);
+	            $successMessage.delay(10000).slideUp(500, function() {
+	              $(this).remove();
+	            });
+	            Popup.close();
+	          }
+	        }
+    		);
+      },
+
+      'click #deleteButton'() {
+        const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
+        Popup.close();
+        swal({
+          title: 'Delete Assigned-User-Group?',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+          	AssignedUserGroups.remove({_id: assignedUserGroupId}, (err, res) => {
+            	if (err) {
+            		swal(err, {
+                  icon: "success",
+                });
+            	} else if (res) {
+            		swal("Assigned-User-Group has been deleted!", {
+                  icon: "success",
+                });
+            	}
+            });
+          } else {
+            return false;
+          }
+        });
+      },
+    }];
+  },
+}).register('editAssignedUserGroupPopup');
+
+Template.editAssignedUserGroupPopup.helpers({
+  specificRowUser(match) {
+    const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
+    if (assignedUserGroupId) {
+      const selected = AssignedUserGroups.findOne(assignedUserGroupId).userId;
+      return selected === match;
+    }
+    return false;
+  },
+
+  specificRowUserGroup(match) {
+    const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
+    if (assignedUserGroupId) {
+      const selected = AssignedUserGroups.findOne(assignedUserGroupId).userGroupId;
+      return selected === match;
+    }
+    return false;
+  },
+  
+	assignedUserGroup() {
+    return AssignedUserGroups.findOne(this.assignedUserGroupId);
   },
 });

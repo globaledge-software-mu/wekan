@@ -17,6 +17,8 @@ template(name="people")
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+              li.active
+                a.js-setting-menu(data-id="assigned-user-groups-setting") {{_ 'assigned-user-groups'}}
         .main-body
           if loading.get
             +spinner
@@ -26,6 +28,8 @@ template(name="people")
             +rolesGeneral
           else if userGroups.get
             +userGroupsGeneral
+          else if assignedUserGroups.get
+            +assignedUserGroupsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -273,8 +277,10 @@ template(name="userGroupsGeneral")
     tbody
       tr
         th {{_ 'title'}}
+        th {{_ 'users-quota'}}   
+        th {{_ 'used-users-quota'}}   
         th {{_ 'boards-quota'}}
-        th {{_ 'users-quota'}}    
+        th {{_ 'used-boards-quota'}}    
         th {{_ 'createdAt'}} 
         th {{_ 'action'}}
       // if isAdmin
@@ -285,8 +291,10 @@ template(name="userGroupsGeneral")
 template(name="userGroupRow")
   tr
     td {{ userGroupData.title }}
-    td {{ userGroupData.boardsQuota }}
     td {{ userGroupData.usersQuota }}
+    td {{ userGroupData.usedUsersQuota }}
+    td {{ userGroupData.boardsQuota }}
+    td {{ userGroupData.usedBoardsQuota }}
     td {{ moment userGroupData.createdAt 'LLL' }}
     td
       a.edit-user-group
@@ -345,5 +353,107 @@ template(name="editUserGroupPopup")
         div
         if notAsssignedToAnyUser
           input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
-        
-        
+
+template(name="assignedUserGroupsGeneral")
+  button#assign-user-to-user-group.btn.btn-primary {{_ 'add'}}
+  table
+    tbody
+      tr
+        th {{_ 'user-id'}}
+        th {{_ 'username'}}
+        th {{_ 'email-address'}}    
+        th {{_ 'user-group-id'}} 
+        th {{_ 'user-group-title'}}
+        th {{_ 'group-order'}}
+        th {{_ 'action'}}
+      // if isAdmin
+      if currentUser.isAdmin
+        each assignedUserGroup in assignedUserGroupsList
+          +assignedUserGroupRow(assignedUserGroupId=assignedUserGroup._id)
+
+template(name="assignedUserGroupRow")
+  tr
+    td {{ assignedUserGroupData.userId }}
+    td {{ assignedUserGroupData.username }}
+    td {{ assignedUserGroupData.email }}
+    td {{ assignedUserGroupData.userGroupId }}
+    td {{ assignedUserGroupData.userGroupTitle }}
+    td {{ assignedUserGroupData.groupOrder }}
+    td
+      a.edit-assigned-user-group
+        | {{_ 'edit'}}
+
+template(name="assignUserToUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'username'}}
+        .select-user-msg.error.hide.assigned-user-group-not-created {{_ 'error-userNotSelected'}}
+        select.select-user.js-select-user
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each user in users
+              option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        .select-user-group-msg.error.hide.assigned-user-group-not-created {{_ 'error-userGroupNotSelected'}}
+        select.select-user-group.js-select-user-group
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each userGroup in userGroups
+              option(value='{{userGroup._id}}') {{userGroup._id}}
+      label
+        | {{_ 'group-order'}}
+        span.error.hide.group-order-blank.assigned-user-group-not-created
+          | {{_ 'error-group-order-blank'}}
+        input.js-group-order(type="number" min="1" value="" onkeydown="return false")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelAssignedUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editAssignedUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form#editAssignedUserGroupPopup
+      label.hide.assignedUserGroupId(type="text" value=assignedUserGroup._id)
+      label
+        | {{_ 'username'}}
+        .select-user-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userNotSelected'}}
+        select.select-user.js-select-user
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each user in users
+              if specificRowUser user._id
+                option(value='{{user._id}}' selected) {{user.username}}
+              else
+                option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        .select-user-group-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userGroupNotSelected'}}
+        select.select-user-group.js-select-user-group
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each userGroup in userGroups
+              if specificRowUserGroup userGroup._id
+                option(value='{{userGroup._id}}' selected) {{userGroup._id}}
+              else
+                option(value='{{userGroup._id}}') {{userGroup._id}}
+      label
+        | {{_ 'group-order'}}
+        span.error.hide.group-order-blank.assigned-user-group-not-edited
+          | {{_ 'error-group-order-blank'}}
+        input.js-group-order(type="number" min="1" value=assignedUserGroup.groupOrder onkeydown="return false")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
