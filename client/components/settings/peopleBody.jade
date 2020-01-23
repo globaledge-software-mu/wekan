@@ -309,6 +309,8 @@ template(name="createUserGroupPopup")
         | {{_ 'title'}}
         span.error.hide.title-blank.user-group-not-created
           | {{_ 'error-title-blank'}}
+        span.error.hide.title-duplicate.user-group-not-created
+          | {{_ 'error-title-duplicate'}}
         input.js-user-group-title(type="text" value="" autofocus)
       label
         | {{_ 'boards-quota'}}
@@ -336,6 +338,8 @@ template(name="editUserGroupPopup")
         | {{_ 'title'}}
         span.error.hide.title-blank.user-group-not-edited
           | {{_ 'error-title-blank'}}
+        span.error.hide.title-duplicate.user-group-not-edited
+          | {{_ 'error-title-duplicate'}}
         input.js-user-group-title(type="text" value=userGroup.title autofocus)
       label
         | {{_ 'boards-quota'}}
@@ -359,10 +363,8 @@ template(name="assignedUserGroupsGeneral")
   table
     tbody
       tr
-        th {{_ 'user-id'}}
         th {{_ 'username'}}
         th {{_ 'email-address'}}    
-        th {{_ 'user-group-id'}} 
         th {{_ 'user-group-title'}}
         th {{_ 'group-order'}}
         th {{_ 'action'}}
@@ -373,10 +375,8 @@ template(name="assignedUserGroupsGeneral")
 
 template(name="assignedUserGroupRow")
   tr
-    td {{ assignedUserGroupData.userId }}
     td {{ assignedUserGroupData.username }}
     td {{ assignedUserGroupData.email }}
-    td {{ assignedUserGroupData.userGroupId }}
     td {{ assignedUserGroupData.userGroupTitle }}
     td {{ assignedUserGroupData.groupOrder }}
     td
@@ -405,7 +405,7 @@ template(name="assignUserToUserGroupPopup")
           // if isAdmin
           if currentUser.isAdmin
             each userGroup in userGroups
-              option(value='{{userGroup._id}}') {{userGroup._id}}
+              option(value='{{userGroup._id}}') {{userGroup.title}}
       label
         | {{_ 'group-order'}}
         span.error.hide.group-order-blank.assigned-user-group-not-created

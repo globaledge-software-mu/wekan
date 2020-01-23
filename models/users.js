@@ -1119,6 +1119,13 @@ if (Meteor.isServer) {
       username: 1,
     }, {unique: true});
     //____________________________________
+  	
+  	
+    // Let mongoDB ensure username unicity
+    UserGroups._collection._ensureIndex({
+      title: 1,
+    }, {unique: true});
+    //____________________________________
 
 
     // Cleanup old boards of all the non-existing users as members

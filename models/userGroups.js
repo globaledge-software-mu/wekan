@@ -5,10 +5,10 @@ UserGroups.attachSchema(new SimpleSchema({
     type: String,
   },
   usersQuota: {
-    type: String,
+    type: Number,
   },
   usedUsersQuota: {
-    type: String,
+    type: Number,
     optional: true,
     defaultValue: 0,
   },

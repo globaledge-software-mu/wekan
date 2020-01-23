@@ -871,13 +871,17 @@ BlazeComponent.extendComponent({
         if (titleLeftBlank) {
         	this.$('.title-blank').show();
         }
+        const duplicateTitle = UserGroups.findOne({title});
+        if (duplicateTitle) {
+        	this.$('.title-duplicate').show();
+        }
         if (boardsQuotaLeftBlank) {
         	this.$('.boards-quota-blank').show();
         }
         if (usersQuotaLeftBlank) {
         	this.$('.users-quota-blank').show();
         }
-        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank) {
+        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank || duplicateTitle) {
           return false;
         }
         this.setLoading(true);
@@ -952,13 +956,20 @@ BlazeComponent.extendComponent({
         if (titleLeftBlank) {
         	this.$('.title-blank').show();
         }
+        const duplicateTitle = UserGroups.findOne({
+        	title,
+        	_id: { $ne: userGroupId }
+      	});
+        if (duplicateTitle) {
+        	this.$('.title-duplicate').show();
+        }
         if (boardsQuotaLeftBlank) {
         	this.$('.boards-quota-blank').show();
         }
         if (usersQuotaLeftBlank) {
         	this.$('.users-quota-blank').show();
         }
-        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank) {
+        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank || duplicateTitle) {
           return false;
         }
         this.setLoading(true);
