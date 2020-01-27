@@ -1113,26 +1113,37 @@ BlazeComponent.extendComponent({
   
   events() {
     return [{
-      'change .select-user'() {
-      	//First remove the options
-      	$('.select-user-group').html('');
+      'change .js-select-user'() {
+      	//First remove the UserGroups List options and set the GroupOrder to 1
+      	$('.js-select-user-group').html("<option value='' selected='selected'>Select One</option>");
+      	$('.js-group-order').val(1);
       	
       	// Then find the selected user and the UserGroups he is assigned to.
       	// Return all the UserGroups excluding the ones the selected user is already assigned to.
-      	const userId = this.find('.js-select-user').value;      	
-      	if (userId) {
-        	const assignedUserGroups = AssignedUserGroups.find({userId});
+      	const userId = this.find('.js-select-user option:selected').value;
+      	const user = Users.findOne({_id: userId});
+      	if (user && user._id) {
+        	const assignedUserGroups = AssignedUserGroups.find({userId: user._id});
         	if (assignedUserGroups) {
         		const groupsIds = new Array();
         		assignedUserGroups.forEach((assignedUserGroup) => {
         			groupsIds.push(assignedUserGroup.userGroupId);
         		});
-        		const optionsDocs = UserGroups.find({ _id: { $nin: groupsIds } });
-        		optionsDocs.forEach((optionsDoc) => {
-          		$('.select-user-group').html("<option value='"+ optionsDoc._id +"'>"+ optionsDoc.title +"</option>");
+        		const options = UserGroups.find({ _id: { $nin: groupsIds } });
+        		options.forEach((option) => {
+          		$('.select-user-group').append("<option value='"+ option._id +"'>"+ option.title +"</option>");
         		});
-        	} 
+
+    				//	If the selected user has N number of UserGroups assigned to him, 
+          	//  then the 'groupOrder' field should auto-generate the field with the number N+1.
+          	$('.js-group-order').val(groupsIds.length + 1);
+        	} else {
+        		UserGroups.find().forEach((userGroup) => {
+          		$('.select-user-group').append("<option value='"+ userGroup._id +"'>"+ userGroup.title +"</option>");
+        		});
+        	}
       	}
+      	
       },
 
     	submit(evt) {

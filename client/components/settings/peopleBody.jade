@@ -406,7 +406,7 @@ template(name="assignUserToUserGroupPopup")
         | {{_ 'group-order'}}
         span.error.hide.group-order-blank.assigned-user-group-not-created
           | {{_ 'error-group-order-blank'}}
-        input.js-group-order(type="number" min="1" value="" onkeydown="return false")
+        input.js-group-order(type="number" value="" onkeydown="return false" disabled)
       hr
       div.buttonsContainer
         input.primary.wide(type="submit" value="{{_ 'save'}}")
