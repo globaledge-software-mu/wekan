@@ -402,10 +402,6 @@ template(name="assignUserToUserGroupPopup")
         .select-user-group-msg.error.hide.assigned-user-group-not-created {{_ 'error-userGroupNotSelected'}}
         select.select-user-group.js-select-user-group
           option(value='', selected='selected') Select One
-          // if isAdmin
-          if currentUser.isAdmin
-            each userGroup in userGroups
-              option(value='{{userGroup._id}}') {{userGroup.title}}
       label
         | {{_ 'group-order'}}
         span.error.hide.group-order-blank.assigned-user-group-not-created
@@ -445,8 +441,6 @@ template(name="editAssignedUserGroupPopup")
             each userGroup in userGroups
               if specificRowUserGroup userGroup._id
                 option(value='{{userGroup._id}}' selected) {{userGroup._id}}
-              else
-                option(value='{{userGroup._id}}') {{userGroup._id}}
       label
         | {{_ 'group-order'}}
         span.error.hide.group-order-blank.assigned-user-group-not-edited

@@ -1110,13 +1110,31 @@ BlazeComponent.extendComponent({
   users() {
     return Users.find();
   },
-
-  userGroups() {
-    return UserGroups.find();
-  },
   
   events() {
     return [{
+      'change .select-user'() {
+      	//First remove the options
+      	$('.select-user-group').html('');
+      	
+      	// Then find the selected user and the UserGroups he is assigned to.
+      	// Return all the UserGroups excluding the ones the selected user is already assigned to.
+      	const userId = this.find('.js-select-user').value;      	
+      	if (userId) {
+        	const assignedUserGroups = AssignedUserGroups.find({userId});
+        	if (assignedUserGroups) {
+        		const groupsIds = new Array();
+        		assignedUserGroups.forEach((assignedUserGroup) => {
+        			groupsIds.push(assignedUserGroup.userGroupId);
+        		});
+        		const optionsDocs = UserGroups.find({ _id: { $nin: groupsIds } });
+        		optionsDocs.forEach((optionsDoc) => {
+          		$('.select-user-group').html("<option value='"+ optionsDoc._id +"'>"+ optionsDoc.title +"</option>");
+        		});
+        	} 
+      	}
+      },
+
     	submit(evt) {
         evt.preventDefault();
         const userId = this.find('.js-select-user').value;
