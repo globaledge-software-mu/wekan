@@ -557,6 +557,8 @@
     "email-smtp-test-text": "You have successfully sent an email",
     "error-invitation-code-not-exist": "Invitation code doesn't exist",
     "error-notAuthorized": "You are not authorised to view this page.",
+    "error-exhausted-users-quota": "Cannot create user as you've used all of your 'Users Quota'",
+    "error-exhausted-boards-quota": "Cannot create board as you've used all of your 'Boards Quota'",
     "outgoing-webhooks": "Outgoing Webhooks",
     "outgoingWebhooksPopup-title": "Outgoing Webhooks",
     "boardCardTitlePopup-title": "Card Title Filter",

@@ -1351,7 +1351,10 @@ BlazeComponent.extendComponent({
       						//	sorting by the earliest createdAt, 
       						//	start by setting the first document's field to 1 and 
       						//	then keep icrementing the groupOrder by one in the next loops.
-                	const usersRemainingAssignedUserGroups = AssignedUserGroups.find({userId});
+                	const usersRemainingAssignedUserGroups = AssignedUserGroups.find(
+              			{userId}, 
+              			{sort: {createdAt: 1}}
+            			);
                 	const groupOrder = 0;
                 	usersRemainingAssignedUserGroups.forEach((remainingAssignedUserGroup) => {
                 		groupOrder++;

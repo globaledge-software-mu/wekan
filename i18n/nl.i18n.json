@@ -578,6 +578,8 @@
     "email-smtp-test-text": "U heeft met succes een email verzonden",
     "error-invitation-code-not-exist": "Uitnodigings code bestaat niet",
     "error-notAuthorized": "Je bent niet toegestaan om deze pagina te bekijken.",
+    "error-exhausted-users-quota": "Kan geen gebruiker maken omdat u al uw 'Gebruikersquota' hebt gebruikt",
+    "error-exhausted-boards-quota": "Kan geen bord maken omdat je al je 'Boards Quota' hebt gebruikt",
     "outgoing-webhooks": "Uitgaande Webhooks",
     "outgoingWebhooksPopup-title": "Uitgaande Webhooks",
     "boardCardTitlePopup-title": "Card Title Filter",

@@ -246,6 +246,13 @@ Users.attachSchema(new SimpleSchema({
 	createdBy: {
 	  type: String,
 	  optional: true,
+    autoValue() {
+      if (this.isInsert) {
+        return Meteor.user()._id;
+      } else {
+        this.unset();
+      }
+    },
 	},
 }));
 
@@ -679,14 +686,6 @@ Users.helpers({
 
   remove() {
     User.remove({ _id: this._id});
-  },
-
-  defaultTrialUsersQuota() {
-    return 5;
-  },
-
-  defaultTrialBoardsQuota() {
-    return 10;
   },
 
 });
@@ -1167,6 +1166,44 @@ if (Meteor.isServer) {
   //      }
   //    });
   //});
+
+  Users.before.insert((insertorId) => {
+
+  	function defaultTrialUsersQuota() {
+      return 5;
+    }
+
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	and whether he has exhausted his default trial quota
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
+  	// If user has any AssignedUserGroup
+  	if (userAssignedUserGroups.count() > 0) {
+  		const usersQuotaLeft = 0;
+  		userAssignedUserGroups.forEach((assignedUserGroup) => {
+  			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+  			if (userGroup && userGroup.usersQuota) {
+  				usersQuotaLeft += userGroup.usersQuota - userGroup.usedUsersQuota
+  			}
+  		});
+  		if (usersQuotaLeft > 0) {
+  			return true;
+  		} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+  		}
+  	} 
+  	// Else we check with the Default Trial 'Users Quota'
+  	else {
+    	const usersCreatedByCurrentUserCount = Users.find({createdBy: insertorId}).count();
+			if (usersCreatedByCurrentUserCount < defaultTrialUsersQuota()) {
+				return true;
+			} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+			}
+  	}
+
+  });
 
   Users.before.remove((userId, doc) => {
     // 
