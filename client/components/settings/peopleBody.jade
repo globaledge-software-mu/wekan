@@ -440,12 +440,12 @@ template(name="editAssignedUserGroupPopup")
           if currentUser.isAdmin
             each userGroup in userGroups
               if specificRowUserGroup userGroup._id
-                option(value='{{userGroup._id}}' selected) {{userGroup._id}}
+                option(value='{{userGroup._id}}' selected) {{userGroup.title}}
       label
         | {{_ 'group-order'}}
         span.error.hide.group-order-blank.assigned-user-group-not-edited
           | {{_ 'error-group-order-blank'}}
-        input.js-group-order(type="number" min="1" value=assignedUserGroup.groupOrder onkeydown="return false")
+        input.js-group-order(type="number" value=assignedUserGroup.groupOrder onkeydown="return false" disabled)
       hr
       div.buttonsContainer
         input.primary.wide(type="submit" value="{{_ 'save'}}")
