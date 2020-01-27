@@ -8,7 +8,7 @@ AssignedUserGroups.attachSchema(new SimpleSchema({
     type: String,
   },
   groupOrder: {
-    type: String,
+    type: Number,
   },
   createdAt: {
     type: Date,

@@ -1333,17 +1333,36 @@ BlazeComponent.extendComponent({
         })
         .then((okDelete) => {
           if (okDelete) {
-          	AssignedUserGroups.remove({_id: assignedUserGroupId}, (err, res) => {
-            	if (err) {
-            		swal(err, {
-                  icon: "success",
-                });
-            	} else if (res) {
-            		swal("Assigned-User-Group has been deleted!", {
-                  icon: "success",
-                });
-            	}
-            });
+          	const assignedUserGroup = AssignedUserGroups.findOne({_id: assignedUserGroupId});
+          	if (assignedUserGroup && assignedUserGroup.userId) {
+            	const userId = assignedUserGroup.userId;
+            	AssignedUserGroups.remove({_id: assignedUserGroupId}, (err, res) => {
+              	if (err) {
+              		swal(err, {
+                    icon: "success",
+                  });
+              	} else if (res) {
+              		swal("Assigned-User-Group has been deleted!", {
+                    icon: "success",
+                  });
+
+      						//	Find the remaining UserGroups assigned to this user and 
+      						//	update his rest of the AssignedUserGroups records' field 'groupOrder' 
+      						//	sorting by the earliest createdAt, 
+      						//	start by setting the first document's field to 1 and 
+      						//	then keep icrementing the groupOrder by one in the next loops.
+                	const usersRemainingAssignedUserGroups = AssignedUserGroups.find({userId});
+                	const groupOrder = 0;
+                	usersRemainingAssignedUserGroups.forEach((remainingAssignedUserGroup) => {
+                		groupOrder++;
+                		AssignedUserGroups.update(
+              				{ _id: remainingAssignedUserGroup._id },
+              				{ $set: { groupOrder } }
+            				);
+                	});
+              	}
+              });
+          	}
           } else {
             return false;
           }
