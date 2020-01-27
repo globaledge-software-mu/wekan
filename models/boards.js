@@ -953,17 +953,22 @@ if (Meteor.isServer) {
 
 
     // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
-  	AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).forEach((assignedUserGroup) => {
-  		if (assignedUserGroup.boardsQuota - assignedUserGroup.usedBoardsQuota > 0) {
-  			var usedQuota = assignedUserGroup.usedBoardsQuota  + 1;
-  			// Increment usedBoardsQuota
-  			AssignedUserGroups.update(
-					{ _id: assignedUserGroup._id }, 
-					{ $set: { usedBoardsQuota: usedQuota } }
-				);
-  			break;
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).fetch();
+  	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+  		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+  		if (userGroup && userGroup._id) {
+    		var quotaDifference = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+    		if (quotaDifference > 0) {
+    			var usedQuota = userGroup.usedBoardsQuota  + 1;
+    			// Increment usedBoardsQuota
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedBoardsQuota: usedQuota } }
+  				);
+    			break;
+    		}
   		}
-  	});
+  	};
   	//_______________________//
 
   });
@@ -1016,7 +1021,7 @@ if (Meteor.isServer) {
   	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
   	// If user has any AssignedUserGroup
   	if (userAssignedUserGroups.count() > 0) {
-  		const boardsQuotaLeft = 0;
+  		var boardsQuotaLeft = 0;
   		userAssignedUserGroups.forEach((assignedUserGroup) => {
   			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
   			if (userGroup && userGroup.boardsQuota) {

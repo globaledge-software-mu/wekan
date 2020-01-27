@@ -1180,7 +1180,7 @@ if (Meteor.isServer) {
   	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
   	// If user has any AssignedUserGroup
   	if (userAssignedUserGroups.count() > 0) {
-  		const usersQuotaLeft = 0;
+  		var usersQuotaLeft = 0;
   		userAssignedUserGroups.forEach((assignedUserGroup) => {
   			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
   			if (userGroup && userGroup.usersQuota) {
@@ -1369,17 +1369,22 @@ if (Meteor.isServer) {
   Users.after.insert((userId, doc) => {
 
   	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
-  	AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).forEach((assignedUserGroup) => {
-  		if (assignedUserGroup.usersQuota - assignedUserGroup.usedUsersQuota > 0) {
-  			var usedQuota = assignedUserGroup.usedUsersQuota  + 1;
-  			// Increment usedUsersQuota
-  			AssignedUserGroups.update(
-					{ _id: assignedUserGroup._id }, 
-					{ $set: { usedUsersQuota: usedQuota } }
-				);
-  			break;
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).fetch();
+  	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+  		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+  		if (userGroup && userGroup._id) {
+    		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+    		if (quotaDifference > 0) {
+    			var usedQuota = userGroup.usedUsersQuota  + 1;
+    			// Increment usedUsersQuota
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedUsersQuota: usedQuota } }
+  				);
+    			break;
+    		}
   		}
-  	});
+  	};
   	//_______________________//
 
 
