@@ -1367,7 +1367,22 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
-  	
+
+  	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
+  	AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).forEach((assignedUserGroup) => {
+  		if (assignedUserGroup.usersQuota - assignedUserGroup.usedUsersQuota > 0) {
+  			var usedQuota = assignedUserGroup.usedUsersQuota  + 1;
+  			// Increment usedUsersQuota
+  			AssignedUserGroups.update(
+					{ _id: assignedUserGroup._id }, 
+					{ $set: { usedUsersQuota: usedQuota } }
+				);
+  			break;
+  		}
+  	});
+  	//_______________________//
+
+
   	// When a new user is created, if his role is Admin or manager, 
   	// make him a member of all the template boards of which he was not a member before
   	const templateBoards = Boards.find({

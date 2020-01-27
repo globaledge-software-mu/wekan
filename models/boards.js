@@ -939,8 +939,9 @@ if (Meteor.isServer) {
     Boards._collection._ensureIndex({ 'members.userId': 1 });
   });
 
-  // Genesis: the first activity of the newly created board
   Boards.after.insert((userId, doc) => {
+
+    // Genesis: the first activity of the newly created board
     Activities.insert({
       userId,
       type: 'board',
@@ -948,6 +949,23 @@ if (Meteor.isServer) {
       activityType: 'createBoard',
       boardId: doc._id,
     });
+  	//_______________________//
+
+
+    // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
+  	AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).forEach((assignedUserGroup) => {
+  		if (assignedUserGroup.boardsQuota - assignedUserGroup.usedBoardsQuota > 0) {
+  			var usedQuota = assignedUserGroup.usedBoardsQuota  + 1;
+  			// Increment usedBoardsQuota
+  			AssignedUserGroups.update(
+					{ _id: assignedUserGroup._id }, 
+					{ $set: { usedBoardsQuota: usedQuota } }
+				);
+  			break;
+  		}
+  	});
+  	//_______________________//
+
   });
 
   // If the user remove one label from a board, we cant to remove reference of
