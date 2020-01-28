@@ -87,18 +87,21 @@ template(name="peopleGeneral")
         th {{_ 'active'}}
         th {{_ 'authentication-method'}}
         th
-      // if isAdmin, user gets to see all the users
+      // If isAdmin
       if currentUser.isAdmin
+        // List all the users
         each user in peopleList
           +peopleRow(userId=user._id)
-      // if isManagerAndNotAdmin, user gets to see 'coaches', 'coachees' and other users that are neither admin nor manager
+      // If isManagerAndNotAdmin
       if currentUser.isManagerAndNotAdmin
-        each user in managerUsersList
+        // List users from his own groups which have either the role 'Coach' or 'Coachee'
+        each user in managerUserGroupsUsersList
           +peopleRow(userId=user._id)
 
-      // if isCoachAndNotAdmin, user gets to see 'coachees' and other users that are neither admin nor manager and not even coach
+      // If isCoachAndNotAdmin
       if currentUser.isCoachAndNotAdmin
-        each user in coachUsersList
+        // List users from his own groups which have the role 'Coachee'
+        each user in coachUserGroupsUsersList
           +peopleRow(userId=user._id)
         
 

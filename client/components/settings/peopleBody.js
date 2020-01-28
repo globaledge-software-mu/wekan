@@ -93,22 +93,59 @@ BlazeComponent.extendComponent({
     this.number.set(users.count());
     return users;
   },
-  managerUsersList() {
+  managerUserGroupsUsersList() {
     const role = Roles.findOne({name: 'Manager'});
-    const users = Users.find({
-      $nor: [
-        { isAdmin: true },
-        { roleId: role._id }
-      ]
-    });
-    this.number.set(users.count());
-    return users;
+    if (role && role._id) {
+    	const userId = Meteor.user()._id;
+    	const userUserGroupsIds = new Array();
+  		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+  			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+    			userUserGroupsIds.push(assignedUserGroup.userGroupId);
+  			}
+    	});
+    	const sameUserGroupsUserIds = new Array();
+    	AssignedUserGroups.find({
+    		userGroupId: { $in: userUserGroupsIds }
+    	}).forEach((assignedUserGroup) => {
+  			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+      		sameUserGroupsUserIds.push(assignedUserGroup.userId);
+  			}
+    	});
+      const users = Users.find({
+      	_id: { $in: sameUserGroupsUserIds },
+        $nor: [
+          { isAdmin: true },
+          { roleId: role._id }
+        ]
+      });
+    	this.number.set(users.count());
+      return users;
+    } else {
+      this.number.set(0);
+      return null;
+    }
   },
-  coachUsersList() {
+  coachUserGroupsUsersList() {
     const managerRole = Roles.findOne({name: 'Manager'});
     const coachRole = Roles.findOne({name: 'Coach'});
     if (managerRole && managerRole._id && coachRole && coachRole._id) {
+    	const userId = Meteor.user()._id;
+    	const userUserGroupsIds = new Array();
+  		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+  			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+    			userUserGroupsIds.push(assignedUserGroup.userGroupId);
+  			}
+    	});
+    	const sameUserGroupsUserIds = new Array();
+    	AssignedUserGroups.find({
+    		userGroupId: { $in: userUserGroupsIds }
+    	}).forEach((assignedUserGroup) => {
+  			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+      		sameUserGroupsUserIds.push(assignedUserGroup.userId);
+  			}
+    	});
       const users = Users.find({
+      	_id: { $in: sameUserGroupsUserIds },
         $nor: [
           { isAdmin: true },
           { roleId: managerRole._id },
@@ -1053,7 +1090,7 @@ Template.editUserGroupPopup.helpers({
 
 BlazeComponent.extendComponent({
 	assignedUserGroupsList() {
-  	return AssignedUserGroups.find();
+  	return AssignedUserGroups.find({}, {sort: {userGroupId: 1}});
   },
   events() {
 	  return [{
