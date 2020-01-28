@@ -20,6 +20,11 @@ UserGroups.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: 0,
   },
+  groupAdmin: {
+    type: String,
+    optional: true,
+    defaultValue: 'No',
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return

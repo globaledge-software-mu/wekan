@@ -239,10 +239,6 @@ Users.attachSchema(new SimpleSchema({
     optional: false,
     defaultValue: 'password',
   },
-	userGroupId: {
-	  type: String,
-	  optional: true,
-	},
 	createdBy: {
 	  type: String,
 	  optional: true,
