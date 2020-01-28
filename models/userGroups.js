@@ -23,7 +23,6 @@ UserGroups.attachSchema(new SimpleSchema({
   groupAdmin: {
     type: String,
     optional: true,
-    defaultValue: 'No',
   },
   createdAt: {
     type: Date,
