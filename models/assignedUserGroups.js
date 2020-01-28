@@ -10,6 +10,11 @@ AssignedUserGroups.attachSchema(new SimpleSchema({
   groupOrder: {
     type: Number,
   },
+  groupAdmin: {
+    type: String,
+    optional: true,
+    defaultValue: 'No',
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return
