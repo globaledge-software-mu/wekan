@@ -1179,6 +1179,20 @@ BlazeComponent.extendComponent({
           		$('.select-user-group').append("<option value='"+ userGroup._id +"'>"+ userGroup.title +"</option>");
         		});
         	}
+
+        	// check that the selected user is not a Coachee
+      		var coacheeRole = Roles.findOne({name: 'Coachee'});
+          if (coacheeRole && coacheeRole._id) {
+            var notCoachee = Users.find({
+            	_id: userId, 
+            	roleId: { $ne: coacheeRole._id }
+          	});
+            if (notCoachee.count() == 1) {
+            	$('.group-admin-label').show();
+            } else {
+            	$('.group-admin-label').hide();
+            }
+          }
       	}
       },
 
@@ -1251,6 +1265,22 @@ BlazeComponent.extendComponent({
   
   onRendered() {
     this.setLoading(false);
+
+    const userId = this.find('.js-select-user option:selected').value;
+  	// check that the selected user is not a Coachee
+		var coacheeRole = Roles.findOne({name: 'Coachee'});
+    if (coacheeRole && coacheeRole._id) {
+      var notCoachee = Users.find({
+      	_id: userId, 
+      	roleId: { $ne: coacheeRole._id }
+    	});
+      if (notCoachee.count() == 1) {
+      	$('.group-admin-label').show();
+      } else {
+      	$('.group-admin-label').hide();
+      }
+    }
+    
   },
   
 	setLoading(w) {
@@ -1300,6 +1330,20 @@ BlazeComponent.extendComponent({
           		$('.select-user-group').append("<option value='"+ userGroup._id +"'>"+ userGroup.title +"</option>");
         		});
         	}
+
+        	// check that the selected user is not a Coachee
+      		var coacheeRole = Roles.findOne({name: 'Coachee'});
+          if (coacheeRole && coacheeRole._id) {
+            var notCoachee = Users.find({
+            	_id: userId, 
+            	roleId: { $ne: coacheeRole._id }
+          	});
+            if (notCoachee.count() == 1) {
+            	$('.group-admin-label').show();
+            } else {
+            	$('.group-admin-label').hide();
+            }
+          }
       	}
       },
 

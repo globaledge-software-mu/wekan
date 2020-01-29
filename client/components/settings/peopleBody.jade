@@ -410,11 +410,12 @@ template(name="assignUserToUserGroupPopup")
         span.error.hide.group-order-blank.assigned-user-group-not-created
           | {{_ 'error-group-order-blank'}}
         input.js-group-order(type="number" value="" onkeydown="return false" disabled)
-      label
-        | {{_ 'group-admin'}}
-        select.js-set-group-admin
-          option(value='No', selected='selected') No
-          option(value='Yes') Yes
+      unless currentUser.isCoachee
+        label.group-admin-label
+          | {{_ 'group-admin'}}
+          select.js-set-group-admin
+            option(value='No', selected='selected') No
+            option(value='Yes') Yes
       hr
       div.buttonsContainer
         input.primary.wide(type="submit" value="{{_ 'save'}}")
@@ -454,15 +455,16 @@ template(name="editAssignedUserGroupPopup")
         span.error.hide.group-order-blank.assigned-user-group-not-edited
           | {{_ 'error-group-order-blank'}}
         input.js-group-order(type="number" value=assignedUserGroup.groupOrder onkeydown="return false" disabled)
-      label
-        | {{_ 'group-admin'}}
-        select.js-set-group-admin
-          if $eq assignedUserGroup.groupAdmin 'Yes'
-            option(value='No') No
-            option(value='Yes', selected='selected') Yes
-          else
-            option(value='No', selected='selected') No
-            option(value='Yes') Yes
+      unless currentUser.isCoachee
+        label.group-admin-label
+          | {{_ 'group-admin'}}
+          select.js-set-group-admin
+            if $eq assignedUserGroup.groupAdmin 'Yes'
+              option(value='No') No
+              option(value='Yes', selected='selected') Yes
+            else
+              option(value='No', selected='selected') No
+              option(value='Yes') Yes
       hr
       div.buttonsContainer
         input.primary.wide(type="submit" value="{{_ 'save'}}")
