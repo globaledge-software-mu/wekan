@@ -1187,6 +1187,7 @@ BlazeComponent.extendComponent({
         const userId = this.find('.js-select-user').value;
         const userGroupId = this.find('.js-select-user-group').value;
         const groupOrder = this.find('.js-group-order').value.trim();
+        const groupAdmin = this.find('.js-set-group-admin').value;
 
         var leftBlank = ['undefined', null, ''];
         var userNotSelected = leftBlank.indexOf(userId) > -1;
@@ -1208,7 +1209,7 @@ BlazeComponent.extendComponent({
         this.setLoading(true);
 
         AssignedUserGroups.insert({ 
-        	userId, userGroupId, groupOrder
+        	userId, userGroupId, groupOrder, groupAdmin
       	}, (err, res) => {
 	        	this.setLoading(false);
 	          if (err) {
@@ -1308,6 +1309,7 @@ BlazeComponent.extendComponent({
         const userId = this.find('.js-select-user').value;
         const userGroupId = this.find('.js-select-user-group').value;
         const groupOrder = this.find('.js-group-order').value.trim();
+        const groupAdmin = this.find('.js-set-group-admin').value;
 
         var leftBlank = ['undefined', null, ''];
         var userNotSelected = leftBlank.indexOf(userId) > -1;
@@ -1330,7 +1332,7 @@ BlazeComponent.extendComponent({
 
         AssignedUserGroups.update(
       		{ _id: assignedUserGroupId }, 
-      		{ $set: { userId, userGroupId, groupOrder } }, 
+      		{ $set: { userId, userGroupId, groupOrder, groupAdmin } }, 
       		(err, res) => {
 	        	this.setLoading(false);
 	          if (err) {
