@@ -404,6 +404,7 @@ template(name="assignedUserGroupsGeneral")
         th {{_ 'username'}}
         th {{_ 'email-address'}}    
         th {{_ 'user-group-title'}}
+        th {{_ 'group-admins'}}
         th {{_ 'group-order'}}
         th {{_ 'action'}}
       // if isAdmin
@@ -416,6 +417,7 @@ template(name="assignedUserGroupRow")
     td {{ assignedUserGroupData.username }}
     td {{ assignedUserGroupData.email }}
     td {{ assignedUserGroupData.userGroupTitle }}
+    td {{ assignedUserGroupData.groupAdmin }}
     td {{ assignedUserGroupData.groupOrder }}
     td
       a.edit-assigned-user-group

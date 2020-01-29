@@ -1132,6 +1132,10 @@ Template.assignedUserGroupRow.helpers({
         if (user.emails && user.emails[0] && user.emails[0].address) {
           data.email = user.emails[0].address;
         }
+        var acceptedValues = ['Yes', 'yes', 'No', 'no'];
+        if (!acceptedValues.includes(data.groupAdmin)) {
+          data.groupAdmin = 'No';
+        }
     	}
     	const userGroup = UserGroups.findOne({_id: data.userGroupId});
     	if (userGroup && userGroup._id) {
