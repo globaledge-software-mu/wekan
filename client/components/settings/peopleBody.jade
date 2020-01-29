@@ -279,33 +279,64 @@ template(name="userGroupsGeneral")
   table
     tbody
       tr
-        th {{_ 'title'}}
-        th {{_ 'users-quota'}}   
-        th {{_ 'used-users-quota'}}   
-        th {{_ 'boards-quota'}}
-        th {{_ 'used-boards-quota'}}    
-        th {{_ 'group-admin'}} 
-        th {{_ 'createdAt'}} 
-        th {{_ 'action'}}
-      // if isAdmin
+        th 
+          ul
+            li {{_ 'title'}}
+        th 
+          ul
+            li {{_ 'users-quota'}}   
+        th 
+          ul
+            li {{_ 'used-users-quota'}}   
+        th 
+          ul
+            li {{_ 'boards-quota'}}
+        th 
+          ul
+            li {{_ 'used-boards-quota'}}    
+        th 
+          ul
+            li {{_ 'group-admins'}} 
+        th 
+          ul
+            li {{_ 'createdAt'}} 
+        th 
+          ul
+            li {{_ 'action'}}
+          // if isAdmin
       if currentUser.isAdmin
         each userGroup in userGroupsList
           +userGroupRow(userGroupId=userGroup._id)
 
 template(name="userGroupRow")
   tr
-    td {{ userGroupData.title }}
-    td {{ userGroupData.usersQuota }}
-    td {{ userGroupData.usedUsersQuota }}
-    td {{ userGroupData.boardsQuota }}
-    td {{ userGroupData.usedBoardsQuota }}
     td 
-      each groupAdmin in userGroupData.groupAdmins
-        {{ groupAdmin . "<br>" }}
-    td {{ moment userGroupData.createdAt 'LLL' }}
+      ul
+        li {{ userGroupData.title }}
+    td 
+      ul
+        li {{ userGroupData.usersQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedUsersQuota }}
+    td 
+      ul
+        li {{ userGroupData.boardsQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedBoardsQuota }}
     td
-      a.edit-user-group
-        | {{_ 'edit'}}
+      ul
+        each groupAdmin in userGroupData.groupAdmins 
+          li {{ groupAdmin }} <br />
+    td 
+      ul
+        li {{ moment userGroupData.createdAt 'LLL' }}
+    td
+      ul
+        li
+          a.edit-user-group
+            | {{_ 'edit'}}
 
 template(name="createUserGroupPopup")
   if loading.get
