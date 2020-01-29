@@ -871,7 +871,22 @@ BlazeComponent.extendComponent({
 
 Template.userGroupRow.helpers({
 	userGroupData() {
-    return UserGroups.findOne(this.userGroupId);
+		var data = UserGroups.findOne(this.userGroupId);
+		if (data && data._id) {
+			var groupAdminsIds = new Array();
+			AssignedUserGroups.find({userGroupId: data._id}).forEach((assignedUserGroup) => {
+				if (assignedUserGroup.groupAdmin === 'Yes') {
+					groupAdminsIds.push(assignedUserGroup.userId);
+				}
+			});
+			var usernames = new Array();
+			Users.find({_id: {$in: groupAdminsIds}}).forEach((user) => {
+				usernames.push(user.username);
+			});
+			data.groupAdmins = usernames;
+	    return data;
+		}
+    return null;
   },
 });
 

@@ -284,6 +284,7 @@ template(name="userGroupsGeneral")
         th {{_ 'used-users-quota'}}   
         th {{_ 'boards-quota'}}
         th {{_ 'used-boards-quota'}}    
+        th {{_ 'group-admin'}} 
         th {{_ 'createdAt'}} 
         th {{_ 'action'}}
       // if isAdmin
@@ -298,6 +299,9 @@ template(name="userGroupRow")
     td {{ userGroupData.usedUsersQuota }}
     td {{ userGroupData.boardsQuota }}
     td {{ userGroupData.usedBoardsQuota }}
+    td 
+      each groupAdmin in userGroupData.groupAdmins
+        {{ groupAdmin . "<br>" }}
     td {{ moment userGroupData.createdAt 'LLL' }}
     td
       a.edit-user-group
