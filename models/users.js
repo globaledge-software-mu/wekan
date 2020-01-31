@@ -239,6 +239,10 @@ Users.attachSchema(new SimpleSchema({
     optional: false,
     defaultValue: 'password',
   },
+  quotaGroupId: {
+	  type: String,
+	  optional: true,
+  },
 	createdBy: {
 	  type: String,
 	  optional: true,

@@ -312,6 +312,10 @@ Boards.attachSchema(new SimpleSchema({
     type: String,
     defaultValue: 'board',
   },
+  quotaGroupId: {
+	  type: String,
+	  optional: true,
+  },
 	createdBy: {
 	  type: String,
 	  optional: true,
