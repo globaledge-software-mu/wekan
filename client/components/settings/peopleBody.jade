@@ -15,6 +15,10 @@ template(name="people")
             if currentUser.isAdmin
               li.active.hide
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+              li.active
+                a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+              li.active
+                a.js-setting-menu(data-id="assigned-user-groups-setting") {{_ 'assigned-user-groups'}}
         .main-body
           if loading.get
             +spinner
@@ -22,6 +26,10 @@ template(name="people")
             +peopleGeneral
           else if roles.get
             +rolesGeneral
+          else if userGroups.get
+            +userGroupsGeneral
+          else if assignedUserGroups.get
+            +assignedUserGroupsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -79,18 +87,21 @@ template(name="peopleGeneral")
         th {{_ 'active'}}
         th {{_ 'authentication-method'}}
         th
-      // if isAdmin, user gets to see all the users
+      // If isAdmin
       if currentUser.isAdmin
+        // List all the users
         each user in peopleList
           +peopleRow(userId=user._id)
-      // if isManagerAndNotAdmin, user gets to see 'coaches', 'coachees' and other users that are neither admin nor manager
+      // If isManagerAndNotAdmin
       if currentUser.isManagerAndNotAdmin
-        each user in managerUsersList
+        // List users from his own groups which have either the role 'Coach' or 'Coachee'
+        each user in managerUserGroupsUsersList
           +peopleRow(userId=user._id)
 
-      // if isCoachAndNotAdmin, user gets to see 'coachees' and other users that are neither admin nor manager and not even coach
+      // If isCoachAndNotAdmin
       if currentUser.isCoachAndNotAdmin
-        each user in coachUsersList
+        // List users from his own groups which have the role 'Coachee'
+        each user in coachUserGroupsUsersList
           +peopleRow(userId=user._id)
         
 
@@ -262,5 +273,237 @@ template(name="createRolePopup")
       div
       unless managerCoachOrCoacheeDoc role._id
         input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
-        
-        
+
+template(name="userGroupsGeneral")
+  button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
+  table
+    tbody
+      tr
+        th 
+          ul
+            li {{_ 'title'}}
+        th 
+          ul
+            li {{_ 'users-quota'}}   
+        th 
+          ul
+            li {{_ 'used-users-quota'}}   
+        th 
+          ul
+            li {{_ 'boards-quota'}}
+        th 
+          ul
+            li {{_ 'used-boards-quota'}}    
+        th 
+          ul
+            li {{_ 'group-admins'}} 
+        th 
+          ul
+            li {{_ 'createdAt'}} 
+        th 
+          ul
+            li {{_ 'action'}}
+          // if isAdmin
+      if currentUser.isAdmin
+        each userGroup in userGroupsList
+          +userGroupRow(userGroupId=userGroup._id)
+
+template(name="userGroupRow")
+  tr
+    td 
+      ul
+        li {{ userGroupData.title }}
+    td 
+      ul
+        li {{ userGroupData.usersQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedUsersQuota }}
+    td 
+      ul
+        li {{ userGroupData.boardsQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedBoardsQuota }}
+    td
+      ul
+        each groupAdmin in userGroupData.groupAdmins 
+          li {{ groupAdmin }} <br />
+    td 
+      ul
+        li {{ moment userGroupData.createdAt 'LLL' }}
+    td
+      ul
+        li
+          a.edit-user-group
+            | {{_ 'edit'}}
+
+template(name="createUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-created
+          | {{_ 'error-title-blank'}}
+        span.error.hide.title-duplicate.user-group-not-created
+          | {{_ 'error-title-duplicate'}}
+        input.js-user-group-title(type="text" value="" autofocus)
+      label
+        | {{_ 'boards-quota'}}
+        span.error.hide.boards-quota-blank.user-group-not-created
+          | {{_ 'error-boards-quota-blank'}}
+        input.js-user-group-boards-quota(type="text" value="")
+      label
+        | {{_ 'users-quota'}}
+        span.error.hide.users-quota-blank.user-group-not-created
+          | {{_ 'error-users-quota-blank'}}
+        input.js-user-group-users-quota(type="text" value="")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form#editUserGroupPopup
+      label.hide.userGroupId(type="text" value=userGroup._id)
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-edited
+          | {{_ 'error-title-blank'}}
+        span.error.hide.title-duplicate.user-group-not-edited
+          | {{_ 'error-title-duplicate'}}
+        input.js-user-group-title(type="text" value=userGroup.title autofocus)
+      label
+        | {{_ 'boards-quota'}}
+        span.error.hide.boards-quota-blank.user-group-not-edited
+          | {{_ 'error-boards-quota-blank'}}
+        input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+      label
+        | {{_ 'users-quota'}}
+        span.error.hide.users-quota-blank.user-group-not-edited
+          | {{_ 'error-users-quota-blank'}}
+        input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        if notAsssignedToAnyUser
+          input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="assignedUserGroupsGeneral")
+  button#assign-user-to-user-group.btn.btn-primary {{_ 'add'}}
+  table
+    tbody
+      tr
+        th {{_ 'username'}}
+        th {{_ 'email-address'}}    
+        th {{_ 'user-group'}}
+        th {{_ 'group-admins'}}
+        th {{_ 'group-order'}}
+        th {{_ 'action'}}
+      // if isAdmin
+      if currentUser.isAdmin
+        each assignedUserGroup in assignedUserGroupsList
+          +assignedUserGroupRow(assignedUserGroupId=assignedUserGroup._id)
+
+template(name="assignedUserGroupRow")
+  tr
+    td {{ assignedUserGroupData.username }}
+    td {{ assignedUserGroupData.email }}
+    td {{ assignedUserGroupData.userGroupTitle }}
+    td {{ assignedUserGroupData.groupAdmin }}
+    td {{ assignedUserGroupData.groupOrder }}
+    td
+      a.edit-assigned-user-group
+        | {{_ 'edit'}}
+
+template(name="assignUserToUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'username'}}
+        .select-user-msg.error.hide.assigned-user-group-not-created {{_ 'error-userNotSelected'}}
+        select.select-user.js-select-user
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each user in users
+              option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        .select-user-group-msg.error.hide.assigned-user-group-not-created {{_ 'error-userGroupNotSelected'}}
+        select.select-user-group.js-select-user-group
+          option(value='', selected='selected') Select One
+      label
+        | {{_ 'group-order'}}
+        span.error.hide.group-order-blank.assigned-user-group-not-created
+          | {{_ 'error-group-order-blank'}}
+        input.js-group-order(type="number" value="" onkeydown="return false" disabled)
+      unless currentUser.isCoachee
+        label.group-admin-label
+          | {{_ 'group-admin'}}
+          select.js-set-group-admin
+            option(value='No', selected='selected') No
+            option(value='Yes') Yes
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelAssignedUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editAssignedUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form#editAssignedUserGroupPopup
+      label.hide.assignedUserGroupId(type="text" value=assignedUserGroup._id)
+      label
+        | {{_ 'username'}}
+        .select-user-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userNotSelected'}}
+        select.select-user.js-select-user
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each user in users
+              if specificRowUser user._id
+                option(value='{{user._id}}' selected) {{user.username}}
+              else
+                option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        .select-user-group-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userGroupNotSelected'}}
+        select.select-user-group.js-select-user-group
+          option(value='', selected='selected') Select One
+          // if isAdmin
+          if currentUser.isAdmin
+            each userGroup in userGroups
+              if specificRowUserGroup userGroup._id
+                option(value='{{userGroup._id}}' selected) {{userGroup.title}}
+      label
+        | {{_ 'group-order'}}
+        span.error.hide.group-order-blank.assigned-user-group-not-edited
+          | {{_ 'error-group-order-blank'}}
+        input.js-group-order(type="number" value=assignedUserGroup.groupOrder onkeydown="return false" disabled)
+      unless currentUser.isCoachee
+        label.group-admin-label
+          | {{_ 'group-admin'}}
+          select.js-set-group-admin
+            if $eq assignedUserGroup.groupAdmin 'Yes'
+              option(value='No') No
+              option(value='Yes', selected='selected') Yes
+            else
+              option(value='No', selected='selected') No
+              option(value='Yes') Yes
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")

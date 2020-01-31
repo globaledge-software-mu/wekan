@@ -239,6 +239,17 @@ Users.attachSchema(new SimpleSchema({
     optional: false,
     defaultValue: 'password',
   },
+	createdBy: {
+	  type: String,
+	  optional: true,
+    autoValue() {
+      if (this.isInsert) {
+        return Meteor.user()._id;
+      } else {
+        this.unset();
+      }
+    },
+	},
 }));
 
 Users.allow({
@@ -672,6 +683,7 @@ Users.helpers({
   remove() {
     User.remove({ _id: this._id});
   },
+
 });
 
 Users.mutations({
@@ -1102,6 +1114,13 @@ if (Meteor.isServer) {
       username: 1,
     }, {unique: true});
     //____________________________________
+  	
+  	
+    // Let mongoDB ensure username unicity
+    UserGroups._collection._ensureIndex({
+      title: 1,
+    }, {unique: true});
+    //____________________________________
 
 
     // Cleanup old boards of all the non-existing users as members
@@ -1143,6 +1162,44 @@ if (Meteor.isServer) {
   //      }
   //    });
   //});
+
+  Users.before.insert((insertorId) => {
+
+  	function defaultTrialUsersQuota() {
+      return 5;
+    }
+
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	and whether he has exhausted his default trial quota
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
+  	// If user has any AssignedUserGroup
+  	if (userAssignedUserGroups.count() > 0) {
+  		var usersQuotaLeft = 0;
+  		userAssignedUserGroups.forEach((assignedUserGroup) => {
+  			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+  			if (userGroup && userGroup.usersQuota) {
+  				usersQuotaLeft += userGroup.usersQuota - userGroup.usedUsersQuota
+  			}
+  		});
+  		if (usersQuotaLeft > 0) {
+  			return true;
+  		} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+  		}
+  	} 
+  	// Else we check with the Default Trial 'Users Quota'
+  	else {
+    	const usersCreatedByCurrentUserCount = Users.find({createdBy: insertorId}).count();
+			if (usersCreatedByCurrentUserCount < defaultTrialUsersQuota()) {
+				return true;
+			} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+			}
+  	}
+
+  });
 
   Users.before.remove((userId, doc) => {
     // 
@@ -1306,7 +1363,27 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
-  	
+
+  	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).fetch();
+  	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+  		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+  		if (userGroup && userGroup._id) {
+    		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+    		if (quotaDifference > 0) {
+    			var usedQuota = userGroup.usedUsersQuota  + 1;
+    			// Increment usedUsersQuota
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedUsersQuota: usedQuota } }
+  				);
+    			break;
+    		}
+  		}
+  	};
+  	//_______________________//
+
+
   	// When a new user is created, if his role is Admin or manager, 
   	// make him a member of all the template boards of which he was not a member before
   	const templateBoards = Boards.find({

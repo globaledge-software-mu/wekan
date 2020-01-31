@@ -312,6 +312,17 @@ Boards.attachSchema(new SimpleSchema({
     type: String,
     defaultValue: 'board',
   },
+	createdBy: {
+	  type: String,
+	  optional: true,
+    autoValue() {
+      if (this.isInsert) {
+        return Meteor.user()._id;
+      } else {
+        this.unset();
+      }
+    },
+	},
 }));
 
 
@@ -924,8 +935,9 @@ if (Meteor.isServer) {
     Boards._collection._ensureIndex({ 'members.userId': 1 });
   });
 
-  // Genesis: the first activity of the newly created board
   Boards.after.insert((userId, doc) => {
+
+    // Genesis: the first activity of the newly created board
     Activities.insert({
       userId,
       type: 'board',
@@ -933,6 +945,28 @@ if (Meteor.isServer) {
       activityType: 'createBoard',
       boardId: doc._id,
     });
+  	//_______________________//
+
+
+    // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).fetch();
+  	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+  		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+  		if (userGroup && userGroup._id) {
+    		var quotaDifference = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+    		if (quotaDifference > 0) {
+    			var usedQuota = userGroup.usedBoardsQuota  + 1;
+    			// Increment usedBoardsQuota
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedBoardsQuota: usedQuota } }
+  				);
+    			break;
+    		}
+  		}
+  	};
+  	//_______________________//
+
   });
 
   // If the user remove one label from a board, we cant to remove reference of
@@ -969,6 +1003,44 @@ if (Meteor.isServer) {
       }
     });
   };
+
+  Boards.before.insert((insertorId) => {
+
+  	function defaultTrialBoardsQuota() {
+      return 10;
+    }
+
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	and whether he has exhausted his default trial quota
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
+  	// If user has any AssignedUserGroup
+  	if (userAssignedUserGroups.count() > 0) {
+  		var boardsQuotaLeft = 0;
+  		userAssignedUserGroups.forEach((assignedUserGroup) => {
+  			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+  			if (userGroup && userGroup.boardsQuota) {
+  				boardsQuotaLeft += userGroup.boardsQuota - userGroup.usedBoardsQuota
+  			}
+  		});
+  		if (boardsQuotaLeft > 0) {
+  			return true;
+  		} else {
+	      throw new Meteor.Error('error-exhausted-boards-quota');
+  		}
+  	} 
+  	// Else we check with the Default Trial 'Boards Quota'
+  	else {
+    	const boardsCreatedByCurrentUserCount = Boards.find({createdBy: insertorId}).count();
+			if (boardsCreatedByCurrentUserCount < defaultTrialBoardsQuota()) {
+				return true;
+			} else {
+	      throw new Meteor.Error('error-exhausted-boards-quota');
+			}
+  	}
+
+  });
 
   // Remove a member from all objects of the board before leaving the board
   Boards.before.update((userId, doc, fieldNames, modifier) => {
