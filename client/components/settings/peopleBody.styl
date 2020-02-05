@@ -25,6 +25,39 @@ table
   tr:nth-child(even)
     background-color: #dddddd;
 
+    td.aUGCell
+      padding: 10 0 10 0;
+      width: auto;
+      height: auto;
+      .aUGIndividualCell:nth-child(odd)
+        color: black;
+        background-color: white;
+        border: 5px solid white;
+        width: auto;
+
+      .aUGIndividualCell:nth-child(even)
+        color: white;
+        background-color: #796e6e;
+        border: 5px solid #796e6e;
+        width: auto;
+
+  tr:nth-child(odd)
+    td.aUGCell
+      padding: 10 0 10 0;
+      width: auto;
+      height: auto;
+      .aUGIndividualCell:nth-child(odd)
+        color: black;
+        background-color: #dddddd;
+        border: 5px solid #dddddd;
+        width: auto;
+
+      .aUGIndividualCell:nth-child(even)
+        color: white;
+        background-color: #796e6e;
+        border: 5px solid #796e6e;
+        width: auto;
+
 .js-set-group-admin
   width: auto !important;
 

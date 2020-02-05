@@ -1104,8 +1104,13 @@ Template.editUserGroupPopup.helpers({
 });
 
 BlazeComponent.extendComponent({
-	assignedUserGroupsList() {
-  	return AssignedUserGroups.find({}, {sort: {userGroupId: 1}});
+	users() {
+		// return only the users who have at least one Usergroup assigned to him/her
+		const userIds = new Array();
+		AssignedUserGroups.find().forEach((assignedUG) => {
+			userIds.push(assignedUG.userId);
+		});
+		return Users.find({_id: {$in: userIds}});
   },
   events() {
 	  return [{
@@ -1123,27 +1128,36 @@ BlazeComponent.extendComponent({
 }).register('assignedUserGroupRow');
 
 Template.assignedUserGroupRow.helpers({
-	assignedUserGroupData() {
-    const data = AssignedUserGroups.findOne(this.assignedUserGroupId);
-    if (data && data._id) {
-    	const user = Users.findOne({_id: data.userId});
-    	if (user && user._id) {
-        data.username = user.username;
-        if (user.emails && user.emails[0] && user.emails[0].address) {
-          data.email = user.emails[0].address;
-        }
-        var acceptedValues = ['Yes', 'yes', 'No', 'no'];
-        if (!acceptedValues.includes(data.groupAdmin)) {
-          data.groupAdmin = 'No';
-        }
-    	}
-    	const userGroup = UserGroups.findOne({_id: data.userGroupId});
-    	if (userGroup && userGroup._id) {
-        data.userGroupTitle = userGroup.title;
-    	}
-    }
+	userDetails() {
+		const data = new Array();
+  	const user = Users.findOne({_id: this.userId});
+  	if (user && user._id) {
+    	data.username = user.username;
+    	data.email = user.emails[0].address;
+  	}
     return data;
   },
+
+  userGroupsDetails() {
+		const data = new Array();
+		var i = 0;
+		AssignedUserGroups.find({userId: this.userId}).forEach((assignedUG) => {
+			const userGroup = UserGroups.findOne({_id: assignedUG.userGroupId});
+			if (userGroup && userGroup.title) {
+	      var acceptedValues = ['Yes', 'yes', 'No', 'no'];
+	      if (!acceptedValues.includes(assignedUG.groupAdmin)) {
+	      	assignedUG.groupAdmin = 'No';
+	      }
+				data[i] = {
+					'title': userGroup.title, 
+					'groupAdmin': assignedUG.groupAdmin, 
+					'groupOrder': assignedUG.groupOrder, 
+				};
+			}
+			i++;
+		});
+    return data;
+  }
 });
 
 BlazeComponent.extendComponent({
@@ -1320,53 +1334,7 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-      'change .js-select-user'() {
-      	//First remove the UserGroups List options and set the GroupOrder to 1
-      	$('.js-select-user-group').html("<option value='' selected='selected'>Select One</option>");
-      	$('.js-group-order').val(1);
-      	
-      	// Then find the selected user and the UserGroups he is assigned to.
-      	// Return all the UserGroups excluding the ones the selected user is already assigned to.
-      	const userId = this.find('.js-select-user option:selected').value;
-      	const user = Users.findOne({_id: userId});
-      	if (user && user._id) {
-        	const assignedUserGroups = AssignedUserGroups.find({userId: user._id});
-        	if (assignedUserGroups) {
-        		const groupsIds = new Array();
-        		assignedUserGroups.forEach((assignedUserGroup) => {
-        			groupsIds.push(assignedUserGroup.userGroupId);
-        		});
-        		const options = UserGroups.find({ _id: { $nin: groupsIds } });
-        		options.forEach((option) => {
-          		$('.select-user-group').append("<option value='"+ option._id +"'>"+ option.title +"</option>");
-        		});
-
-    				//	If the selected user has N number of UserGroups assigned to him, 
-          	//  then the 'groupOrder' field should auto-generate the field with the number N+1.
-          	$('.js-group-order').val(groupsIds.length + 1);
-        	} else {
-        		UserGroups.find().forEach((userGroup) => {
-          		$('.select-user-group').append("<option value='"+ userGroup._id +"'>"+ userGroup.title +"</option>");
-        		});
-        	}
-
-        	// check that the selected user is not a Coachee
-      		var coacheeRole = Roles.findOne({name: 'Coachee'});
-          if (coacheeRole && coacheeRole._id) {
-            var notCoachee = Users.find({
-            	_id: userId, 
-            	roleId: { $ne: coacheeRole._id }
-          	});
-            if (notCoachee.count() == 1) {
-            	$('.group-admin-label').show();
-            } else {
-            	$('.group-admin-label').hide();
-            }
-          }
-      	}
-      },
-
-    	submit(evt) {
+      submit(evt) {
         evt.preventDefault();
         const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
         const userId = this.find('.js-select-user').value;
