@@ -953,17 +953,23 @@ if (Meteor.isServer) {
 
 
     // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
-  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {sort: {createdAt: 1}}).fetch();
+  	// And update the board's field quotaGroupId with the _id of the UserGroup which's quota was used.
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }).sort( {groupOrder: 1} ).fetch();
   	for (var i = 0; i < userAssignedUserGroups.length; i++) {
   		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
   		if (userGroup && userGroup._id) {
     		var quotaDifference = userGroup.boardsQuota - userGroup.usedBoardsQuota;
     		if (quotaDifference > 0) {
     			var usedQuota = userGroup.usedBoardsQuota  + 1;
-    			// Increment usedBoardsQuota
+    			// Update usedUsersQuota in UserGroups
     			UserGroups.update(
   					{ _id: userGroup._id }, 
   					{ $set: { usedBoardsQuota: usedQuota } }
+  				);
+    			// Update quotaGroupId in Boards
+    			Boards.update(
+  					{ _id: doc._id }, 
+  					{ $set: { quotaGroupId: userGroup._id } }
   				);
     			break;
     		}
