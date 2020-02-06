@@ -406,7 +406,6 @@ template(name="assignedUserGroupsGeneral")
         th {{_ 'user-groups'}}
         th {{_ 'group-admin'}}
         th {{_ 'group-order'}}
-        th {{_ 'action'}}
       // if isAdmin
       if currentUser.isAdmin
         each user in users
@@ -418,16 +417,24 @@ template(name="assignedUserGroupRow")
     td {{ userDetails.email }}
     td.aUGCell 
       each groupDetails in userGroupsDetails
-        .aUGIndividualCell{{ groupDetails.title }} <br>
+        .aUGIndividualCell {{ groupDetails.title }}
+          a.fa.fa-window-close.pull-right.removeUGFromAUG(title="Remove {{ groupDetails.title }}"
+            data-assigned-user-group-id=groupDetails.assignedUserGroupId)
     td.aUGCell 
       each groupDetails in userGroupsDetails
-        .aUGIndividualCell {{ groupDetails.groupAdmin }} <br>
+        .aUGIndividualCell {{ groupDetails.groupAdmin }} 
+          a.fa.fa-exchange.pull-right(class="{{#if $eq groupDetails.groupAdmin 'No'}}setGroupAdmin{{else}}unsetGroupAdmin{{/if}}"
+            title="{{#if $eq groupDetails.groupAdmin 'No'}}Set Group Admin{{else}}Unset Group Admin{{/if}}"
+            data-assigned-user-group-id=groupDetails.assignedUserGroupId)
     td.aUGCell 
       each groupDetails in userGroupsDetails
-        .aUGIndividualCell {{ groupDetails.groupOrder }} <br>
-    td
-      a.edit-assigned-user-group
-        | {{_ 'edit'}}
+        .aUGIndividualCell {{ groupDetails.groupOrder }}
+          a.fa.fa-caret-up.incrementGroupOrder.pull-right(title="Increase Group Order"
+            data-assigned-user-group-id=groupDetails.assignedUserGroupId
+            style="{{#if $eq groupDetails.groupOrder 1}}margin-left: 15px;{{/if}}")
+          unless $eq groupDetails.groupOrder 1
+            a.fa.fa-caret-down.decrementGroupOrder.pull-right(title="decrease Group Order"
+              data-assigned-user-group-id=groupDetails.assignedUserGroupId)
 
 template(name="assignUserToUserGroupPopup")
   if loading.get
@@ -465,51 +472,3 @@ template(name="assignUserToUserGroupPopup")
         div
         input#cancelAssignedUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
 
-template(name="editAssignedUserGroupPopup")
-  if loading.get
-    +spinner
-  else
-    form#editAssignedUserGroupPopup
-      label.hide.assignedUserGroupId(type="text" value=assignedUserGroup._id)
-      label
-        | {{_ 'username'}}
-        .select-user-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userNotSelected'}}
-        select.select-user.js-select-user
-          option(value='', selected='selected') Select One
-          // if isAdmin
-          if currentUser.isAdmin
-            each user in users
-              if specificRowUser user._id
-                option(value='{{user._id}}' selected) {{user.username}}
-              else
-                option(value='{{user._id}}') {{user.username}}
-      label
-        | {{_ 'user-group'}}
-        .select-user-group-msg.error.hide.assigned-user-group-not-edited {{_ 'error-userGroupNotSelected'}}
-        select.select-user-group.js-select-user-group
-          option(value='', selected='selected') Select One
-          // if isAdmin
-          if currentUser.isAdmin
-            each userGroup in userGroups
-              if specificRowUserGroup userGroup._id
-                option(value='{{userGroup._id}}' selected) {{userGroup.title}}
-      label
-        | {{_ 'group-order'}}
-        span.error.hide.group-order-blank.assigned-user-group-not-edited
-          | {{_ 'error-group-order-blank'}}
-        input.js-group-order(type="number" value=assignedUserGroup.groupOrder onkeydown="return false" disabled)
-      unless currentUser.isCoachee
-        label.group-admin-label
-          | {{_ 'group-admin'}}
-          select.js-set-group-admin
-            if $eq assignedUserGroup.groupAdmin 'Yes'
-              option(value='No') No
-              option(value='Yes', selected='selected') Yes
-            else
-              option(value='No', selected='selected') No
-              option(value='Yes') Yes
-      hr
-      div.buttonsContainer
-        input.primary.wide(type="submit" value="{{_ 'save'}}")
-        div
-        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
