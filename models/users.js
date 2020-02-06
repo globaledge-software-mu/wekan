@@ -1370,7 +1370,7 @@ if (Meteor.isServer) {
 
   	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
   	// And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
-  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }).sort( {groupOrder: 1} ).fetch();
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {$sort: {groupOrder: 1}} ).fetch();
   	for (var i = 0; i < userAssignedUserGroups.length; i++) {
   		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
   		if (userGroup && userGroup._id) {
