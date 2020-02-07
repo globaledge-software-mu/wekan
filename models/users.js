@@ -346,6 +346,42 @@ if (Meteor.isClient) {
       return board && board.hasCommentOnly(this._id);
     },
 
+    hasMultipleUsableBoardQuotaGroups() {
+    	var handler1 = Meteor.subscribe('assigned_user_groups');
+    	var handler2 = Meteor.subscribe('user_groups');
+    	if (handler1.ready() && handler2.ready()) {
+      	var usableBoardQuotaGroups = 0;
+        AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+        	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+        	if (userGroup && userGroup._id) {
+        		const unusedQuota = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+        		if (unusedQuota > 0) {
+        			usableBoardQuotaGroups++;
+        		}
+        	}
+        });
+        if (usableBoardQuotaGroups > 1) {
+          return true;
+        }
+        return false;
+    	}
+      return false;
+    },
+
+    usableBoardsQuotaGroups() {
+      const usableBoardsQuotaUserGroupsIds = new Array();
+      AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {
+      	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+      	if (userGroup && userGroup._id) {
+      		var unusedBoardsQuota = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+      		if (unusedBoardsQuota > 0) {
+      			usableBoardsQuotaUserGroupsIds.push(userGroup._id);
+      		}
+      	}
+      });
+      return UserGroups.find({_id: {$in: usableBoardsQuotaUserGroupsIds}});
+    },
+
     isBoardAdmin() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasAdmin(this._id);

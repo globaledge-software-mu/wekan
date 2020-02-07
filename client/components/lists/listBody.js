@@ -677,6 +677,13 @@ BlazeComponent.extendComponent({
             isCommentOnly: false,
             userId: Meteor.userId(),
           }]
+          const selectedUserGroupId = $('.select-specific-quota-to-use option:selected').val().trim();
+          // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
+          // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+          // default order of the UGs assigned to him and is usable.
+          if (selectedUserGroupId.length > 0) {
+            board.quotaGroupId = selectedUserGroupId;
+          }
           var oldId = board._id;
           delete board.slug;
           _id = board.getNewBoardId();
