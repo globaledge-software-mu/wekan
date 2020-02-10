@@ -529,7 +529,7 @@ BlazeComponent.extendComponent({
     return this.loadingAfterSelectedRole.get();
   },
 
-  inviteUser(idNameEmail, roleId) {
+  inviteUser(idNameEmail, roleId, selectedUserGroupId) {
     const boardId = Session.get('currentBoard');
     if ($('.inviteFromBoardSidebar').length > 0 && $('.js-profile-role').length > 0) {
       this.setLoadingAfterSelectedRole(true);
@@ -537,7 +537,7 @@ BlazeComponent.extendComponent({
       this.setLoading(true);
     }
     const self = this;
-    Meteor.call('inviteUserToBoard', idNameEmail, boardId, roleId, (err, ret) => {
+    Meteor.call('inviteUserToBoard', idNameEmail, boardId, roleId, selectedUserGroupId, (err, ret) => {
       if ($('.inviteFromBoardSidebar').length > 0 && $('.js-profile-role').length > 0) {
         this.setLoadingAfterSelectedRole(false);
       } else {
@@ -563,7 +563,7 @@ BlazeComponent.extendComponent({
         const userId = this.currentData()._id;
         const currentBoard = Boards.findOne(Session.get('currentBoard'));
         if (!currentBoard.hasMember(userId)) {
-          this.inviteUser(userId, '');
+          this.inviteUser(userId, '', '');
         }
       },
       'click .js-email-invite'() {
@@ -595,11 +595,11 @@ BlazeComponent.extendComponent({
         if (roleNotSelected || validEmailNotEntered || duplicateUserEmail) {
         	return false;
         }
-        
 
         const idNameEmail = $('.js-search-member input').val();
         if (idNameEmail.indexOf('@')<0 || this.isValidEmail(idNameEmail)) {
-	    		this.inviteUser(idNameEmail, roleId);
+          const selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+	    		this.inviteUser(idNameEmail, roleId, selectedUserGroupId);
         } else {
         	this.setError('email-invalid');
       	}

@@ -57,7 +57,7 @@ template(name="general")
               // if isCoachAndNotAdmin, user gets to choose 'coachee'
               if currentUser.isCoachAndNotAdmin
                 option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
-          li
+          li(style="margin-bottom: 8px")
             .title {{_ 'to-boards'}}
             .select-board-msg.hide {{_ 'error-boardNotSelected'}}
             .bg-white
@@ -67,6 +67,14 @@ template(name="general")
 
                   span= title
 
+          if currentUser.hasMultipleUsableUserQuotaGroups
+            li.title(style="margin-bottom: 0px")
+              label(style="margin-bottom: 8px")
+                | {{_ 'choose-specific-quota-to-use'}}
+              select.choose-specific-quota-to-use
+                option(value='', selected='selected') Select One
+                each usableBoardsQuotaGroup in currentUser.usableUsersQuotaGroups
+                  option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
           li
             // In settings tab of admin panel
             button.js-email-invite.primary {{_ 'invite'}}

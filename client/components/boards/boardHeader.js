@@ -192,14 +192,20 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
+    const selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
 
     // Creating regular board
     if (!$('.js-new-board-title').hasClass('createBoardTemplate')) {
       const visibility = this.visibility.get();
-      this.boardId.set(Boards.insert({
-        title,
-        permission: visibility,
-      }));
+
+      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
+      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+      // default order of the UGs assigned to him and is usable.
+      if (selectedUserGroupId.length > 0) {
+        this.boardId.set(Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId }));
+      } else {
+        this.boardId.set(Boards.insert({ title, permission: visibility }));
+      }
 
       Swimlanes.insert({
         title: 'Default',
@@ -211,11 +217,15 @@ const CreateBoard = BlazeComponent.extendComponent({
     // Creating board template
     else {
       let linkedId = '';
-      linkedId = Boards.insert({
-        title,
-        permission: 'private',
-        type: 'template-board',
-      });
+
+      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
+      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+      // default order of the UGs assigned to him and is usable.
+      if (selectedUserGroupId.length > 0) {
+        linkedId = Boards.insert({ title, permission: 'private', type: 'template-board', quotaGroupId: selectedUserGroupId });
+      } else {
+        linkedId = Boards.insert({ title, permission: 'private', type: 'template-board' });
+      }
 
       Swimlanes.insert({
         title: TAPi18n.__('default'),

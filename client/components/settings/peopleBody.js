@@ -213,6 +213,7 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
+        const quotaGroupId = this.find('.choose-specific-quota-to-use option:selected').value.trim();
         const isAdmin = false;
         if (this.find('.js-profile-isadmin')) {
           isAdmin = this.find('.js-profile-isadmin').value.trim();
@@ -277,6 +278,7 @@ BlazeComponent.extendComponent({
         	params['fullname'] = fullname;
         	params['roleId'] = roleId;
         	params['roleName'] = roleName;
+        	params['quotaGroupId'] = quotaGroupId;
           // Create user doc
           Meteor.call('createNewUser', params, (err, res) => {
           	this.setLoading(false);
@@ -1104,8 +1106,13 @@ Template.editUserGroupPopup.helpers({
 });
 
 BlazeComponent.extendComponent({
-	assignedUserGroupsList() {
-  	return AssignedUserGroups.find({}, {sort: {userGroupId: 1}});
+	users() {
+		// return only the users who have at least one Usergroup assigned to him/her
+		const userIds = new Array();
+		AssignedUserGroups.find().forEach((assignedUG) => {
+			userIds.push(assignedUG.userId);
+		});
+		return Users.find({_id: {$in: userIds}});
   },
   events() {
 	  return [{
@@ -1115,35 +1122,147 @@ BlazeComponent.extendComponent({
 }).register('assignedUserGroupsGeneral');
 
 BlazeComponent.extendComponent({
+	updateResponse(err, res) {
+    if (err) {
+      var message = '';
+      if (err.error) {
+        message = TAPi18n.__(err.error);
+      } else {
+        message = err;
+      }
+	    var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    $('#header-main-bar').before($errorMessage);
+	    $errorMessage.delay(10000).slideUp(500, function() {
+	      $(this).remove();
+	    });
+	  } else if (res) {
+	    var message = TAPi18n.__('assigned-user-group-edited');
+	    var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    $('#header-main-bar').before($successMessage);
+	    $successMessage.delay(10000).slideUp(500, function() {
+	      $(this).remove();
+	    });
+	    Popup.close();
+	  }
+	},
+
   events() {
 	  return [{
-	   'click a.edit-assigned-user-group': Popup.open('editAssignedUserGroup'),
+	  	'click .setGroupAdmin'(e) {
+	  		const assignedUserGroupId = $(e.target).data('assigned-user-group-id');
+        AssignedUserGroups.update(
+          { _id: assignedUserGroupId }, 
+          { $set: { groupAdmin: 'Yes' } }, 
+          (err, res) => {
+	          this.updateResponse(err, res);
+	        }
+        );
+	  	},
+
+	  	'click .unsetGroupAdmin'(e) {
+	  		const assignedUserGroupId = $(e.target).data('assigned-user-group-id');
+        AssignedUserGroups.update(
+          { _id: assignedUserGroupId }, 
+          { $set: { groupAdmin: 'No' } }, 
+          (err, res) => {
+	          this.updateResponse(err, res);
+	        }
+        );
+	  	},
+
+	  	'click .incrementGroupOrder'(e) {
+	  		const assignedUserGroupId = $(e.target).data('assigned-user-group-id');
+	  		const assignedUG = AssignedUserGroups.findOne({_id: assignedUserGroupId});
+	  		if (assignedUG && assignedUG._id) {
+	  			var groupOrder = assignedUG.groupOrder + 1;
+	        AssignedUserGroups.update(
+            { _id: assignedUserGroupId }, 
+            { $set: { groupOrder } }, 
+            (err, res) => {
+  	          this.updateResponse(err, res);
+  	        }
+          );
+	  		}
+	  	},
+
+	  	'click .decrementGroupOrder'(e) {
+	  		const assignedUserGroupId = $(e.target).data('assigned-user-group-id');
+	  		const assignedUG = AssignedUserGroups.findOne({_id: assignedUserGroupId});
+	  		if (assignedUG && assignedUG._id) {
+	  			var groupOrder = assignedUG.groupOrder - 1;
+	        AssignedUserGroups.update(
+            { _id: assignedUserGroupId }, 
+            { $set: { groupOrder } }, 
+            (err, res) => {
+  	          this.updateResponse(err, res);
+  	        }
+          );
+	  		}
+	  	},
+
+	  	'click .removeUGFromAUG'(e) {
+        swal({
+          title: 'Remove user group?',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+    	  		const assignedUserGroupId = $(e.target).data('assigned-user-group-id');
+            AssignedUserGroups.remove({_id: assignedUserGroupId}, (err, res) => {
+              if (err) {
+                swal(err, {
+                	icon: "success",
+                });
+              } else if (res) {
+                swal("user-group-removed", {
+                	icon: "success",
+                });
+              }
+            });
+          } else {
+            return false;
+          }
+        });
+	  	},
 	  }];
 	}
 }).register('assignedUserGroupRow');
 
 Template.assignedUserGroupRow.helpers({
-	assignedUserGroupData() {
-    const data = AssignedUserGroups.findOne(this.assignedUserGroupId);
-    if (data && data._id) {
-    	const user = Users.findOne({_id: data.userId});
-    	if (user && user._id) {
-        data.username = user.username;
-        if (user.emails && user.emails[0] && user.emails[0].address) {
-          data.email = user.emails[0].address;
-        }
-        var acceptedValues = ['Yes', 'yes', 'No', 'no'];
-        if (!acceptedValues.includes(data.groupAdmin)) {
-          data.groupAdmin = 'No';
-        }
-    	}
-    	const userGroup = UserGroups.findOne({_id: data.userGroupId});
-    	if (userGroup && userGroup._id) {
-        data.userGroupTitle = userGroup.title;
-    	}
-    }
+	userDetails() {
+		const data = new Array();
+  	const user = Users.findOne({_id: this.userId});
+  	if (user && user._id) {
+    	data.username = user.username;
+    	data.email = user.emails[0].address;
+  	}
     return data;
   },
+
+  userGroupsDetails() {
+		const data = new Array();
+		var i = 0;
+		AssignedUserGroups.find({userId: this.userId}).forEach((assignedUG) => {
+			const userGroup = UserGroups.findOne({_id: assignedUG.userGroupId});
+			if (userGroup && userGroup.title) {
+	      var acceptedValues = ['Yes', 'yes', 'No', 'no'];
+	      if (!acceptedValues.includes(assignedUG.groupAdmin)) {
+	      	assignedUG.groupAdmin = 'No';
+	      }
+				data[i] = {
+					'title': userGroup.title, 
+					'groupAdmin': assignedUG.groupAdmin, 
+					'groupOrder': assignedUG.groupOrder, 
+					'assignedUserGroupId': assignedUG._id,
+				};
+			}
+			i++;
+		});
+    return data;
+  }
 });
 
 BlazeComponent.extendComponent({
@@ -1276,227 +1395,3 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('assignUserToUserGroupPopup');
-
-BlazeComponent.extendComponent({
-  onCreated() {
-    this.loading = new ReactiveVar(false);
-  },
-  
-  onRendered() {
-    this.setLoading(false);
-
-    const userId = this.find('.js-select-user option:selected').value;
-  	// check that the selected user is not a Coachee
-		var coacheeRole = Roles.findOne({name: 'Coachee'});
-    if (coacheeRole && coacheeRole._id) {
-      var notCoachee = Users.find({
-      	_id: userId, 
-      	roleId: { $ne: coacheeRole._id }
-    	});
-      if (notCoachee.count() == 1) {
-      	$('.group-admin-label').show();
-      } else {
-      	$('.group-admin-label').hide();
-      }
-    }
-    
-  },
-  
-	setLoading(w) {
-    this.loading.set(w);
-  },
-
-  isLoading() {
-    return this.loading.get();
-  },
-
-  users() {
-    return Users.find();
-  },
-
-  userGroups() {
-    return UserGroups.find();
-  },
-
-  events() {
-    return [{
-      'change .js-select-user'() {
-      	//First remove the UserGroups List options and set the GroupOrder to 1
-      	$('.js-select-user-group').html("<option value='' selected='selected'>Select One</option>");
-      	$('.js-group-order').val(1);
-      	
-      	// Then find the selected user and the UserGroups he is assigned to.
-      	// Return all the UserGroups excluding the ones the selected user is already assigned to.
-      	const userId = this.find('.js-select-user option:selected').value;
-      	const user = Users.findOne({_id: userId});
-      	if (user && user._id) {
-        	const assignedUserGroups = AssignedUserGroups.find({userId: user._id});
-        	if (assignedUserGroups) {
-        		const groupsIds = new Array();
-        		assignedUserGroups.forEach((assignedUserGroup) => {
-        			groupsIds.push(assignedUserGroup.userGroupId);
-        		});
-        		const options = UserGroups.find({ _id: { $nin: groupsIds } });
-        		options.forEach((option) => {
-          		$('.select-user-group').append("<option value='"+ option._id +"'>"+ option.title +"</option>");
-        		});
-
-    				//	If the selected user has N number of UserGroups assigned to him, 
-          	//  then the 'groupOrder' field should auto-generate the field with the number N+1.
-          	$('.js-group-order').val(groupsIds.length + 1);
-        	} else {
-        		UserGroups.find().forEach((userGroup) => {
-          		$('.select-user-group').append("<option value='"+ userGroup._id +"'>"+ userGroup.title +"</option>");
-        		});
-        	}
-
-        	// check that the selected user is not a Coachee
-      		var coacheeRole = Roles.findOne({name: 'Coachee'});
-          if (coacheeRole && coacheeRole._id) {
-            var notCoachee = Users.find({
-            	_id: userId, 
-            	roleId: { $ne: coacheeRole._id }
-          	});
-            if (notCoachee.count() == 1) {
-            	$('.group-admin-label').show();
-            } else {
-            	$('.group-admin-label').hide();
-            }
-          }
-      	}
-      },
-
-    	submit(evt) {
-        evt.preventDefault();
-        const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
-        const userId = this.find('.js-select-user').value;
-        const userGroupId = this.find('.js-select-user-group').value;
-        const groupOrder = this.find('.js-group-order').value.trim();
-        const groupAdmin = this.find('.js-set-group-admin').value;
-
-        var leftBlank = ['undefined', null, ''];
-        var userNotSelected = leftBlank.indexOf(userId) > -1;
-        var userGroupNotSelected = leftBlank.indexOf(userGroupId) > -1;
-        var groupOrderLeftBlank = leftBlank.indexOf(groupOrder) > -1;
-        $('assigned-user-group-not-edited').hide();
-        if (userNotSelected) {
-        	this.$('.select-user-msg').show();
-        }
-        if (userGroupNotSelected) {
-        	this.$('.select-user-group-msg').show();
-        }
-        if (groupOrderLeftBlank) {
-        	this.$('.group-order-blank').show();
-        }
-        if (userNotSelected || userGroupNotSelected || groupOrderLeftBlank) {
-          return false;
-        }
-        this.setLoading(true);
-
-        AssignedUserGroups.update(
-      		{ _id: assignedUserGroupId }, 
-      		{ $set: { userId, userGroupId, groupOrder, groupAdmin } }, 
-      		(err, res) => {
-	        	this.setLoading(false);
-	          if (err) {
-	          	var message = '';
-	          	if (err.error) {
-	            	message = TAPi18n.__(err.error);
-	          	} else {
-	          		message = err;
-	          	}
-	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-	            $('#header-main-bar').before($errorMessage);
-	            $errorMessage.delay(10000).slideUp(500, function() {
-	              $(this).remove();
-	            });
-	          } else if (res) {
-	          	var message = TAPi18n.__('assigned-user-group-edited');
-	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-	            $('#header-main-bar').before($successMessage);
-	            $successMessage.delay(10000).slideUp(500, function() {
-	              $(this).remove();
-	            });
-	            Popup.close();
-	          }
-	        }
-    		);
-      },
-
-      'click #deleteButton'() {
-        const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
-        Popup.close();
-        swal({
-          title: 'Delete Assigned-User-Group?',
-          text: 'Are you sure?',
-          icon: "warning",
-          buttons: true,
-          dangerMode: true,
-        })
-        .then((okDelete) => {
-          if (okDelete) {
-          	const assignedUserGroup = AssignedUserGroups.findOne({_id: assignedUserGroupId});
-          	if (assignedUserGroup && assignedUserGroup.userId) {
-            	const userId = assignedUserGroup.userId;
-            	AssignedUserGroups.remove({_id: assignedUserGroupId}, (err, res) => {
-              	if (err) {
-              		swal(err, {
-                    icon: "success",
-                  });
-              	} else if (res) {
-              		swal("Assigned-User-Group has been deleted!", {
-                    icon: "success",
-                  });
-
-      						//	Find the remaining UserGroups assigned to this user and 
-      						//	update his rest of the AssignedUserGroups records' field 'groupOrder' 
-      						//	sorting by the earliest createdAt, 
-      						//	start by setting the first document's field to 1 and 
-      						//	then keep icrementing the groupOrder by one in the next loops.
-                	const usersRemainingAssignedUserGroups = AssignedUserGroups.find(
-              			{userId}, 
-              			{sort: {createdAt: 1}}
-            			);
-                	const groupOrder = 0;
-                	usersRemainingAssignedUserGroups.forEach((remainingAssignedUserGroup) => {
-                		groupOrder++;
-                		AssignedUserGroups.update(
-              				{ _id: remainingAssignedUserGroup._id },
-              				{ $set: { groupOrder } }
-            				);
-                	});
-              	}
-              });
-          	}
-          } else {
-            return false;
-          }
-        });
-      },
-    }];
-  },
-}).register('editAssignedUserGroupPopup');
-
-Template.editAssignedUserGroupPopup.helpers({
-  specificRowUser(match) {
-    const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
-    if (assignedUserGroupId) {
-      const selected = AssignedUserGroups.findOne(assignedUserGroupId).userId;
-      return selected === match;
-    }
-    return false;
-  },
-
-  specificRowUserGroup(match) {
-    const assignedUserGroupId = Template.instance().data.assignedUserGroupId;
-    if (assignedUserGroupId) {
-      const selected = AssignedUserGroups.findOne(assignedUserGroupId).userGroupId;
-      return selected === match;
-    }
-    return false;
-  },
-  
-	assignedUserGroup() {
-    return AssignedUserGroups.findOne(this.assignedUserGroupId);
-  },
-});

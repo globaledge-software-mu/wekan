@@ -147,12 +147,14 @@ if (Meteor.isServer) {
     }
     if (activity.cardId) {
       const card = activity.card();
-      participants = _.union(participants, [card.userId], card.members || []);
-      watchers = _.union(watchers, card.watchers || []);
-      params.card = card.title;
-      title = 'act-withCardTitle';
-      params.url = card.absoluteUrl();
-      params.cardId = activity.cardId;
+      if (card && card.userId) {
+        participants = _.union(participants, [card.userId], card.members || []);
+        watchers = _.union(watchers, card.watchers || []);
+        params.card = card.title;
+        title = 'act-withCardTitle';
+        params.url = card.absoluteUrl();
+        params.cardId = activity.cardId;
+      }
     }
     if (activity.swimlaneId) {
       const swimlane = activity.swimlane();
