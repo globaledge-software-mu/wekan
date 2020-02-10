@@ -12,7 +12,6 @@ BlazeComponent.extendComponent({
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
     this.userGroups = new ReactiveVar(false);
-    this.assignedUserGroups = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -179,7 +178,6 @@ BlazeComponent.extendComponent({
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
       this.userGroups.set('user-groups-setting' === targetID);
-      this.assignedUserGroups.set('assigned-user-groups-setting' === targetID);
     }
   },
   events() {
