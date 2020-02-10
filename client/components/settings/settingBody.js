@@ -41,6 +41,7 @@ BlazeComponent.extendComponent({
       archived: false,
       'members.userId': Meteor.userId(),
       'members.isAdmin': true,
+      type: {$ne: 'template-container'}
     }, {
       sort: ['title'],
     });
@@ -102,6 +103,7 @@ BlazeComponent.extendComponent({
 
   inviteThroughEmail() {
     const emails = $('#email-to-invite').val().toLowerCase().trim().split('\n').join(',').split(',');
+    const selectedUserGroupId = $('.choose-specific-quota-to-use option:selected').val();
     const boardsToInvite = [];
     $('.js-toggle-board-choose .materialCheckBox.is-checked').each(function () {
       boardsToInvite.push($(this).data('id'));
@@ -134,7 +136,7 @@ BlazeComponent.extendComponent({
 
       validEmails.forEach((validEmail) => {
       	boardsToInvite.forEach((inviteToBoard) => {
-          Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, roleId, '', (err, ret) => {
+          Meteor.call('inviteUserToBoard', validEmail, inviteToBoard, roleId, selectedUserGroupId, (err, ret) => {
             self.setLoading(false);
             if (err) {
             	var message = '';

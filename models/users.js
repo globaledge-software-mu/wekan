@@ -1049,25 +1049,40 @@ if (Meteor.isServer) {
 
       	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
       	// And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
-        var quotaGroupId = null;
+        var updateUsingDefaultGroupOrder = false;
         // Check if the user had selected any specific user group's quota to use or not!
+        var quotaGroupId = null;
         if (selectedUserGroupId.length > 0) {
         	quotaGroupId = selectedUserGroupId;
+      		const userGroup = UserGroups.findOne({_id: quotaGroupId});
+      		if (userGroup && userGroup._id) {
+      			const usableQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+      			if (usableQuota > 0) {
+        			var usedQuota = userGroup.usedUsersQuota  + 1;
+        			// Update usedUsersQuota in UserGroups
+        			UserGroups.update(
+      					{ _id: userGroup._id }, 
+      					{ $set: { usedUsersQuota: usedQuota } }
+      				);
+        			// Update quotaGroupId in Users
+        			Users.update(
+      					{ _id: newUserId }, 
+      					{ $set: { quotaGroupId: userGroup._id } }
+      				);
+      			} 
+      			// Have to add this else here as the settings tab of the admin panel also use this method to create users
+      			// and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
+      			// and let's say the selected usergroup has only 2 usable usersQuota and the user had input 4 e-mails to create 4 users
+      			// so then the system would create the first two users using the selected user group and the rest of the users shall be 
+      			// created using the default system check for the order of the user's userGroups based on its usable usersQuota
+      			else {
+      				updateUsingDefaultGroupOrder = true;
+      			}
+      		}
+        } else {
+        	updateUsingDefaultGroupOrder = true;
         }
-    		const userGroup = UserGroups.findOne({_id: quotaGroupId});
-    		if (userGroup && userGroup._id) {
-    			var usedQuota = userGroup.usedUsersQuota  + 1;
-    			// Update usedUsersQuota in UserGroups
-    			UserGroups.update(
-  					{ _id: userGroup._id }, 
-  					{ $set: { usedUsersQuota: usedQuota } }
-  				);
-    			// Update quotaGroupId in Users
-    			Users.update(
-  					{ _id: newUserId }, 
-  					{ $set: { quotaGroupId: userGroup._id } }
-  				);
-    		} else {
+        if (updateUsingDefaultGroupOrder) {
         	const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
         	for (var i = 0; i < userAssignedUserGroups.length; i++) {
         		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
