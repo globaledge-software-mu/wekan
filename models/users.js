@@ -943,6 +943,43 @@ if (Meteor.isServer) {
           'authenticationMethod': 'password',
   			} }
 			);
+      // Check if the user had selected any specific user group's quota to use or not!
+  		const userGroup = UserGroups.findOne({_id: params.quotaGroupId});
+  		if (userGroup && userGroup._id) {
+  			var usedQuota = userGroup.usedUsersQuota  + 1;
+  			// Update usedUsersQuota in UserGroups
+  			UserGroups.update(
+					{ _id: userGroup._id }, 
+					{ $set: { usedUsersQuota: usedQuota } }
+				);
+  			// Update quotaGroupId in Users
+  			Users.update(
+					{ _id: newUserId }, 
+					{ $set: { quotaGroupId: userGroup._id } }
+				);
+  		} else {
+      	const userAssignedUserGroups = AssignedUserGroups.find({ userId: Meteor.userId }, {$sort: {groupOrder: 1}} ).fetch();
+      	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+      		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+      		if (userGroup && userGroup._id) {
+        		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+        		if (quotaDifference > 0) {
+        			var usedQuota = userGroup.usedUsersQuota  + 1;
+        			// Update usedUsersQuota in UserGroups
+        			UserGroups.update(
+      					{ _id: userGroup._id }, 
+      					{ $set: { usedUsersQuota: usedQuota } }
+      				);
+        			// Update quotaGroupId in Users
+        			Users.update(
+      					{ _id: userAssignedUserGroups[i].userId }, 
+      					{ $set: { quotaGroupId: userGroup._id } }
+      				);
+        			break;
+        		}
+      		}
+      	};
+      }
 
       // Send new user invite to complete registration by adding his password
       Accounts.sendEnrollmentEmail(newUserId);

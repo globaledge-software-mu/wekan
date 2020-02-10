@@ -213,6 +213,7 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
+        const quotaGroupId = this.find('.choose-specific-quota-to-use option:selected').value.trim();
         const isAdmin = false;
         if (this.find('.js-profile-isadmin')) {
           isAdmin = this.find('.js-profile-isadmin').value.trim();
@@ -277,6 +278,7 @@ BlazeComponent.extendComponent({
         	params['fullname'] = fullname;
         	params['roleId'] = roleId;
         	params['roleName'] = roleName;
+        	params['quotaGroupId'] = quotaGroupId;
           // Create user doc
           Meteor.call('createNewUser', params, (err, res) => {
           	this.setLoading(false);

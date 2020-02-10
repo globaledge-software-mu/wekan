@@ -137,7 +137,7 @@
     "board-view-lists": "Lists",
     "boards-quota": "Boards Quota",
     "users-quota": "Users Quota",
-    "choose-specific-quota-to-use": "Want to choose a specific UserGroup's quota to use?",
+    "choose-specific-quota-to-use": "Select which quota to use (optional)",
     "bucket-example": "Like “Bucket List” for example",
     "cancel": "Cancel",
     "card-archived": "This card is moved to Archive.",
