@@ -952,12 +952,12 @@ if (Meteor.isServer) {
   	//_______________________//
 
 
-    // *** Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated ***
-  	// *** And update the board's field quotaGroupId with the _id of the UserGroup which's quota was used. ***
+    // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
+  	// And update the board's field quotaGroupId with the _id of the UserGroup which's quota was used.
     const insertedBoard = Boards.findOne({ _id: doc._id });
     if (insertedBoard && insertedBoard._id) {
       const specificQuotaGroupId = insertedBoard.quotaGroupId;
-      // *** Check if the user had selected any specifc user group's quota to use or not! ***
+      // Check if the user had selected any specifc user group's quota to use or not!
       if (specificQuotaGroupId && specificQuotaGroupId.length > 0) {
     		const userGroup = UserGroups.findOne({_id: specificQuotaGroupId});
     		if (userGroup && userGroup._id) {

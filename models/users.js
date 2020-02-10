@@ -346,6 +346,28 @@ if (Meteor.isClient) {
       return board && board.hasCommentOnly(this._id);
     },
 
+    hasMultipleUsableUserQuotaGroups() {
+    	var handler1 = Meteor.subscribe('assigned_user_groups');
+    	var handler2 = Meteor.subscribe('user_groups');
+    	if (handler1.ready() && handler2.ready()) {
+      	var usableUserQuotaGroups = 0;
+        AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+        	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+        	if (userGroup && userGroup._id) {
+        		const unusedQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+        		if (unusedQuota > 0) {
+        			usableUserQuotaGroups++;
+        		}
+        	}
+        });
+        if (usableUserQuotaGroups > 1) {
+          return true;
+        }
+        return false;
+    	}
+      return false;
+    },
+
     hasMultipleUsableBoardQuotaGroups() {
     	var handler1 = Meteor.subscribe('assigned_user_groups');
     	var handler2 = Meteor.subscribe('user_groups');
@@ -366,6 +388,20 @@ if (Meteor.isClient) {
         return false;
     	}
       return false;
+    },
+
+    usableUsersQuotaGroups() {
+      const usableUsersQuotaUserGroupsIds = new Array();
+      AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {
+      	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+      	if (userGroup && userGroup._id) {
+      		var unusedUsersQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+      		if (unusedUsersQuota > 0) {
+      			usableUsersQuotaUserGroupsIds.push(userGroup._id);
+      		}
+      	}
+      });
+      return UserGroups.find({_id: {$in: usableUsersQuotaUserGroupsIds}});
     },
 
     usableBoardsQuotaGroups() {
@@ -915,10 +951,11 @@ if (Meteor.isServer) {
   	},
 
     // we accept userId, username, email
-    inviteUserToBoard(username, boardId, roleId) {
+    inviteUserToBoard(username, boardId, roleId, selectedUserGroupId) {
       check(username, String);
       check(boardId, String);
       check(roleId, String);
+      check(selectedUserGroupId, String);
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
@@ -972,6 +1009,51 @@ if (Meteor.isServer) {
             },
           });
         }
+
+      	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
+      	// And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
+        var quotaGroupId = null;
+        // Check if the user had selected any specific user group's quota to use or not!
+        if (selectedUserGroupId.length > 0) {
+        	quotaGroupId = selectedUserGroupId;
+        }
+    		const userGroup = UserGroups.findOne({_id: quotaGroupId});
+    		if (userGroup && userGroup._id) {
+    			var usedQuota = userGroup.usedUsersQuota  + 1;
+    			// Update usedUsersQuota in UserGroups
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedUsersQuota: usedQuota } }
+  				);
+    			// Update quotaGroupId in Users
+    			Users.update(
+  					{ _id: newUserId }, 
+  					{ $set: { quotaGroupId: userGroup._id } }
+  				);
+    		} else {
+        	const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
+        	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+        		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+        		if (userGroup && userGroup._id) {
+          		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+          		if (quotaDifference > 0) {
+          			var usedQuota = userGroup.usedUsersQuota  + 1;
+          			// Update usedUsersQuota in UserGroups
+          			UserGroups.update(
+        					{ _id: userGroup._id }, 
+        					{ $set: { usedUsersQuota: usedQuota } }
+        				);
+          			// Update quotaGroupId in Users
+          			Users.update(
+        					{ _id: userAssignedUserGroups[i].userId }, 
+        					{ $set: { quotaGroupId: userGroup._id } }
+        				);
+          			break;
+          		}
+        		}
+        	};
+        }
+
         // Send Enrollment Email
         Accounts.sendEnrollmentEmail(newUserId);
         user = Users.findOne(newUserId);
@@ -1403,32 +1485,6 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
-
-  	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
-  	// And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
-  	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {$sort: {groupOrder: 1}} ).fetch();
-  	for (var i = 0; i < userAssignedUserGroups.length; i++) {
-  		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
-  		if (userGroup && userGroup._id) {
-    		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
-    		if (quotaDifference > 0) {
-    			var usedQuota = userGroup.usedUsersQuota  + 1;
-    			// Update usedUsersQuota in UserGroups
-    			UserGroups.update(
-  					{ _id: userGroup._id }, 
-  					{ $set: { usedUsersQuota: usedQuota } }
-  				);
-    			// Update quotaGroupId in Users
-    			Users.update(
-  					{ _id: userAssignedUserGroups[i].userId }, 
-  					{ $set: { quotaGroupId: userGroup._id } }
-  				);
-    			break;
-    		}
-  		}
-  	};
-  	//_______________________//
-
 
   	// When a new user is created, if his role is Admin or manager, 
   	// make him a member of all the template boards of which he was not a member before
