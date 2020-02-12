@@ -424,6 +424,8 @@
     "log-out": "Log Out",
     "log-in": "Log In",
     "loginPopup-title": "Log In",
+    "manage": "Manage",
+    "manage-user-group": "Manage User Group: ",
     "memberMenuPopup-title": "Member Settings",
     "members": "Members",
     "menu": "Menu",

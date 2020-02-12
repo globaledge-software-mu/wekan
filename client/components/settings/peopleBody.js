@@ -182,7 +182,10 @@ BlazeComponent.extendComponent({
   },
   events() {
     return [{
-      'click a.js-setting-menu': this.switchMenu,
+      'click a.js-setting-menu'(e) {
+      	Popup.close();
+      	this.switchMenu(e);
+      },
       'click #create-user': Popup.open('createNewUser'),
     }];
   },
@@ -481,7 +484,7 @@ BlazeComponent.extendComponent({
           title: 'Confirm Delete User!',
           text: 'Are you sure?',
           icon: 'warning',
-          buttons: true,
+          buttons: [true, 'Remove'],
           dangerMode: true,
         })
         .then((okDelete) => {
@@ -799,6 +802,7 @@ Template.createRolePopup.events({
     Popup.close();
   },
 });
+
 Template.createRolePopup.helpers({
   isEnabled(role, group, access) {
     if (!role) {
@@ -864,7 +868,11 @@ BlazeComponent.extendComponent({
 BlazeComponent.extendComponent({
   events() {
 	  return [{
-	   'click a.edit-user-group': Popup.open('editUserGroup'),
+      'click a.manage-user-group'(e) {
+      	const groupId = $(e.target).data('user-group-id');
+        Modal.open('editUserGroup');
+        Session.set('manageUserGroupId', groupId);
+      },
 	  }];
 	}
 }).register('userGroupRow');
@@ -993,35 +1001,34 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
+    	'click .errorResponse, click .successResponse'(event) {
+    		$('a#response a,p').remove();
+    	},
+
       submit(evt) {
         evt.preventDefault();
-        const userGroupId = Template.instance().data.userGroupId;
-        const title = this.find('.js-user-group-title').value.trim();
-        const boardsQuota = this.find('.js-user-group-boards-quota').value.trim();
+
+        // clearing any immediate previous response
+        if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
+        	$('a#response').empty();
+        }
+
+        const userGroupId = $('#userGroupTitle').data('user-group-id');
+        const title = $('#userGroupTitle').data('user-group-title');
         const usersQuota = this.find('.js-user-group-users-quota').value.trim();
+        const boardsQuota = this.find('.js-user-group-boards-quota').value.trim();
 
         var leftBlank = ['undefined', null, ''];
-        var titleLeftBlank = leftBlank.indexOf(title) > -1;
         var boardsQuotaLeftBlank = leftBlank.indexOf(boardsQuota) > -1;
         var usersQuotaLeftBlank = leftBlank.indexOf(usersQuota) > -1;
         $('.user-group-not-edited').hide();
-        if (titleLeftBlank) {
-        	this.$('.title-blank').show();
-        }
-        const duplicateTitle = UserGroups.findOne({
-        	title,
-        	_id: { $ne: userGroupId }
-      	});
-        if (duplicateTitle) {
-        	this.$('.title-duplicate').show();
-        }
         if (boardsQuotaLeftBlank) {
         	this.$('.boards-quota-blank').show();
         }
         if (usersQuotaLeftBlank) {
         	this.$('.users-quota-blank').show();
         }
-        if (titleLeftBlank || boardsQuotaLeftBlank || usersQuotaLeftBlank || duplicateTitle) {
+        if (boardsQuotaLeftBlank || usersQuotaLeftBlank) {
           return false;
         }
         this.setLoading(true);
@@ -1038,32 +1045,28 @@ BlazeComponent.extendComponent({
 	          	} else {
 	          		message = err;
 	          	}
-	            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-	            $('#header-main-bar').before($errorMessage);
-	            $errorMessage.delay(10000).slideUp(500, function() {
+	            $('a#response').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+	            $('a#response a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          } else if (res) {
 	          	var message = TAPi18n.__('user-group-edited');
-	            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-	            $('#header-main-bar').before($successMessage);
-	            $successMessage.delay(10000).slideUp(500, function() {
+	            $('a#response').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+	            $('a#response a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
-	            Popup.close();
 	          }
 	        }
     		);
       },
 
-      'click #deleteButton'() {
-        const userGroupId = Template.instance().data.userGroupId;
-        Popup.close();
+      'click #deleteUGButton'() {
+        const userGroupId = $('#userGroupTitle').data('user-group-id');
         swal({
           title: 'Confirm Delete User-Group!',
           text: 'Are you sure?',
           icon: "warning",
-          buttons: true,
+          buttons: [true, 'Remove'],
           dangerMode: true,
         })
         .then((okDelete) => {
@@ -1077,6 +1080,7 @@ BlazeComponent.extendComponent({
             		swal("User-Group has been deleted!", {
                   icon: "success",
                 });
+            		Modal.close('editUserGroup');
             	}
             });
           } else {
@@ -1086,15 +1090,17 @@ BlazeComponent.extendComponent({
       },
     }];
   },
-}).register('editUserGroupPopup');
+}).register('editUserGroup');
 
-Template.editUserGroupPopup.helpers({
+Template.editUserGroup.helpers({
 	userGroup() {
-    return UserGroups.findOne(this.userGroupId);
+		const userGroupId = Session.get('manageUserGroupId');
+    return UserGroups.findOne(userGroupId);
   },
 
   notAsssignedToAnyUser() {
-  	const assignedGroup = AssignedUserGroups.findOne({userGroupId: this.userGroupId});
+		const userGroupId = Session.get('manageUserGroupId');
+  	const assignedGroup = AssignedUserGroups.findOne({userGroupId: userGroupId});
   	if (!assignedGroup) {
   		return true;
   	} else {
@@ -1203,7 +1209,7 @@ BlazeComponent.extendComponent({
           title: 'Remove user group?',
           text: 'Are you sure?',
           icon: "warning",
-          buttons: true,
+          buttons: [true, 'Remove'],
           dangerMode: true,
         })
         .then((okDelete) => {

@@ -340,8 +340,8 @@ template(name="userGroupRow")
     td
       ul
         li
-          a.edit-user-group
-            | {{_ 'edit'}}
+          a.manage-user-group(data-user-group-id=userGroupData._id)
+            | {{_ 'manage'}}
 
 template(name="createUserGroupPopup")
   if loading.get
@@ -371,35 +371,30 @@ template(name="createUserGroupPopup")
         div
         input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
 
-template(name="editUserGroupPopup")
+template(name="editUserGroup")
+  #modalBanner
+    h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
+      | {{_ 'manage-user-group'}} {{userGroup.title}}
+    a#response
+  hr.hrEditUserGroupForm
   if loading.get
     +spinner
-  else
-    form#editUserGroupPopup
-      label.hide.userGroupId(type="text" value=userGroup._id)
-      label
-        | {{_ 'title'}}
-        span.error.hide.title-blank.user-group-not-edited
-          | {{_ 'error-title-blank'}}
-        span.error.hide.title-duplicate.user-group-not-edited
-          | {{_ 'error-title-duplicate'}}
-        input.js-user-group-title(type="text" value=userGroup.title autofocus)
-      label
-        | {{_ 'boards-quota'}}
-        span.error.hide.boards-quota-blank.user-group-not-edited
-          | {{_ 'error-boards-quota-blank'}}
-        input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
-      label
-        | {{_ 'users-quota'}}
-        span.error.hide.users-quota-blank.user-group-not-edited
-          | {{_ 'error-users-quota-blank'}}
-        input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
-      hr
-      div.buttonsContainer
-        input.primary.wide(type="submit" value="{{_ 'save'}}")
-        div
-        if notAsssignedToAnyUser
-          input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+  form#editUserGroupPopup
+    label
+      | {{_ 'users-quota'}}
+      span.error.hide.users-quota-blank.user-group-not-edited
+        | {{_ 'error-users-quota-blank'}}
+      input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+    label
+      | {{_ 'boards-quota'}}
+      span.error.hide.boards-quota-blank.user-group-not-edited
+        | {{_ 'error-boards-quota-blank'}}
+      input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+    div.editUGButtonsContainer
+      input.primary.wide(type="submit" value="{{_ 'save'}}")
+      if notAsssignedToAnyUser
+        input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete'}}")
+  hr.hrEditUserGroupForm
 
 template(name="assignedUserGroupsGeneral")
   button#assign-user-to-user-group.btn.btn-primary {{_ 'add'}}
