@@ -373,102 +373,66 @@ template(name="createUserGroupPopup")
 
 template(name="editUserGroup")
   #modalBanner
+    h4#modalLabel
+      | {{_ 'manage-user-group'}} 
     h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
-      | {{_ 'manage-user-group'}} {{userGroup.title}}
+      | {{userGroup.title}}
     a#response
   hr.hrEditUserGroupForm
+  label#quota
+    | {{_ 'manage-quota'}}
   if loading.get
     +spinner
   form#editUserGroupPopup
-    label
+    label.bold
       | {{_ 'users-quota'}}
       span.error.hide.users-quota-blank.user-group-not-edited
         | {{_ 'error-users-quota-blank'}}
       input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
-    label
+    label.bold
       | {{_ 'boards-quota'}}
       span.error.hide.boards-quota-blank.user-group-not-edited
         | {{_ 'error-boards-quota-blank'}}
       input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
     div.editUGButtonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
-      if notAsssignedToAnyUser
-        input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete'}}")
   hr.hrEditUserGroupForm
-
-template(name="assignedUserGroupsGeneral")
-  button#assign-user-to-user-group.btn.btn-primary {{_ 'add'}}
-  table
-    tbody
-      tr
-        th {{_ 'username'}}
-        th {{_ 'email-address'}}    
-        th {{_ 'user-groups'}}
-        th {{_ 'group-admin'}}
-        th {{_ 'group-order'}}
-      // if isAdmin
-      if currentUser.isAdmin
-        each user in users
-          +assignedUserGroupRow(userId=user._id)
-
-template(name="assignedUserGroupRow")
-  tr
-    td {{ userDetails.username }}
-    td {{ userDetails.email }}
-    td.aUGCell 
-      each groupDetails in userGroupsDetails
-        .aUGIndividualCell {{ groupDetails.title }}
-          a.fa.fa-window-close.pull-right.removeUGFromAUG(title="Remove {{ groupDetails.title }}"
-            data-assigned-user-group-id=groupDetails.assignedUserGroupId)
-    td.aUGCell 
-      each groupDetails in userGroupsDetails
-        .aUGIndividualCell {{ groupDetails.groupAdmin }} 
-          a.fa.fa-exchange.pull-right(class="{{#if $eq groupDetails.groupAdmin 'No'}}setGroupAdmin{{else}}unsetGroupAdmin{{/if}}"
-            title="{{#if $eq groupDetails.groupAdmin 'No'}}Set Group Admin{{else}}Unset Group Admin{{/if}}"
-            data-assigned-user-group-id=groupDetails.assignedUserGroupId)
-    td.aUGCell 
-      each groupDetails in userGroupsDetails
-        .aUGIndividualCell {{ groupDetails.groupOrder }}
-          a.fa.fa-caret-up.incrementGroupOrder.pull-right(title="Increase Group Order"
-            data-assigned-user-group-id=groupDetails.assignedUserGroupId
-            style="{{#if $eq groupDetails.groupOrder 1}}margin-left: 15px;{{/if}}")
-          unless $eq groupDetails.groupOrder 1
-            a.fa.fa-caret-down.decrementGroupOrder.pull-right(title="decrease Group Order"
-              data-assigned-user-group-id=groupDetails.assignedUserGroupId)
-
-template(name="assignUserToUserGroupPopup")
-  if loading.get
-    +spinner
-  else
-    form
+  #js-user-group-members.bold
+    label#memberLabel
+      | {{_ 'manage-members'}}
+    if canAddMoreMember
       label
-        | {{_ 'username'}}
-        .select-user-msg.error.hide.assigned-user-group-not-created {{_ 'error-userNotSelected'}}
-        select.select-user.js-select-user
+        | {{_ 'add-member'}}
+        select#js-select-user
           option(value='', selected='selected') Select One
-          // if isAdmin
-          if currentUser.isAdmin
-            each user in users
-              option(value='{{user._id}}') {{user.username}}
-      label
-        | {{_ 'user-group'}}
-        .select-user-group-msg.error.hide.assigned-user-group-not-created {{_ 'error-userGroupNotSelected'}}
-        select.select-user-group.js-select-user-group
-          option(value='', selected='selected') Select One
-      label
-        | {{_ 'group-order'}}
-        span.error.hide.group-order-blank.assigned-user-group-not-created
-          | {{_ 'error-group-order-blank'}}
-        input.js-group-order(type="number" value="" onkeydown="return false" disabled)
-      unless currentUser.isCoachee
-        label.group-admin-label
-          | {{_ 'group-admin'}}
-          select.js-set-group-admin
-            option(value='No', selected='selected') No
-            option(value='Yes') Yes
-      hr
-      div.buttonsContainer
-        input.primary.wide(type="submit" value="{{_ 'save'}}")
-        div
-        input#cancelAssignedUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+          each user in notUserGroupMember
+            option(value=user._id) {{user.username}}
+    if hasUsersAssignedToIt
+      each user in users
+        .fa.fa-circle.listIndicator 
+          span.memberListComponent {{user.username}}
+          a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
+            .fa.fa-times-circle
+      hr.hrEditUserGroupForm
+      label#groupAdminLabel
+        | {{_ 'group-admins'}}
+      if canAddMoreGroupAdmin
+        label
+          | {{_ 'add-group-admin'}}
+          select#js-select-group-admin
+            option(value='', selected='selected') Select One
+            each userGroupNonAdmin in userGroupNonAdmins
+              option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
+      if hasGroupAdmin
+        each groupAdmin in userGroupAdmins
+          .fa.fa-circle.listIndicator 
+            span.groupAdminListComponent {{groupAdmin.username}}
+            a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
+              .fa.fa-times-circle
+    else
+      .fa.fa-circle.listIndicator 
+        span.memberListComponent {{_ 'none'}}
+    if notAsssignedToAnyUser
+      hr.hrEditUserGroupForm
+      input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
 
