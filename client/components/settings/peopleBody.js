@@ -1004,7 +1004,7 @@ BlazeComponent.extendComponent({
     	'change #js-select-user'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#response').empty();
+        	$('a#manageMembersResponse').empty();
         }
 
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
@@ -1020,7 +1020,6 @@ BlazeComponent.extendComponent({
     			groupOrder,
     		}, (err, res) => {
         	this.setLoading(false);
-        	$("#modal").scrollTop(0);
           if (err) {
           	var message = '';
           	if (err.error) {
@@ -1028,14 +1027,14 @@ BlazeComponent.extendComponent({
           	} else {
           		message = err;
           	}
-            $('a#response').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-            $('a#response a,p').delay(10000).slideUp(500, function() {
+            $('a#manageMembersResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+            $('a#manageMembersResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           } else if (res) {
           	var message = TAPi18n.__('added-member-successfully');
-            $('a#response').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-            $('a#response a,p').delay(10000).slideUp(500, function() {
+            $('a#manageMembersResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+            $('a#manageMembersResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           }
@@ -1058,7 +1057,6 @@ BlazeComponent.extendComponent({
   					} }, 
     				(err, res) => {
   	        	this.setLoading(false);
-  	        	$("#modal").scrollTop(0);
   	          if (err) {
   	          	var message = '';
   	          	if (err.error) {
@@ -1066,14 +1064,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#response').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#response a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-set-successfully');
-  	            $('a#response').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#response a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1085,7 +1083,7 @@ BlazeComponent.extendComponent({
     	'click .unsetUserGroupAdmin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#response').empty();
+        	$('a#manageGroupAdminResponse').empty();
         }
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
     		const userId = $(evt.target).data('user-id');
@@ -1098,7 +1096,6 @@ BlazeComponent.extendComponent({
   					} }, 
     				(err, res) => {
   	        	this.setLoading(false);
-  	        	$("#modal").scrollTop(0);
   	          if (err) {
   	          	var message = '';
   	          	if (err.error) {
@@ -1106,14 +1103,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#response').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#response a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-unset-successfully');
-  	            $('a#response').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#response a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1161,8 +1158,9 @@ BlazeComponent.extendComponent({
         });
     	},
 
-    	'click .errorResponse, click .successResponse'() {
-    		$('a#response a,p').remove();
+    	'click .errorResponse, click .successResponse'(evt) {
+    		const responseId = $(evt.target).parent().closest('a').attr('id');
+    		$('#'+responseId).empty();
     	},
 
       submit(evt) {
@@ -1170,7 +1168,7 @@ BlazeComponent.extendComponent({
 
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#response').empty();
+        	$('a#manageQuotaResponse').empty();
         }
 
         const userGroupId = $('#userGroupTitle').data('user-group-id');
@@ -1206,14 +1204,14 @@ BlazeComponent.extendComponent({
 	          	} else {
 	          		message = err;
 	          	}
-	            $('a#response').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-	            $('a#response a,p').delay(10000).slideUp(500, function() {
+	            $('a#manageQuotaResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+	            $('a#manageQuotaResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          } else if (res) {
 	          	var message = TAPi18n.__('user-group-edited');
-	            $('a#response').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-	            $('a#response a,p').delay(10000).slideUp(500, function() {
+	            $('a#manageQuotaResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+	            $('a#manageQuotaResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          }

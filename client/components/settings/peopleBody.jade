@@ -377,8 +377,8 @@ template(name="editUserGroup")
       | {{_ 'manage-user-group'}} 
     h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
       | {{userGroup.title}}
-    a#response
   hr.hrEditUserGroupForm
+  a#manageQuotaResponse
   label#quota
     | {{_ 'manage-quota'}}
   if loading.get
@@ -397,6 +397,7 @@ template(name="editUserGroup")
     div.editUGButtonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
   hr.hrEditUserGroupForm
+  a#manageMembersResponse
   #js-user-group-members.bold
     label#memberLabel
       | {{_ 'manage-members'}}
@@ -418,6 +419,7 @@ template(name="editUserGroup")
         .fa.fa-circle.listIndicator 
           span.memberListComponent {{_ 'none'}}
     hr.hrEditUserGroupForm
+    a#manageGroupAdminResponse
     label#groupAdminLabel
       | {{_ 'manage-group-admin'}}
     if canAddMoreGroupAdmin
