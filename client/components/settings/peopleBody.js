@@ -1044,7 +1044,7 @@ BlazeComponent.extendComponent({
     	'change #js-select-group-admin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#response').empty();
+        	$('a#manageGroupAdminResponse').empty();
         }
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
     		const userId = $("#js-select-group-admin option:selected").val();
