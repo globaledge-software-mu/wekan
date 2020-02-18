@@ -1264,6 +1264,26 @@ Template.editUserGroup.helpers({
 		return false;
 	},
 
+	lessThan4Members() {
+		const groupId = Session.get('manageUserGroupId');
+		const assignedUGs = AssignedUserGroups.find({userGroupId: groupId});
+		if (assignedUGs.count() < 4) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+
+	lessThan4GroupAdmins() {
+		const groupId = Session.get('manageUserGroupId');
+		const assignedUGs = AssignedUserGroups.find({userGroupId: groupId, groupAdmin: {$in: ['Yes', 'yes']} });
+		if (assignedUGs.count() < 4) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+
 	users() {
 		const groupId = Session.get('manageUserGroupId');
 		const userGroupMembersIds = new Array();
