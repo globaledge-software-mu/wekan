@@ -1376,7 +1376,13 @@ if (Meteor.isServer) {
   });
 
   Users.before.remove((userId, doc) => {
-    // 
+  	var assignedUGIds = new Array();
+    AssignedUserGroups.find({userId: doc._id}).forEach((assignedUG) => {
+    	assignedUGIds.push(assignedUG._id);
+    });
+    for (var i = 0; i < assignedUGIds.length;  i++) {
+    	AssignedUserGroups.remove({_id: assignedUGIds[i]._id});
+    }
   });
 
   // Each board document contains the de-normalized number of users that have
