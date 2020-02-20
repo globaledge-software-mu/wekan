@@ -17,6 +17,8 @@ template(name="people")
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+            li.active
+              a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
         .main-body
           if loading.get
             +spinner
