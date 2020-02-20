@@ -35,17 +35,25 @@
   margin-bottom: 15px;
   line-height: 30px;
   font-size: 20px;
+  font-weight: bold;
 
   .fa-user-plus
     font-size: 16px !important;
 
-#js-user-group-members
-  display: grid;
+#manageUserGroupContainer
+  display: inline-block;
+
+#manageUserGroup
+  display: flex;
+  margin: 0px 18px 0px 18px;
 
   .listProperties
+    overflow: auto;
+    background-color: #dedede;
+    padding: 15px;
     margin-bottom: 0px;
+    margin-top: 15px;
     height: 150px;
-    overflow-y: auto;
 
     .listIndicator
       font-size: 8px !important;
@@ -84,6 +92,27 @@
 
 .hrEditUserGroupForm
   background: darkgray;
+
+#manageQuota
+  background-color: whitesmoke;
+  padding: 15px 10px 20px 10px;
+  border-radius: 5px;
+  height: fit-content;
+
+#manageMembers
+  display: grid;
+  margin: 0px 30px 10px 30px;
+  background-color: whitesmoke;
+  padding: 10px 10px 30px 10px;
+  border-radius: 5px;
+  height: fit-content;
+
+#manageGroupAdmin
+  background-color: whitesmoke;
+  padding: 10px 10px 20px 10px;
+  border-radius: 5px;
+  height: fit-content;
+  display: grid;
 
 #deleteUGButton
   margin-bottom: 0px !important;

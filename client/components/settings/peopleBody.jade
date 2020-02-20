@@ -17,6 +17,8 @@ template(name="people")
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+            li.active
+              a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
         .main-body
           if loading.get
             +spinner
@@ -26,8 +28,8 @@ template(name="people")
             +rolesGeneral
           else if userGroups.get
             +userGroupsGeneral
-          else if assignedUserGroups.get
-            +assignedUserGroupsGeneral
+          else if plans.get
+            +plansGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -377,69 +379,73 @@ template(name="editUserGroup")
       | {{_ 'manage-user-group'}} 
     h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
       | {{userGroup.title}}
+  a#manageUserGroupResponse
   hr.hrEditUserGroupForm
-  a#manageQuotaResponse
-  label#quota
-    | {{_ 'manage-quota'}}
-  if loading.get
-    +spinner
-  form#editUserGroupPopup
-    label.bold
-      | {{_ 'users-quota'}}
-      span.error.hide.users-quota-blank.user-group-not-edited
-        | {{_ 'error-users-quota-blank'}}
-      input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
-    label.bold
-      | {{_ 'boards-quota'}}
-      span.error.hide.boards-quota-blank.user-group-not-edited
-        | {{_ 'error-boards-quota-blank'}}
-      input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
-    div.editUGButtonsContainer
-      input.primary.wide(type="submit" value="{{_ 'save'}}")
-  hr.hrEditUserGroupForm
-  a#manageMembersResponse
-  #js-user-group-members.bold
-    label#memberLabel
-      | {{_ 'manage-members'}}
-    if canAddMoreMember
-      label
-        | {{_ 'add-member'}}
-        select#js-select-user
-          option(value='', selected='selected') Select One
-          each user in notUserGroupMember
-            option(value=user._id) {{user.username}}
-    .test(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
-      if hasUsersAssignedToIt
-        each user in users
-          .fa.fa-circle.listIndicator 
-            span.memberListComponent {{user.username}}
-            a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
-              .fa.fa-times-circle
-      else
-        .fa.fa-circle.listIndicator 
-          span.memberListComponent {{_ 'none'}}
-    hr.hrEditUserGroupForm
-    a#manageGroupAdminResponse
-    label#groupAdminLabel
-      | {{_ 'manage-group-admin'}}
-    if canAddMoreGroupAdmin
-      label
-        | {{_ 'add-group-admin'}}
-        select#js-select-group-admin
-          option(value='', selected='selected') Select One
-          each userGroupNonAdmin in userGroupNonAdmins
-            option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
-    .test(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
-      if hasGroupAdmin
-        each groupAdmin in userGroupAdmins
-          .fa.fa-circle.listIndicator 
-            span.groupAdminListComponent {{groupAdmin.username}}
-            a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
-              .fa.fa-times-circle
-      else
-        .fa.fa-circle.listIndicator 
-          span.groupAdminListComponent {{_ 'none'}}
-    if notAsssignedToAnyUser
-      hr.hrEditUserGroupForm
-      input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
+  #manageUserGroupContainer
+    #manageUserGroup
+      #manageQuota
+        label#quota
+          | {{_ 'manage-quota'}}
+        if loading.get
+          +spinner
+        form#editUserGroupPopup
+          label.bold
+            | {{_ 'users-quota'}}
+            span.error.hide.users-quota-blank.user-group-not-edited
+              | {{_ 'error-users-quota-blank'}}
+            input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+          label.bold
+            | {{_ 'boards-quota'}}
+            span.error.hide.boards-quota-blank.user-group-not-edited
+              | {{_ 'error-boards-quota-blank'}}
+            input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+          div.editUGButtonsContainer
+            input.primary.wide(type="submit" value="{{_ 'save'}}")
+      #manageMembers.bold
+        label#memberLabel
+          | {{_ 'manage-members'}}
+        if canAddMoreMember
+          label
+            | {{_ 'add-member'}}
+            select#js-select-user
+              option(value='', selected='selected') Select One
+              each user in notUserGroupMember
+                option(value=user._id) {{user.username}}
+        #membersList(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
+          if hasUsersAssignedToIt
+            each user in users
+              .fa.fa-circle.listIndicator 
+                span.memberListComponent {{user.username}}
+                a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
+                  .fa.fa-times-circle
+          else
+            .fa.fa-circle.listIndicator 
+              span.memberListComponent {{_ 'none'}}
+      #manageGroupAdmin
+        label#groupAdminLabel
+          | {{_ 'manage-group-admin'}}
+        if canAddMoreGroupAdmin
+          label.bold
+            | {{_ 'add-group-admin'}}
+            select#js-select-group-admin
+              option(value='', selected='selected') Select One
+              each userGroupNonAdmin in userGroupNonAdmins
+                option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
+        #groupAdminslist(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
+          if hasGroupAdmin
+            each groupAdmin in userGroupAdmins
+              .fa.fa-circle.listIndicator 
+                span.groupAdminListComponent {{groupAdmin.username}}
+                a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
+                  .fa.fa-times-circle
+          else
+            .fa.fa-circle.listIndicator 
+              span.groupAdminListComponent {{_ 'none'}}
+     if notAsssignedToAnyUser
+       hr.hrEditUserGroupForm
+       input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
+
+
+template(name="plansGeneral")
+  button.btn.btn-primary {{_ 'test'}}
 
