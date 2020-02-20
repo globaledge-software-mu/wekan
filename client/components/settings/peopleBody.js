@@ -1344,7 +1344,7 @@ Template.editUserGroup.helpers({
   canAddMoreGroupAdmin() {
 		const groupId = Session.get('manageUserGroupId');
 	  const assignedUGs = AssignedUserGroups.find({userGroupId: groupId});
-    const userGroupAdmins = AssignedUserGroups.find({groupAdmin: {$in: ['Yes', 'yes']} });
+    const userGroupAdmins = AssignedUserGroups.find({ userGroupId: groupId, groupAdmin: {$in: ['Yes', 'yes']} });
 		if (assignedUGs.count() > userGroupAdmins.count()) {
 	    return true;
 		} else {
