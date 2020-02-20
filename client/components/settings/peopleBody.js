@@ -12,6 +12,7 @@ BlazeComponent.extendComponent({
     this.people = new ReactiveVar(true);
     this.roles = new ReactiveVar(false);
     this.userGroups = new ReactiveVar(false);
+    this.plans = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -36,6 +37,7 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('role_colors');
       Meteor.subscribe('user_groups');
       Meteor.subscribe('assigned_user_groups');
+      Meteor.subscribe('plans');
     });
   },
   events() {
@@ -178,6 +180,7 @@ BlazeComponent.extendComponent({
       this.people.set('people-setting' === targetID);
       this.roles.set('roles-setting' === targetID);
       this.userGroups.set('user-groups-setting' === targetID);
+      this.plans.set('plans-setting' === targetID);
     }
   },
   events() {
@@ -1004,7 +1007,7 @@ BlazeComponent.extendComponent({
     	'change #js-select-user'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageMembersResponse').empty();
+        	$('a#manageUserGroupResponse').empty();
         }
 
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
@@ -1027,14 +1030,14 @@ BlazeComponent.extendComponent({
           	} else {
           		message = err;
           	}
-            $('a#manageMembersResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-            $('a#manageMembersResponse a,p').delay(10000).slideUp(500, function() {
+            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           } else if (res) {
           	var message = TAPi18n.__('added-member-successfully');
-            $('a#manageMembersResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-            $('a#manageMembersResponse a,p').delay(10000).slideUp(500, function() {
+            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           }
@@ -1044,7 +1047,7 @@ BlazeComponent.extendComponent({
     	'change #js-select-group-admin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageGroupAdminResponse').empty();
+        	$('a#manageUserGroupResponse').empty();
         }
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
     		const userId = $("#js-select-group-admin option:selected").val();
@@ -1064,14 +1067,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-set-successfully');
-  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1083,7 +1086,7 @@ BlazeComponent.extendComponent({
     	'click .unsetUserGroupAdmin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageGroupAdminResponse').empty();
+        	$('a#manageUserGroupResponse').empty();
         }
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
     		const userId = $(evt.target).data('user-id');
@@ -1103,14 +1106,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-unset-successfully');
-  	            $('a#manageGroupAdminResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#manageGroupAdminResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1168,7 +1171,7 @@ BlazeComponent.extendComponent({
 
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageQuotaResponse').empty();
+        	$('a#manageUserGroupResponse').empty();
         }
 
         const userGroupId = $('#userGroupTitle').data('user-group-id');
@@ -1204,14 +1207,14 @@ BlazeComponent.extendComponent({
 	          	} else {
 	          		message = err;
 	          	}
-	            $('a#manageQuotaResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-	            $('a#manageQuotaResponse a,p').delay(10000).slideUp(500, function() {
+	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          } else if (res) {
 	          	var message = TAPi18n.__('user-group-edited');
-	            $('a#manageQuotaResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-	            $('a#manageQuotaResponse a,p').delay(10000).slideUp(500, function() {
+	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          }
