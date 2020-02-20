@@ -1013,7 +1013,7 @@ BlazeComponent.extendComponent({
     		const userGroupId = $('#userGroupTitle').data('user-group-id');
     		const selectedUserId = $("#js-select-user option:selected").val();
     		var groupOrder = 1;
-    		const assignedUserGroups = AssignedUserGroups.find({ userId: selectedUserId }, {$sort: {groupOrder: -1}});
+    		const assignedUserGroups = AssignedUserGroups.find({ userId: selectedUserId, userGroupId }, {$sort: {groupOrder: -1}});
     		if (assignedUserGroups && assignedUserGroups.count() > 0)  {
     			groupOrder = assignedUserGroups[0].groupOrder + 1;
     		}
