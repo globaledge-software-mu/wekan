@@ -13,6 +13,7 @@ BlazeComponent.extendComponent({
     this.roles = new ReactiveVar(false);
     this.userGroups = new ReactiveVar(false);
     this.plans = new ReactiveVar(false);
+    this.subscriptions = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -38,6 +39,7 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('user_groups');
       Meteor.subscribe('assigned_user_groups');
       Meteor.subscribe('plans');
+      Meteor.subscribe('subscriptions');
     });
   },
   events() {
@@ -181,6 +183,7 @@ BlazeComponent.extendComponent({
       this.roles.set('roles-setting' === targetID);
       this.userGroups.set('user-groups-setting' === targetID);
       this.plans.set('plans-setting' === targetID);
+      this.subscriptions.set('subscriptions-setting' === targetID);
     }
   },
   events() {
@@ -1380,3 +1383,39 @@ Template.editUserGroup.helpers({
 	  return Users.find({ _id: {$in: userGroupAdminIds} });
   },
 });
+
+BlazeComponent.extendComponent({
+  plans() {
+    return Plans.find();
+  },
+}).register('plansGeneral');
+
+Template.planRow.helpers({
+	plan() {
+    return Plans.findOne(this.planId);
+  },
+});
+
+BlazeComponent.extendComponent({
+	subscriptions() {
+		return Subscriptions.find();
+  },
+}).register('subscriptionsGeneral');
+
+Template.subscriptionRow.helpers({
+	subscription() {
+    const subscription = Subscriptions.findOne(this.subscriptionId);
+    if (subscription && subscription._id) {
+    	const plan = Plans.findOne(subscription.planId);
+    	if (plan && plan._id) {
+    		subscription.planTitle = plan.title;
+    	}
+    	const userGroup = UserGroups.findOne(subscription.userGroupId);
+    	if (userGroup && userGroup._id) {
+    		subscription.userGroupTitle = userGroup.title;
+    	}
+    }
+    return subscription;
+  },
+});
+

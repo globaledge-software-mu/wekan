@@ -17,8 +17,10 @@ template(name="people")
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
-            li.active
-              a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
+              li.active
+                a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
+              li.active
+                a.js-setting-menu(data-id="subscriptions-setting") {{_ 'subscriptions'}}
         .main-body
           if loading.get
             +spinner
@@ -30,6 +32,8 @@ template(name="people")
             +userGroupsGeneral
           else if plans.get
             +plansGeneral
+          else if subscriptions.get
+            +subscriptionsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -447,5 +451,45 @@ template(name="editUserGroup")
 
 
 template(name="plansGeneral")
-  button.btn.btn-primary {{_ 'test'}}
+  table
+    tbody
+      tr
+        th {{_ 'title'}}
+        th {{_ 'users-quota'}}
+        th {{_ 'boards-quota'}}
+        th {{_ 'price-per-month'}}
+        th {{_ 'price-per-year'}}
+      if currentUser.isAdmin
+        each plan in plans
+          +planRow(planId=plan._id)
+
+template(name="planRow")
+  tr
+    td {{ plan.title }}
+    td {{ plan.usersQuota }}
+    td {{ plan.boardsQuota }}
+    td {{ plan.pricePerMonth }}
+    td {{ plan.pricePerYear }}
+
+template(name="subscriptionsGeneral")
+  table
+    tbody
+      tr
+        th {{_ 'plan'}}
+        th {{_ 'user-group'}}
+        th {{_ 'subscribed-on'}}
+        th {{_ 'expires-on'}}
+        th {{_ 'billing-cycle'}}
+      if currentUser.isAdmin
+        each subscription in subscriptions
+          +subscriptionRow(subscriptionId=subscription._id)
+
+template(name="subscriptionRow")
+  tr
+    td {{ subscription.planTitle }}
+    td {{ subscription.userGroupTitle }}
+    td {{ moment subscription.subscribedOn 'LLL' }}
+    td {{ moment subscription.expiresOn 'LLL' }}
+    td {{ subscription.billingCycle }}
+
 
