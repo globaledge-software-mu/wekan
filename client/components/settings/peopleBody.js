@@ -1414,6 +1414,10 @@ Template.subscriptionRow.helpers({
     	if (userGroup && userGroup._id) {
     		subscription.userGroupTitle = userGroup.title;
     	}
+    	const user = Users.findOne(subscription.subscriberId);
+    	if (userGroup && userGroup._id) {
+    		subscription.subscriberUsername = userGroup.title;
+    	}
     }
     return subscription;
   },

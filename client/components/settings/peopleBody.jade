@@ -477,6 +477,7 @@ template(name="subscriptionsGeneral")
       tr
         th {{_ 'plan'}}
         th {{_ 'user-group'}}
+        th {{_ 'subscriber'}}
         th {{_ 'subscribed-on'}}
         th {{_ 'expires-on'}}
         th {{_ 'billing-cycle'}}
@@ -488,6 +489,7 @@ template(name="subscriptionRow")
   tr
     td {{ subscription.planTitle }}
     td {{ subscription.userGroupTitle }}
+    td {{ subscription.subscriberUsername }}
     td {{ moment subscription.subscribedOn 'LLL' }}
     td {{ moment subscription.expiresOn 'LLL' }}
     td {{ subscription.billingCycle }}
