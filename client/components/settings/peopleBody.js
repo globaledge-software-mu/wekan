@@ -1400,6 +1400,12 @@ BlazeComponent.extendComponent({
 	subscriptions() {
 		return Subscriptions.find();
   },
+
+  events() {
+    return [{
+      'click #add-subscription': Popup.open('addSubscription'),
+    }];
+  },
 }).register('subscriptionsGeneral');
 
 Template.subscriptionRow.helpers({
@@ -1415,11 +1421,159 @@ Template.subscriptionRow.helpers({
     		subscription.userGroupTitle = userGroup.title;
     	}
     	const user = Users.findOne(subscription.subscriberId);
-    	if (userGroup && userGroup._id) {
-    		subscription.subscriberUsername = userGroup.title;
+    	if (user && user._id) {
+    		subscription.subscriberUsername = user.username;
     	}
     }
     return subscription;
   },
 });
+
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  users() {
+    return Users.find();
+  },
+
+	plans() {
+    return Plans.find();
+  },
+
+  events() {
+    return [{
+    	'change #select-subscriber'(e) {
+  			$('#user-group-error-msg').hide();
+    		const selector = $('select#select-a-user-group');
+				selector.empty();
+				selector.prop('disabled', true);
+				$('#saveNewSubscription').prop('disabled', true);
+    		const subscriberId = $(e.target).val();
+    		const assignedUserGroups = AssignedUserGroups.find({userId: subscriberId});
+    		var userGroupsIds = new Array();
+    		if (assignedUserGroups && assignedUserGroups.count() > 0) {
+    			assignedUserGroups.forEach((assignedUG) => {
+    				userGroupsIds.push(assignedUG.userGroupId);
+    			});
+    		}
+    		const subscriberUserGroups = UserGroups.find({_id: {$in: userGroupsIds}});
+    		if (subscriberUserGroups && subscriberUserGroups.count() > 0) {
+  				selector.prop('disabled', false);
+  				$('#saveNewSubscription').prop('disabled', false);
+  				selector.append('<option value="">Select One</option>');
+    			subscriberUserGroups.forEach((group) => {
+    				selector.append('<option value='+group._id+'>'+group.title+'</option>');
+    			});
+    		} else {
+        	$('#user-group-not-selected.newSubscriptionErrorMsg').hide();
+    			$('#user-group-error-msg').show();
+    		}
+    	},
+
+    	submit(evt) {
+        evt.preventDefault();
+        $('.newSubscriptionErrorMsg').hide();
+
+        const planId = this.find('#select-a-plan option:selected').value.trim();
+        const billingCycle = this.find('#select-billing-cycle option:selected').value.trim();
+        const subscriberId = this.find('#select-subscriber option:selected').value.trim();
+        const userGroupId = this.find('#select-a-user-group option:selected').value.trim();
+
+        var notSelected = ['undefined', null, ''];
+        var planNotSelected = notSelected.indexOf(planId) > -1;
+        var billingCycleNotSelected = notSelected.indexOf(billingCycle) > -1;
+        var subscriberNotSelected = notSelected.indexOf(subscriberId) > -1;
+        var userGroupNotSelected = notSelected.indexOf(userGroupId) > -1;
+        if (planNotSelected) {
+        	$('#plan-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (billingCycleNotSelected) {
+        	$('#billing-cycle-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (subscriberNotSelected) {
+        	$('#subscriber-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (userGroupNotSelected) {
+    			$('#user-group-error-msg').hide();
+        	$('#user-group-not-selected.newSubscriptionErrorMsg').show();
+        }
+        if (planNotSelected || billingCycleNotSelected || subscriberNotSelected || userGroupNotSelected) {
+          return false;
+        }
+
+        var subscribedOn = new Date();
+        var expiresOn = new Date();
+      	if (billingCycle === 'monthly') {
+          expiresOn.setMonth(expiresOn.getMonth()+1);
+      	} else if (billingCycle === 'yearly') {
+          expiresOn.setMonth(expiresOn.getMonth()+12);
+      	}
+        
+        var priceSubscribedTo = null;
+        const plan = Plans.findOne({_id: planId});
+        if (plan && plan._id) {
+        	if (billingCycle === 'monthly') {
+          	priceSubscribedTo = plan.pricePerMonth;
+        	} else if (billingCycle === 'yearly') {
+          	priceSubscribedTo = plan.pricePerYear;
+        	}
+        }
+
+      	this.setLoading(true);
+        Subscriptions.insert({
+        	planId,
+          userGroupId,
+          subscriberId,
+          subscribedOn,
+          expiresOn,
+          billingCycle,
+          priceSubscribedTo,
+        }, (err, res) => {
+        	this.setLoading(false);
+          if (err) {
+          	var message = '';
+          	if (err.error) {
+            	message = TAPi18n.__(err.error);
+          	} else {
+          		message = err;
+          	}
+            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($errorMessage);
+            $errorMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          } else if (res) {
+          	var message = TAPi18n.__('new-subscription-added');
+            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($successMessage);
+            $successMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+            Popup.close();
+          }
+        });
+      },
+
+      'click #cancelButton'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('addSubscriptionPopup');
+
 

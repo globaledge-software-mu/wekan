@@ -7,6 +7,9 @@ Subscriptions.attachSchema(new SimpleSchema({
   userGroupId: {
     type: String,
   },
+  subscriberId: {
+    type: String,
+  },
   subscribedOn: {
     type: Date,
   },

@@ -468,16 +468,17 @@ template(name="planRow")
     td {{ plan.title }}
     td {{ plan.usersQuota }}
     td {{ plan.boardsQuota }}
-    td {{ plan.pricePerMonth }}
-    td {{ plan.pricePerYear }}
+    td {{_'€'}} {{ plan.pricePerMonth }}
+    td {{_'€'}} {{ plan.pricePerYear }}
 
 template(name="subscriptionsGeneral")
+  button#add-subscription.btn.btn-primary {{_ 'add-subscription'}}
   table
     tbody
       tr
+        th {{_ 'subscriber'}}
         th {{_ 'plan'}}
         th {{_ 'user-group'}}
-        th {{_ 'subscriber'}}
         th {{_ 'subscribed-on'}}
         th {{_ 'expires-on'}}
         th {{_ 'billing-cycle'}}
@@ -487,11 +488,48 @@ template(name="subscriptionsGeneral")
 
 template(name="subscriptionRow")
   tr
+    td {{ subscription.subscriberUsername }}
     td {{ subscription.planTitle }}
     td {{ subscription.userGroupTitle }}
-    td {{ subscription.subscriberUsername }}
     td {{ moment subscription.subscribedOn 'LLL' }}
     td {{ moment subscription.expiresOn 'LLL' }}
-    td {{ subscription.billingCycle }}
+    td {{_ subscription.billingCycle}}
 
+template(name="addSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'plan'}}
+        #plan-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select#select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        #billing-cycle-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select#select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      // select user and have the usergroup dropdown options be only of the selected user's user groups 
+      label
+        | {{_ 'subscriber'}}
+        #subscriber-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-subscriber-not-selected'}}
+        select#select-subscriber
+          option(value='', selected='selected') Select One
+          each user in users
+            option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        #user-group-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-user-not-part-of-any-usergroups'}}
+        #user-group-not-selected.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupNotSelected'}}
+        select#select-a-user-group(disabled)
+      hr
+      div.buttonsContainer
+        input#saveNewSubscription.primary.wide(disabled type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
 
