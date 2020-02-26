@@ -524,6 +524,8 @@ template(name="addSubscriptionPopup")
             option(value='{{user._id}}') {{user.username}}
       label
         | {{_ 'user-group'}}
+        #already-assigned-user-group-to-subscription.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupAlreadyAssignedToSubscription'}}
+        #already-assigned-user-groups-to-subscriptions.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupsAlreadyAssignedToSubscriptions'}}
         #user-group-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-user-not-part-of-any-usergroups'}}
         #user-group-not-selected.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupNotSelected'}}
         select#select-a-user-group(disabled)

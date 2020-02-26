@@ -1459,6 +1459,9 @@ BlazeComponent.extendComponent({
     return [{
     	'change #select-subscriber'(e) {
   			$('#user-group-error-msg').hide();
+  			$('#user-group-not-selected').hide();
+  			$('#already-assigned-user-group-to-subscription').hide();
+  			$('#already-assigned-user-groups-to-subscriptions').hide();
     		const selector = $('select#select-a-user-group');
 				selector.empty();
 				selector.prop('disabled', true);
@@ -1471,17 +1474,36 @@ BlazeComponent.extendComponent({
     				userGroupsIds.push(assignedUG.userGroupId);
     			});
     		}
-    		const subscriberUserGroups = UserGroups.find({_id: {$in: userGroupsIds}});
-    		if (subscriberUserGroups && subscriberUserGroups.count() > 0) {
+    		const subscribedUGs = new Array();
+  			Subscriptions.find().forEach((subscription) => {
+  				if (!subscribedUGs.includes(subscription.userGroupId)) {
+    				subscribedUGs.push(subscription.userGroupId);
+  				}
+    		});
+    		const subscriberUserGroupsOptions = UserGroups.find({ 
+    			$and: [ 
+    				{ _id: { $in: userGroupsIds } }, 
+    				{ _id: { $nin: subscribedUGs } } 
+  				] 
+    		});
+    		if (subscriberUserGroupsOptions && subscriberUserGroupsOptions.count() > 0) {
   				selector.prop('disabled', false);
   				$('#saveNewSubscription').prop('disabled', false);
   				selector.append('<option value="">Select One</option>');
-    			subscriberUserGroups.forEach((group) => {
+    			subscriberUserGroupsOptions.forEach((group) => {
     				selector.append('<option value='+group._id+'>'+group.title+'</option>');
     			});
     		} else {
-        	$('#user-group-not-selected.newSubscriptionErrorMsg').hide();
-    			$('#user-group-error-msg').show();
+      		const subscriberUserGroups = UserGroups.find({_id: { $in: userGroupsIds } });
+      		if (subscriberUserGroups && subscriberUserGroups.count() > 1) {
+      			$('#already-assigned-user-groups-to-subscriptions').show();
+      		} 
+      		if (subscriberUserGroups && subscriberUserGroups.count() > 0 && subscriberUserGroups.count() < 2) {
+      			$('#already-assigned-user-group-to-subscription').show();
+      		} 
+      		if (subscriberUserGroups.count() < 1) {
+      			$('#user-group-error-msg').show();
+      		}
     		}
     	},
 
@@ -1509,7 +1531,6 @@ BlazeComponent.extendComponent({
         	$('#subscriber-error-msg.newSubscriptionErrorMsg').show();
         }
         if (userGroupNotSelected) {
-    			$('#user-group-error-msg').hide();
         	$('#user-group-not-selected.newSubscriptionErrorMsg').show();
         }
         if (planNotSelected || billingCycleNotSelected || subscriberNotSelected || userGroupNotSelected) {

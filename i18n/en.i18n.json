@@ -326,6 +326,8 @@
     "error-user-notAllowSelf": "You can not invite yourself",
     "error-user-notCreated": "This user is not created",
     "error-user-not-part-of-any-usergroups": "Selected user is not part of any user-groups",
+    "error-userGroupAlreadyAssignedToSubscription": "Selected user's user-group is already assigned to a subscription",
+    "error-userGroupsAlreadyAssignedToSubscriptions": "Selected user's user-groups are already assigned to subscriptions",
     "error-subscriber-not-selected": "Please select a subscriber",
     "error-plan-not-selected": "Please select a plan",
     "error-billing-cycle-not-selected": "Please select a billing cycle",

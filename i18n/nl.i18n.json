@@ -325,6 +325,8 @@
     "error-user-notAllowSelf": "Je kan jezelf niet uitnodigen",
     "error-user-notCreated": "Deze gebruiker is niet aangemaakt",
     "error-user-not-part-of-any-usergroups": "Geselecteerde gebruiker maakt geen deel uit van gebruikersgroepen",
+    "error-userGroupAlreadyAssignedToSubscription": "De gebruikersgroep van de geselecteerde gebruiker is al toegewezen aan een abonnement",
+    "error-userGroupsAlreadyAssignedToSubscriptions": "Gebruikersgroepen van geselecteerde gebruikers zijn al toegewezen aan abonnementen",
     "error-subscriber-not-selected": "Selecteer een abonnee",
     "error-plan-not-selected": "Selecteer een plan",
     "error-billing-cycle-not-selected": "Selecteer een betalingscyclus",
