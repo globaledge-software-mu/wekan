@@ -61,8 +61,8 @@ if (Meteor.isServer) {
 		// with those of the plans and reset the UserGroup's usedUsersQuota and usedBoardsQuota to Nil.
 		const plan = Plans.find(doc.planId);
 		if (plan && plan._id) {
-			Plans.update(
-				{ _id: plan._id }, { 
+			UserGroups.update(
+				{ _id: doc.userGroupId }, { 
 					usersQuota: plan.usersQuota, 
 					usedUsersQuota: 0, 
 					boardsQuota: plan.boardsQuota, 
