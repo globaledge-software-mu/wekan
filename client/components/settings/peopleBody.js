@@ -1564,6 +1564,7 @@ BlazeComponent.extendComponent({
           expiresOn,
           billingCycle,
           priceSubscribedTo,
+          assignerId: Meteor.user()._id
         }, (err, res) => {
         	this.setLoading(false);
           if (err) {

@@ -22,6 +22,11 @@ Subscriptions.attachSchema(new SimpleSchema({
   priceSubscribedTo: { // currently use the price directly from the plan's document
     type: Number,
   },
+  assignerId: { 
+    type: String,
+    optional: true,
+    defaultValue: null,
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return
@@ -48,6 +53,27 @@ Subscriptions.attachSchema(new SimpleSchema({
 Subscriptions.helpers({
 	//
 });
+
+if (Meteor.isServer) {
+	Subscriptions.after.insert((assignerId, doc) => {
+
+		// Once a user's UserGroup is subscribed to a plan, that Usergroup's usersQuota and boardsQuota gets overwritten 
+		// with those of the plans and reset the UserGroup's usedUsersQuota and usedBoardsQuota to Nil.
+		const plan = Plans.find(doc.planId);
+		if (plan && plan._id) {
+			Plans.update(
+				{ _id: plan._id }, { 
+					usersQuota: plan.usersQuota, 
+					usedUsersQuota: 0, 
+					boardsQuota: plan.boardsQuota, 
+					usedBoardsQuota: 0,
+				}
+			);
+		}
+		//______________//
+
+  });
+}
 
 Subscriptions.allow({
   insert() {
