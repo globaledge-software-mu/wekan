@@ -22,6 +22,14 @@ Subscriptions.attachSchema(new SimpleSchema({
   priceSubscribedTo: { // currently use the price directly from the plan's document
     type: Number,
   },
+  archived: {
+    type: Boolean,
+    autoValue() {
+      if (!this.isSet) {
+        return false;
+      }
+    },
+  },
   assignerId: { 
     type: String,
     optional: true,

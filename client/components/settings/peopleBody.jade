@@ -473,7 +473,7 @@ template(name="planRow")
 
 template(name="subscriptionsGeneral")
   button#add-subscription.btn.btn-primary {{_ 'add-subscription'}}
-  table
+  table#subscriptionsDataTable
     tbody
       tr
         th {{_ 'subscriber'}}
@@ -482,6 +482,7 @@ template(name="subscriptionsGeneral")
         th {{_ 'subscribed-on'}}
         th {{_ 'expires-on'}}
         th {{_ 'billing-cycle'}}
+        th {{_ 'action'}}
       if currentUser.isAdmin
         each subscription in subscriptions
           +subscriptionRow(subscriptionId=subscription._id)
@@ -494,6 +495,11 @@ template(name="subscriptionRow")
     td {{ moment subscription.subscribedOn 'LLL' }}
     td {{ moment subscription.expiresOn 'LLL' }}
     td {{_ subscription.billingCycle}}
+    td
+      a.upgradeSubscription(data-subscription-id=subscription._id)
+        | {{_ 'upgrade'}}
+      a.archiveSubscription(data-subscription-id=subscription._id)
+        | {{_ 'cancel'}}
 
 template(name="addSubscriptionPopup")
   if loading.get

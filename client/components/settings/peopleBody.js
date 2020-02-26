@@ -1398,7 +1398,7 @@ Template.planRow.helpers({
 
 BlazeComponent.extendComponent({
 	subscriptions() {
-		return Subscriptions.find();
+		return Subscriptions.find({archived: {$ne: true}});
   },
 
   events() {
@@ -1407,6 +1407,51 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('subscriptionsGeneral');
+
+Template.subscriptionRow.events({
+  'click .archiveSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+    const subscription = Subscriptions.findOne(subscriptionId);
+    if (subscription && subscription._id) {
+    	const user = Users.findOne(subscription.subscriberId);
+    	const userGroup = UserGroups.findOne(subscription.userGroupId);
+    	const plan = Plans.findOne(subscription.planId);
+    	if (user && user.username && userGroup && userGroup.title && plan && plan.title) {
+        swal({
+          title: 'Confirm subscription cancellation!',
+          text: "Cancel "+user.username+"'s subscription of UserGroup '"+userGroup.title+"' to Plan '"+plan.title+"'?",
+          icon: 'warning',
+          buttons: ['No', 'Yes'],
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+          	Subscriptions.update(
+        			{ _id: subscriptionId }, {
+        				$set: {
+        					archived: true,
+        				}
+        			}, (err, res) => {
+	            	if (err) {
+	            		swal(err, {
+	                  icon: "error",
+	                });
+	            	} else if (res) {
+	            		var message = TAPi18n.__('subscription_was_successfully_archived');
+	            		swal(message, {
+	                  icon: "success",
+	                });
+	            	}
+        			}
+      			);
+          } else {
+            return false;
+          }
+        });
+    	}
+    }
+  },
+});
 
 Template.subscriptionRow.helpers({
 	subscription() {
@@ -1475,7 +1520,9 @@ BlazeComponent.extendComponent({
     			});
     		}
     		const subscribedUGs = new Array();
-  			Subscriptions.find().forEach((subscription) => {
+  			Subscriptions.find({
+  				archived: {$ne: true}
+  			}).forEach((subscription) => {
   				if (!subscribedUGs.includes(subscription.userGroupId)) {
     				subscribedUGs.push(subscription.userGroupId);
   				}
