@@ -1451,7 +1451,164 @@ Template.subscriptionRow.events({
     	}
     }
   },
+
+  'click .upgradeSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+		Popup.open('upgradeSubscription')(e);
+    Session.set('upgradeSubscriptionOfIdentifier', subscriptionId);
+  },
+
 });
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+
+	onRendered() {
+    this.setLoading(false);
+
+		// had to use two different session keys and setting them in different stages as the popup calls its helper function twice each time it opens and this was not setting 
+		// the session for the key 'upgradeSubscriptionOfId' with the right value at both times, it was either the in the first call or the second call that the right value was being set. 
+		// But using the two session keys 'upgradeSubscriptionOfIdentifier' and 'upgradeSubscriptionOfId', and setting/getting them at different stages and deleting the keys when the popup closes,
+		// made sure that the popup's helper funstion would always set the right value for the key 'upgradeSubscriptionOfId' 
+		const subscriptionId = Session.get('upgradeSubscriptionOfIdentifier')
+    Session.set('upgradeSubscriptionOfId', subscriptionId);
+	},
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+	subscription() {
+		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+		const subscription = Subscriptions.findOne({_id: subscriptionId});
+		if (subscription && subscription._id) {
+			const subscriber = Users.findOne({_id: subscription.subscriberId});
+			if (subscriber && subscriber._id) {
+				subscription.subscriberUsername = subscriber.username;
+			}
+			const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+			if (userGroup && userGroup._id) {
+				subscription.userGroupTitle = userGroup.title;
+			}
+			return subscription;
+		}
+	},
+
+	onDestroyed() {
+		delete Session.keys['upgradeSubscriptionOfIdentifier', 'upgradeSubscriptionOfId']
+	},
+
+	plans() {
+		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+		const subscription = Subscriptions.findOne({_id: subscriptionId});
+		if (subscription && subscription._id) {
+			const plan = Plans.findOne({_id: subscription.planId});
+			if (plan && plan._id) {
+				// Since in the future we'll need to give the admin the right to create new plans and since for now we have 
+				// no way of determining the inferior plans, so we'll just exclude the current plan of the subscription in the return.
+				return Plans.find({_id: {$ne: plan._id}});
+			}
+		}
+  },
+
+  events() {
+    return [{
+    	submit(e) {
+    		e.preventDefault();
+        $('.upgradeSubscriptionErrorMsg').hide();
+
+        const planId = this.find('.select-a-plan option:selected').value.trim();
+        const billingCycle = this.find('.select-billing-cycle option:selected').value.trim();
+
+        var notSelected = ['undefined', null, ''];
+        var planNotSelected = notSelected.indexOf(planId) > -1;
+        var billingCycleNotSelected = notSelected.indexOf(billingCycle) > -1;
+        if (planNotSelected) {
+        	$('.plan-error-msg.upgradeSubscriptionErrorMsg').show();
+        }
+        if (billingCycleNotSelected) {
+        	$('.billing-cycle-error-msg.upgradeSubscriptionErrorMsg').show();
+        }
+        if (planNotSelected || billingCycleNotSelected) {
+          return false;
+        }
+
+    		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+    		const subscription = Subscriptions.findOne({_id: subscriptionId});
+    		if (subscription && subscription._id) {
+      		this.setLoading(true);
+          Subscriptions.update(
+        		{_id: subscriptionId}, {
+        			$set: {
+        				planId,
+        				billingCycle,
+        			}
+        		}, (err, res) => {
+              if (err) {
+              	this.setLoading(false);
+              	var message = '';
+              	if (err.error) {
+                	message = TAPi18n.__(err.error);
+              	} else {
+              		message = err;
+              	}
+                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                $('#header-main-bar').before($errorMessage);
+                $errorMessage.delay(10000).slideUp(500, function() {
+                  $(this).remove();
+                });
+              } else if (res) {
+              	const plan = Plans.findOne({_id: planId});
+              	// update UserGroups, overwriting its usersQuota and boardsQuota with that of the upgraded plan and 
+              	// resetting the user-group's usedUsersQuota and usedBoardsQuota to zero.
+              	UserGroups.update(
+            			{_id: subscription.userGroupId}, {
+            				$set: {
+            					usersQuota: plan.usersQuota,
+            					usedUsersQuota: 0,
+            					boardsQuota: plan.boardsQuota,
+            					usedBoardsQuota: 0,
+            				}
+            			}, (err, res) => {
+                  	this.setLoading(false);
+                    if (err) {
+                    	var message = '';
+                    	if (err.error) {
+                      	message = TAPi18n.__(err.error);
+                    	} else {
+                    		message = err;
+                    	}
+                      var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                      $('#header-main-bar').before($errorMessage);
+                      $errorMessage.delay(10000).slideUp(500, function() {
+                        $(this).remove();
+                      });
+                    } else if (res) {
+                    	var message = TAPi18n.__('subscription-upgraded-successfully');
+                      var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                      $('#header-main-bar').before($successMessage);
+                      $successMessage.delay(10000).slideUp(500, function() {
+                        $(this).remove();
+                      });
+                      Popup.close();
+                    }
+                  }
+          			);
+              }
+              Popup.close();
+            }
+      		);
+    		}
+    	},
+    }];
+  },
+}).register('upgradeSubscriptionPopup');
 
 Template.subscriptionRow.helpers({
 	subscription() {
@@ -1558,8 +1715,8 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
         $('.newSubscriptionErrorMsg').hide();
 
-        const planId = this.find('#select-a-plan option:selected').value.trim();
-        const billingCycle = this.find('#select-billing-cycle option:selected').value.trim();
+        const planId = this.find('.select-a-plan option:selected').value.trim();
+        const billingCycle = this.find('.select-billing-cycle option:selected').value.trim();
         const subscriberId = this.find('#select-subscriber option:selected').value.trim();
         const userGroupId = this.find('#select-a-user-group option:selected').value.trim();
 
@@ -1569,10 +1726,10 @@ BlazeComponent.extendComponent({
         var subscriberNotSelected = notSelected.indexOf(subscriberId) > -1;
         var userGroupNotSelected = notSelected.indexOf(userGroupId) > -1;
         if (planNotSelected) {
-        	$('#plan-error-msg.newSubscriptionErrorMsg').show();
+        	$('.plan-error-msg.newSubscriptionErrorMsg').show();
         }
         if (billingCycleNotSelected) {
-        	$('#billing-cycle-error-msg.newSubscriptionErrorMsg').show();
+        	$('.billing-cycle-error-msg.newSubscriptionErrorMsg').show();
         }
         if (subscriberNotSelected) {
         	$('#subscriber-error-msg.newSubscriptionErrorMsg').show();

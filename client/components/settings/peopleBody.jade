@@ -508,15 +508,15 @@ template(name="addSubscriptionPopup")
     form
       label
         | {{_ 'plan'}}
-        #plan-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
-        select#select-a-plan
+        .plan-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
           option(value='', selected='selected') Select One
           each plan in plans
             option(value='{{plan._id}}') {{plan.title}}
       label
         | {{_ 'billing-cycle'}}
-        #billing-cycle-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
-        select#select-billing-cycle
+        .billing-cycle-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
           option(value='', selected='selected') Select One
           option(value='monthly') {{_ 'monthly'}}
           option(value='yearly') {{_ 'yearly'}}
@@ -538,6 +538,43 @@ template(name="addSubscriptionPopup")
       hr
       div.buttonsContainer
         input#saveNewSubscription.primary.wide(disabled type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="upgradeSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form#upgradeSubscriptionForm
+      input#upgradeSubscriptionHiddenInput
+      p.center.bold 
+        | {{_ 'subscriber'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.subscriberUsername}}
+      p.center.bold 
+        | {{_ 'user-group'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.userGroupTitle}}
+      hr
+      label
+        | {{_ 'plan'}}
+        .plan-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        .billing-cycle-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      hr
+      div.buttonsContainer
+        input#upgradeSubscription.primary.wide(type="submit" value="{{_ 'save'}}")
         div
         input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
 
