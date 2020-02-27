@@ -1437,10 +1437,28 @@ Template.subscriptionRow.events({
 	                  icon: "error",
 	                });
 	            	} else if (res) {
-	            		var message = TAPi18n.__('subscription_was_successfully_archived');
-	            		swal(message, {
-	                  icon: "success",
-	                });
+	            		UserGroups.update(
+            				{_id: subscription.userGroupId}, {
+            					$set: {
+            						usersQuota: 0,
+            						usedUsersQuota: 0,
+            						boardsQuota: 0,
+            						usedBoardsQuota: 0,
+            					}
+            				}, (err, res) => {
+      	            	if (err) {
+      	            		swal(err, {
+      	                  icon: "error",
+      	                });
+      	            	} else if (res) {
+      	            		var message = TAPi18n.__('subscription_was_successfully_archived');
+      	            		swal(message, {
+      	                  icon: "success",
+      	                });
+      	            	}
+              			}
+          				);
+
 	            	}
         			}
       			);
