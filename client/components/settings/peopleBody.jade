@@ -488,7 +488,7 @@ template(name="subscriptionsGeneral")
           +subscriptionRow(subscriptionId=subscription._id)
 
 template(name="subscriptionRow")
-  tr
+  tr(id=subscription._id)
     td {{ subscription.subscriberUsername }}
     td {{ subscription.planTitle }}
     td {{ subscription.userGroupTitle }}

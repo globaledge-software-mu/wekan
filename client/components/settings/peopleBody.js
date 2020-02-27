@@ -1408,6 +1408,38 @@ BlazeComponent.extendComponent({
   },
 }).register('subscriptionsGeneral');
 
+Template.subscriptionRow.onRendered(() => {
+  const subscriptionId = Template.instance().data.subscriptionId;
+  const subscription = Subscriptions.findOne({_id: subscriptionId});
+  if (subscription && subscription._id) {
+  	const currentDateTime = new Date();
+  	if (currentDateTime > subscription.expiresOn) {
+  		$(Template.instance().firstNode).addClass('expired');
+  	}
+  }
+});
+
+Template.subscriptionRow.helpers({
+	subscription() {
+    const subscription = Subscriptions.findOne(this.subscriptionId);
+    if (subscription && subscription._id) {
+    	const plan = Plans.findOne(subscription.planId);
+    	if (plan && plan._id) {
+    		subscription.planTitle = plan.title;
+    	}
+    	const userGroup = UserGroups.findOne(subscription.userGroupId);
+    	if (userGroup && userGroup._id) {
+    		subscription.userGroupTitle = userGroup.title;
+    	}
+    	const user = Users.findOne(subscription.subscriberId);
+    	if (user && user._id) {
+    		subscription.subscriberUsername = user.username;
+    	}
+    }
+    return subscription;
+  },
+});
+
 Template.subscriptionRow.events({
   'click .archiveSubscription'(e) {
     const subscriptionId = $(e.target).data('subscription-id');
@@ -1627,28 +1659,6 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('upgradeSubscriptionPopup');
-
-Template.subscriptionRow.helpers({
-	subscription() {
-    const subscription = Subscriptions.findOne(this.subscriptionId);
-    if (subscription && subscription._id) {
-    	const plan = Plans.findOne(subscription.planId);
-    	if (plan && plan._id) {
-    		subscription.planTitle = plan.title;
-    	}
-    	const userGroup = UserGroups.findOne(subscription.userGroupId);
-    	if (userGroup && userGroup._id) {
-    		subscription.userGroupTitle = userGroup.title;
-    	}
-    	const user = Users.findOne(subscription.subscriberId);
-    	if (user && user._id) {
-    		subscription.subscriberUsername = user.username;
-    	}
-    }
-    return subscription;
-  },
-});
-
 
 BlazeComponent.extendComponent({
   onCreated() {
