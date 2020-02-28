@@ -63,6 +63,42 @@ Subscriptions.helpers({
 });
 
 if (Meteor.isServer) {
+
+	// Cron job to check for expired subscriptions
+	SyncedCron.add({
+	  name: 'checkForExpiredSubscriptions',
+	  schedule: function(parser) {
+	    // parser is a later.parse object
+	  	// fires at 00:01am every day
+	    return parser.text('at 00:01 am');
+	  },
+	  job: function() {
+	    // execute codes for verifications of any expired subscriptions
+	  	// if found any, suspend them by resetting its all of its quota to zero
+	  	Subscriptions.find({
+	  		archived: { $ne: true },
+	  		expiresOn: { $lt: new Date() }
+	  	}).forEach((subscription) => {
+	  		Subscriptions.update(
+  				{ _id: subscription._id }, {
+  					$set: {
+  						usersQuota: 0,
+  						usedUsersQuota: 0,
+  						boardsQuota: 0,
+  						usedBoardsQuota: 0,
+  					}
+  				}
+	  		);
+	  	});
+	  	// return arrayBearingTheSuspendedSubscriptionIds;
+	  }
+	}); // End of the "Cron job to check for expired subscriptions"
+
+
+	// This line is to to start processing the cron jobs
+  SyncedCron.start();
+
+
 	Subscriptions.after.insert((assignerId, doc) => {
 
 		// Once a user's UserGroup is subscribed to a plan, that Usergroup's usersQuota and boardsQuota gets overwritten 
@@ -82,7 +118,8 @@ if (Meteor.isServer) {
 		}
 		//______________//
 
-  });
+  }); // End tag of Subscriptions.after.insert()
+
 }
 
 Subscriptions.allow({
