@@ -96,6 +96,27 @@ BlazeComponent.extendComponent({
     this.number.set(users.count());
     return users;
   },
+  hasExpiredSubscriptions() {
+  	const expiredSubscription = Subscriptions.findOne({ 
+  		archived: { $ne: true }, 
+  		expiresOn: { $lt: new Date() },
+		});
+
+  	if (expiredSubscription && expiredSubscription._id) {
+  		return true;
+  	} else {
+  		return false;
+  	}
+  },
+  expiredSubscriptionsCount() {
+  	const expiredSubscriptions = Subscriptions.find({ 
+  		archived: { $ne: true }, 
+  		expiresOn: { $lt: new Date() },
+		});
+  	if (expiredSubscriptions && expiredSubscriptions.count() > 0) {
+  		return '(' + expiredSubscriptions.count() + ')';
+  	}
+  },
   managerUserGroupsUsersList() {
     const role = Roles.findOne({name: 'Manager'});
     if (role && role._id) {

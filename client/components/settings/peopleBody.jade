@@ -21,6 +21,9 @@ template(name="people")
                 a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
               li.active
                 a.js-setting-menu(data-id="subscriptions-setting") {{_ 'subscriptions'}}
+                  if hasExpiredSubscriptions
+                    span#expiredSubscriptionsBadge
+                      | {{expiredSubscriptionsCount}}
         .main-body
           if loading.get
             +spinner
