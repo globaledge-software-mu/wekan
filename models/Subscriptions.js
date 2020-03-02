@@ -1,26 +1,8 @@
 Subscriptions = new Mongo.Collection('subscriptions');
 
 Subscriptions.attachSchema(new SimpleSchema({
-	planId: {
-    type: String,
-  },
   userGroupId: {
     type: String,
-  },
-  subscriberId: {
-    type: String,
-  },
-  subscribedOn: {
-    type: Date,
-  },
-  expiresOn: {
-    type: Date,
-  },
-  billingCycle: { // yearly/monthly
-    type: String,
-  },
-  priceSubscribedTo: { // currently use the price directly from the plan's document
-    type: Number,
   },
   archived: {
     type: Boolean,
@@ -29,11 +11,6 @@ Subscriptions.attachSchema(new SimpleSchema({
         return false;
       }
     },
-  },
-  assignerId: { 
-    type: String,
-    optional: true,
-    defaultValue: null,
   },
   createdAt: {
     type: Date,
