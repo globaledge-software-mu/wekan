@@ -1671,6 +1671,15 @@ BlazeComponent.extendComponent({
                     }
                   }
           			);
+
+              	Subscriptions.update(
+            			{ _id: subscription._id }, {
+            				$set: {
+            					status: 'upgraded',
+            					statusSetOn: new Date(),
+            				}
+            			}
+              	);
               }
               Popup.close();
             }
