@@ -36,6 +36,7 @@
     "qs": "^6.5.2",
     "source-map-support": "^0.5.9",
     "xss": "^1.0.3",
-    "sweetalert": "2.1.2"
+    "sweetalert": "2.1.2",
+    "littledata:synced-cron": "1.5.1"
   }
 }
