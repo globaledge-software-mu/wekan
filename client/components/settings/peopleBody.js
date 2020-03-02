@@ -1614,11 +1614,23 @@ BlazeComponent.extendComponent({
     		const subscription = Subscriptions.findOne({_id: subscriptionId});
     		if (subscription && subscription._id) {
       		this.setLoading(true);
+
+          var expiresOn = new Date();
+        	if (billingCycle === 'monthly') {
+            expiresOn.setMonth(expiresOn.getMonth()+1);
+        	} else if (billingCycle === 'yearly') {
+            expiresOn.setMonth(expiresOn.getMonth()+12);
+        	}
+
           Subscriptions.update(
         		{_id: subscriptionId}, {
         			$set: {
         				planId,
         				billingCycle,
+      					status: 'upgraded',
+      					statusSetOn: new Date(),
+    					  subscribedOn: new Date(),
+    					  expiresOn,
         			}
         		}, (err, res) => {
               if (err) {
@@ -1671,15 +1683,6 @@ BlazeComponent.extendComponent({
                     }
                   }
           			);
-
-              	Subscriptions.update(
-            			{ _id: subscription._id }, {
-            				$set: {
-            					status: 'upgraded',
-            					statusSetOn: new Date(),
-            				}
-            			}
-              	);
               }
               Popup.close();
             }
