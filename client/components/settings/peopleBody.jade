@@ -495,8 +495,8 @@ template(name="subscriptionRow")
     td {{ subscription.subscriberUsername }}
     td {{ subscription.planTitle }}
     td {{ subscription.userGroupTitle }}
-    td {{ moment subscription.subscribedOn 'LLL' }}
-    td {{ moment subscription.expiresOn 'LLL' }}
+    td {{ moment subscription.subscribedOn 'LL' }}
+    td {{ moment subscription.expiresOn 'LL' }}
     td {{_ subscription.billingCycle}}
     td
       a.upgradeSubscription(data-subscription-id=subscription._id)
