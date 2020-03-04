@@ -81,13 +81,183 @@ Subscriptions.helpers({
 
 if (Meteor.isServer) {
 
-	// Cron job to check for expired subscriptions
+	// Cron job to check for SOON-TO-BE expired subscriptions && 
+	// notify the subscriber by sending him an e-mail for he needs 
+	// to renew his subscription as soon as possible 
 	SyncedCron.add({
-	  name: 'checkForExpiredSubscriptions',
+	  name: 'check-for-soon-to-be-expired-subscriptions',
 	  schedule: function(parser) {
 	    // parser is a later.parse object
-	  	// fires at 00:01am every day
-	    return parser.text('at 00:01 am');
+	  	// fires at 03:01 am every day
+	    return parser.text('at 03:01 am');
+	  },
+	  job: function() {
+	  	Subscriptions.find({
+	  		archived: { $ne: true },
+			  status: { $nin: ['cancelled', 'suspended'] },
+	  		expiresOn: { $gte: new Date() }, 
+	  	}).forEach((subscription) => {
+	  		const expirationDate = new Date(subscription.expiresOn);
+	  		expirationDate.setHours(0,0,0,0);
+
+	  		const date = expirationDate.getDate();
+	  		const month = expirationDate.getMonth();
+	  		const year = expirationDate.getFullYear();
+
+	  		const currentDay = new Date();
+	  		currentDay.setHours(0,0,0,0);
+
+	  		const oneWeekBeforeExpiration = new Date(expirationDate);
+	  		oneWeekBeforeExpiration.setHours(0,0,0,0);
+	  		oneWeekBeforeExpiration.setDate(date - 7);
+
+	  		const twoWeeksBeforeExpiration = new Date(expirationDate);
+	  		twoWeeksBeforeExpiration.setHours(0,0,0,0);
+	  		twoWeeksBeforeExpiration.setDate(date - 14);
+
+	  		const threeWeeksBeforeExpiration = new Date(expirationDate);
+	  		threeWeeksBeforeExpiration.setHours(0,0,0,0);
+	  		threeWeeksBeforeExpiration.setDate(date - 21);
+
+	  		const oneMonthBeforeExpiration = new Date(expirationDate);
+	  		oneMonthBeforeExpiration.setHours(0,0,0,0);
+	  		oneMonthBeforeExpiration.setMonth(month - 1);
+
+	  		const twoMonthsBeforeExpiration = new Date(expirationDate); 
+	  		twoMonthsBeforeExpiration.setHours(0,0,0,0);
+	  		twoMonthsBeforeExpiration.setMonth(month - 2);
+
+	  		const user = Users.findOne({_id: subscription.subscriberId});
+  			const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+  			const plan = Plans.findOne({_id: subscription.planId});
+
+	  		if (user && user._id && userGroup && userGroup._id && plan && plan._id) {
+	  			const subscriber = user.username;
+	  			const subscriberEmail = user.emails[0].address;
+	  			const planTitle = plan.title;
+	  			const userGroupTitle = userGroup.title;
+
+		  		if (currentDay.getTime() == expirationDate.getTime()) {
+		  			//notify the subscriber that his subscription expired today
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expired-today-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expired-today-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		} else if (currentDay.getTime() == oneWeekBeforeExpiration.getTime()) {
+		  			//notify the subscriber that only one week is left for his subscription to expire 
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-one-week-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-one-week-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		} else if (currentDay.getTime() == twoWeeksBeforeExpiration.getTime()) {
+		  			//notify the subscriber that only two weeks are left for his subscription to expire 
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-two-weeks-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-two-weeks-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		} else if (currentDay.getTime() == threeWeeksBeforeExpiration.getTime()) {
+		  			//notify the subscriber that only three weeks are left for his subscription to expire 
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-three-weeks-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-three-weeks-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		} else if (currentDay.getTime() == oneMonthBeforeExpiration.getTime()) {
+		  			//notify the subscriber that only one month is left for his subscription to expire 
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-one-month-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-one-month-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		} else if (currentDay.getTime() == twoMonthsBeforeExpiration.getTime()) {
+		  			//notify the subscriber that only two months is left for his subscription to expire 
+		  	    try {
+		  	      const params = {
+	  	          subscriber,
+	  	          planTitle,
+	  	          userGroupTitle,
+	  	        };
+		  	      const lang = user.profile.language;
+		  	      Email.send({
+		  	        to: subscriberEmail,
+		  	        from: Accounts.emailTemplates.from,
+		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-two-months-subject', params, lang), 
+		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-expires-after-two-months-text', params, lang),
+		  	      });
+		  	    } catch (e) {
+		  	      throw new Meteor.Error('email-fail', e.message);
+		  	    }
+		  		}
+	  		}
+	  	});
+	  }
+	}); // End of the "Cron job to check for SOON-TO-BE expired subscriptions && send the subscriber an e-mail to remind him that he needs to renew his subscription asap"
+
+	// Cron job to check for expired subscriptions
+	SyncedCron.add({
+	  name: 'check-for-expired-subscriptions',
+	  schedule: function(parser) {
+	    // parser is a later.parse object
+	  	// fires at 03:01 am every day
+	    return parser.text('at 03:01 am');
 	  },
 	  job: function() {
 
