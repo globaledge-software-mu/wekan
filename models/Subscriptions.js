@@ -209,7 +209,7 @@ if (Meteor.isServer) {
 		  	    } catch (e) {
 		  	      throw new Meteor.Error('email-fail', e.message);
 		  	    }
-		  		} else if (currentDay.getTime() == oneMonthBeforeExpiration.getTime()) {
+		  		} else if (currentDay.getTime() == oneMonthBeforeExpiration.getTime() && subscription.billingCycle != 'monthly') {
 		  			//notify the subscriber that only one month is left for his subscription to expire 
 		  	    try {
 		  	      const params = {
@@ -227,7 +227,7 @@ if (Meteor.isServer) {
 		  	    } catch (e) {
 		  	      throw new Meteor.Error('email-fail', e.message);
 		  	    }
-		  		} else if (currentDay.getTime() == twoMonthsBeforeExpiration.getTime()) {
+		  		} else if (currentDay.getTime() == twoMonthsBeforeExpiration.getTime() && subscription.billingCycle != 'monthly') {
 		  			//notify the subscriber that only two months is left for his subscription to expire 
 		  	    try {
 		  	      const params = {
