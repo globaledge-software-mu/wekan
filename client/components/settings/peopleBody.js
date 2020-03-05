@@ -1561,6 +1561,23 @@ Template.subscriptionRow.events({
 	    	                $successMessage.delay(10000).slideUp(500, function() {
 	    	                  $(this).remove();
 	    	                });
+
+	    	    		  	    try {
+	    	    		  	      const params = {
+	    	    	  	          subscriber: user.username,
+	    	    	  	          planTitle: plan.title,
+	    	    	  	          userGroupTitle: userGroup.title,
+	    	    	  	        };
+	    	    		  	      const lang = user.profile.language;
+	    	    		  	      Email.send({
+	    	    		  	        to: user.emails[0].address,
+	    	    		  	        from: Accounts.emailTemplates.from,
+	    	    		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang), 
+	    	    		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-text', params, lang),
+	    	    		  	      });
+	    	    		  	    } catch (e) {
+	    	    		  	      throw new Meteor.Error('email-fail', e.message);
+	    	    		  	    }
 	    	              }
 	    	            }
 	                );
