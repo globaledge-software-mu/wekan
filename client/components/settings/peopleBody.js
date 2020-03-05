@@ -1462,6 +1462,125 @@ Template.subscriptionRow.helpers({
 });
 
 Template.subscriptionRow.events({
+
+  'click .renewSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+    const subscription = Subscriptions.findOne({_id: subscriptionId});
+    if (subscription && subscription._id) {
+      const user = Users.findOne({_id: subscription.subscriberId});
+      const plan = Plans.findOne({_id: subscription.planId});
+      const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+      if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+        swal({
+          title: 'Confirm renewal of subscription!',
+          text: "Renew "+user.username+"'s subscription of UserGroup '"+userGroup.title+"' to Plan '"+plan.title+"'?",
+          icon: 'info',
+          buttons: ['No', 'Yes'],
+          dangerMode: false,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+          	// Update its expiration date by adding the new billing cycle's span to the date to set the expiration date, only if its previous expiration date had not reached yet. 
+            // Renewing a subscription does not allow change in plan, in other words the same plan is subscribed again. 
+          	// The user-group too is not allowed to be tampered with here. 
+          	// The user-group's usersQuota and boardsQuota gets incremented (adding on the existing) with the plan's quota
+            var priceSubscribedTo = null;
+            var subscribedOn = new Date();
+            subscribedOn.setHours(0,0,0,0);
+            var expiresOn = new Date();
+            expiresOn.setHours(0,0,0,0);
+          	if (subscription.billingCycle === 'monthly') {
+              expiresOn.setMonth(expiresOn.getMonth()+1);
+            	priceSubscribedTo = plan.pricePerMonth;
+          	} else if (subscription.billingCycle === 'yearly') {
+              expiresOn.setMonth(expiresOn.getMonth()+12);
+            	priceSubscribedTo = plan.pricePerYear;
+          	}
+
+          	const expirationDate = new Date(subscription.expiresOn);
+        		expirationDate.setHours(0,0,0,0);
+          	const currentDate = new Date();
+          	currentDate.setHours(0,0,0,0);
+          	if (expirationDate > currentDate) {
+          		var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+          		const remainingDaysCount = Math.round(Math.abs((expirationDate.getTime() - currentDate.getTime()) / (oneDay)));
+          		// push the var expiresOn's date by the number of remained days
+          		var incrementedExpiryDate = new Date(expiresOn.setDate(expiresOn.getDate() + remainingDaysCount)).toISOString().substr(0,10);
+          		var expiresOn = new Date(incrementedExpiryDate);
+          		expiresOn.setHours(0,0,0,0);
+          	}
+
+            Subscriptions.update(
+          		{ _id: subscriptionId }, {
+          			$set : {
+                  subscribedOn,
+                  expiresOn,
+                  priceSubscribedTo,
+                  assignerId: Meteor.user()._id
+          			}
+	            }, (err, res) => {
+	              if (err) {
+	              	var message = '';
+	              	if (err.error) {
+	                	message = TAPi18n.__(err.error);
+	              	} else {
+	              		message = err;
+	              	}
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+	              } else if (res) {
+	                UserGroups.update(
+	              		{ _id: userGroup._id }, {
+	              			$set : {
+	              				usersQuota: plan.usersQuota + userGroup.usersQuota,
+	              				boardsQuota: plan.boardsQuota + userGroup.boardsQuota,
+	              			}
+	    	            }, (err, res) => {
+	    	              if (err) {
+	    	              	var message = '';
+	    	              	if (err.error) {
+	    	                	message = TAPi18n.__(err.error);
+	    	              	} else {
+	    	              		message = err;
+	    	              	}
+	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    	                $('#header-main-bar').before($errorMessage);
+	    	                $errorMessage.delay(10000).slideUp(500, function() {
+	    	                  $(this).remove();
+	    	                });
+	    	              } else if (res) {
+	    	                if ($(e.target).closest('tr').hasClass('expired')) {
+	    	                	$(e.target).closest('tr').removeClass('expired');
+	    	                }
+	    	              	var message = TAPi18n.__('subscription-renewed-successfully');
+	    	                var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    	                $('#header-main-bar').before($successMessage);
+	    	                $successMessage.delay(10000).slideUp(500, function() {
+	    	                  $(this).remove();
+	    	                });
+	    	              }
+	    	            }
+	                );
+	              }
+	            }
+            );
+          } else {
+            return false;
+          }
+        });
+      }
+    }
+  },
+
+  'click .upgradeSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+		Popup.open('upgradeSubscription')(e);
+    Session.set('upgradeSubscriptionOfIdentifier', subscriptionId);
+  },
+
   'click .archiveSubscription'(e) {
     const subscriptionId = $(e.target).data('subscription-id');
     const subscription = Subscriptions.findOne(subscriptionId);
@@ -1521,12 +1640,6 @@ Template.subscriptionRow.events({
         });
     	}
     }
-  },
-
-  'click .upgradeSubscription'(e) {
-    const subscriptionId = $(e.target).data('subscription-id');
-		Popup.open('upgradeSubscription')(e);
-    Session.set('upgradeSubscriptionOfIdentifier', subscriptionId);
   },
 
 });
@@ -1802,21 +1915,17 @@ BlazeComponent.extendComponent({
           return false;
         }
 
+        var priceSubscribedTo = null;
         var subscribedOn = new Date();
         var expiresOn = new Date();
-      	if (billingCycle === 'monthly') {
-          expiresOn.setMonth(expiresOn.getMonth()+1);
-      	} else if (billingCycle === 'yearly') {
-          expiresOn.setMonth(expiresOn.getMonth()+12);
-      	}
-        
-        var priceSubscribedTo = null;
         const plan = Plans.findOne({_id: planId});
         if (plan && plan._id) {
         	if (billingCycle === 'monthly') {
           	priceSubscribedTo = plan.pricePerMonth;
+            expiresOn.setMonth(expiresOn.getMonth()+1);
         	} else if (billingCycle === 'yearly') {
           	priceSubscribedTo = plan.pricePerYear;
+            expiresOn.setMonth(expiresOn.getMonth()+12);
         	}
         }
 
