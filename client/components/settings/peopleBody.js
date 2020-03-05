@@ -1562,22 +1562,45 @@ Template.subscriptionRow.events({
 	    	                  $(this).remove();
 	    	                });
 
-	    	    		  	    try {
-	    	    		  	      const params = {
-	    	    	  	          subscriber: user.username,
-	    	    	  	          planTitle: plan.title,
-	    	    	  	          userGroupTitle: userGroup.title,
-	    	    	  	        };
-	    	    		  	      const lang = user.profile.language;
-	    	    		  	      Email.send({
-	    	    		  	        to: user.emails[0].address,
-	    	    		  	        from: Accounts.emailTemplates.from,
-	    	    		  	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang), 
-	    	    		  	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-text', params, lang),
-	    	    		  	      });
-	    	    		  	    } catch (e) {
-	    	    		  	      throw new Meteor.Error('email-fail', e.message);
-	    	    		  	    }
+	    	                const subscriber = user.username;
+	    	                const planTitle = plan.title;
+	    	                const userGroupTitle = userGroup.title;
+	    	                const subscriberEmail = user.emails[0].address;
+    	    		  	      const lang = 'en-GB';
+    	    		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+    	    		  	      	lang = user.profile.language;
+    	    		  	      }
+    	    		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+    	    		          Meteor.call('mailSubscriptionRenewalSuccess', subscriberEmail, lang, params, (err, ret) => {
+    	    		            if (err) {
+    	    	              	var message = '';
+    	    	              	if (err.error) {
+    	    	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+    	    	              	} else {
+    	    	              		message = err + TAPi18n.__('mail-not-sent');
+    	    	              	}
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output != 'success') {
+    	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output == 'success') {
+    	    			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+    	    			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    			            $('#header-main-bar').before($successMessage);
+    	    			            $successMessage.delay(10000).slideUp(500, function() {
+    	    			              $(this).remove();
+    	    			            });
+    	    		            }
+    	    		          });
 	    	              }
 	    	            }
 	                );
@@ -1809,6 +1832,53 @@ BlazeComponent.extendComponent({
                       $successMessage.delay(10000).slideUp(500, function() {
                         $(this).remove();
                       });
+
+                      const user = Users.findOne({_id: subscription.subscriberId});
+                      const plan = Plans.findOne({_id: planId});
+                      const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+
+                      if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+      	                const subscriber = user.username;
+      	                const planTitle = plan.title;
+      	                const userGroupTitle = userGroup.title;
+      	                const subscriberEmail = user.emails[0].address;
+    	    		  	      const lang = 'en-GB';
+    	    		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+    	    		  	      	lang = user.profile.language;
+    	    		  	      }
+    	    		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+    	    		          Meteor.call('mailSubscriptionUpgradeSuccess', subscriberEmail, lang, params, (err, ret) => {
+    	    		            if (err) {
+    	    	              	var message = '';
+    	    	              	if (err.error) {
+    	    	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+    	    	              	} else {
+    	    	              		message = err + TAPi18n.__('mail-not-sent');
+    	    	              	}
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output != 'success') {
+    	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output == 'success') {
+    	    			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+    	    			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    			            $('#header-main-bar').before($successMessage);
+    	    			            $successMessage.delay(10000).slideUp(500, function() {
+    	    			              $(this).remove();
+    	    			            });
+    	    		            }
+    	    		          });
+                      }
+
                       Popup.close();
                     }
                   }
@@ -1977,6 +2047,53 @@ BlazeComponent.extendComponent({
             $successMessage.delay(10000).slideUp(500, function() {
               $(this).remove();
             });
+
+            const user = Users.findOne({_id: subscriberId});
+            const plan = Plans.findOne({_id: planId});
+            const userGroup = UserGroups.findOne({_id: userGroupId});
+
+            if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+              const subscriber = user.username;
+              const planTitle = plan.title;
+              const userGroupTitle = userGroup.title;
+              const subscriberEmail = user.emails[0].address;
+		  	      const lang = 'en-GB';
+		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+		  	      	lang = user.profile.language;
+		  	      }
+		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+		          Meteor.call('mailNewSubscriptionSuccess', subscriberEmail, lang, params, (err, ret) => {
+		            if (err) {
+	              	var message = '';
+	              	if (err.error) {
+	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+	              	} else {
+	              		message = err + TAPi18n.__('mail-not-sent');
+	              	}
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+		            } else if (ret.output && ret.output != 'success') {
+	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+		            } else if (ret.output && ret.output == 'success') {
+			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+			            $('#header-main-bar').before($successMessage);
+			            $successMessage.delay(10000).slideUp(500, function() {
+			              $(this).remove();
+			            });
+		            }
+		          });
+            }
+
             Popup.close();
           }
         });

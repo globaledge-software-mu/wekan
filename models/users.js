@@ -922,6 +922,61 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+
+  	mailNewSubscriptionSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
+  	mailSubscriptionRenewalSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
+  	mailSubscriptionUpgradeSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
   	createNewUser(params) {
       check(params, Object);
 
