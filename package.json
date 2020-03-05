@@ -30,7 +30,6 @@
     "es6-promise": "^4.2.4",
     "hoek": "^5.0.4",
     "inputmask": "^4.0.0",
-    "littledata:synced-cron": "1.5.1",
     "meteor-node-stubs": "^0.4.1",
     "meteor-synced-cron": "^1.0.3",
     "os": "^0.1.1",
