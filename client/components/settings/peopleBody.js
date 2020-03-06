@@ -1765,14 +1765,33 @@ BlazeComponent.extendComponent({
 
     		const subscriptionId = Session.get('upgradeSubscriptionOfId');
     		const subscription = Subscriptions.findOne({_id: subscriptionId});
-    		if (subscription && subscription._id) {
+    		const plan = Plans.findOne({_id: planId});
+    		if (subscription && subscription._id && plan && plan._id) {
       		this.setLoading(true);
 
+          var subscribedOn = new Date();
+          subscribedOn.setHours(0,0,0,0);
           var expiresOn = new Date();
+          expiresOn.setHours(0,0,0,0);
         	if (billingCycle === 'monthly') {
             expiresOn.setMonth(expiresOn.getMonth()+1);
+          	priceSubscribedTo = plan.pricePerMonth;
         	} else if (billingCycle === 'yearly') {
             expiresOn.setMonth(expiresOn.getMonth()+12);
+          	priceSubscribedTo = plan.pricePerYear;
+        	}
+
+        	const expirationDate = new Date(subscription.expiresOn);
+      		expirationDate.setHours(0,0,0,0);
+        	const currentDate = new Date();
+        	currentDate.setHours(0,0,0,0);
+        	if (expirationDate > currentDate) {
+        		var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+        		const remainingDaysCount = Math.round(Math.abs((expirationDate.getTime() - currentDate.getTime()) / (oneDay)));
+        		// push the var expiresOn's date by the number of remained days
+        		var incrementedExpiryDate = new Date(expiresOn.setDate(expiresOn.getDate() + remainingDaysCount)).toISOString().substr(0,10);
+        		var expiresOn = new Date(incrementedExpiryDate);
+        		expiresOn.setHours(0,0,0,0);
         	}
 
           Subscriptions.update(
@@ -1782,7 +1801,8 @@ BlazeComponent.extendComponent({
         				billingCycle,
       					status: 'upgraded',
       					statusSetOn: new Date(),
-    					  subscribedOn: new Date(),
+      					priceSubscribedTo,
+    					  subscribedOn,
     					  expiresOn,
         			}
         		}, (err, res) => {
