@@ -1769,6 +1769,7 @@ BlazeComponent.extendComponent({
     		if (subscription && subscription._id && plan && plan._id) {
       		this.setLoading(true);
 
+          var priceSubscribedTo = null;
           var subscribedOn = new Date();
           subscribedOn.setHours(0,0,0,0);
           var expiresOn = new Date();
