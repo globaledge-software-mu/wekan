@@ -13,6 +13,7 @@ BlazeComponent.extendComponent({
     this.roles = new ReactiveVar(false);
     this.userGroups = new ReactiveVar(false);
     this.plans = new ReactiveVar(false);
+    this.subscriptions = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
     this.number = new ReactiveVar(0);
@@ -38,6 +39,7 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('user_groups');
       Meteor.subscribe('assigned_user_groups');
       Meteor.subscribe('plans');
+      Meteor.subscribe('subscriptions');
     });
   },
   events() {
@@ -93,6 +95,27 @@ BlazeComponent.extendComponent({
     const users = Users.find();
     this.number.set(users.count());
     return users;
+  },
+  hasExpiredSubscriptions() {
+  	const expiredSubscription = Subscriptions.findOne({ 
+  		archived: { $ne: true }, 
+  		expiresOn: { $lt: new Date() },
+		});
+
+  	if (expiredSubscription && expiredSubscription._id) {
+  		return true;
+  	} else {
+  		return false;
+  	}
+  },
+  expiredSubscriptionsCount() {
+  	const expiredSubscriptions = Subscriptions.find({ 
+  		archived: { $ne: true }, 
+  		expiresOn: { $lt: new Date() },
+		});
+  	if (expiredSubscriptions && expiredSubscriptions.count() > 0) {
+  		return '(' + expiredSubscriptions.count() + ')';
+  	}
   },
   managerUserGroupsUsersList() {
     const role = Roles.findOne({name: 'Manager'});
@@ -181,6 +204,7 @@ BlazeComponent.extendComponent({
       this.roles.set('roles-setting' === targetID);
       this.userGroups.set('user-groups-setting' === targetID);
       this.plans.set('plans-setting' === targetID);
+      this.subscriptions.set('subscriptions-setting' === targetID);
     }
   },
   events() {
@@ -1380,3 +1404,727 @@ Template.editUserGroup.helpers({
 	  return Users.find({ _id: {$in: userGroupAdminIds} });
   },
 });
+
+BlazeComponent.extendComponent({
+  plans() {
+    return Plans.find();
+  },
+}).register('plansGeneral');
+
+Template.planRow.helpers({
+	plan() {
+    return Plans.findOne(this.planId);
+  },
+});
+
+BlazeComponent.extendComponent({
+	subscriptions() {
+		return Subscriptions.find({archived: {$ne: true}});
+  },
+
+  events() {
+    return [{
+      'click #add-subscription': Popup.open('addSubscription'),
+    }];
+  },
+}).register('subscriptionsGeneral');
+
+Template.subscriptionRow.onRendered(() => {
+  const subscriptionId = Template.instance().data.subscriptionId;
+  const subscription = Subscriptions.findOne({_id: subscriptionId});
+  if (subscription && subscription._id) {
+  	const currentDateTime = new Date();
+  	if (currentDateTime > subscription.expiresOn) {
+  		$(Template.instance().firstNode).addClass('expired');
+  	}
+  }
+});
+
+Template.subscriptionRow.helpers({
+	subscription() {
+    const subscription = Subscriptions.findOne(this.subscriptionId);
+    if (subscription && subscription._id) {
+    	const plan = Plans.findOne(subscription.planId);
+    	if (plan && plan._id) {
+    		subscription.planTitle = plan.title;
+    	}
+    	const userGroup = UserGroups.findOne(subscription.userGroupId);
+    	if (userGroup && userGroup._id) {
+    		subscription.userGroupTitle = userGroup.title;
+    	}
+    	const user = Users.findOne(subscription.subscriberId);
+    	if (user && user._id) {
+    		subscription.subscriberUsername = user.username;
+    	}
+    }
+    return subscription;
+  },
+});
+
+Template.subscriptionRow.events({
+
+  'click .renewSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+    const subscription = Subscriptions.findOne({_id: subscriptionId});
+    if (subscription && subscription._id) {
+      const user = Users.findOne({_id: subscription.subscriberId});
+      const plan = Plans.findOne({_id: subscription.planId});
+      const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+      if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+        swal({
+          title: 'Confirm renewal of subscription!',
+          text: "Renew "+user.username+"'s subscription of UserGroup '"+userGroup.title+"' to Plan '"+plan.title+"'?",
+          icon: 'info',
+          buttons: ['No', 'Yes'],
+          dangerMode: false,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+          	// Update its expiration date by adding the new billing cycle's span to the date to set the expiration date, only if its previous expiration date had not reached yet. 
+            // Renewing a subscription does not allow change in plan, in other words the same plan is subscribed again. 
+          	// The user-group too is not allowed to be tampered with here. 
+          	// The user-group's usersQuota and boardsQuota gets incremented (adding on the existing) with the plan's quota
+            var priceSubscribedTo = null;
+            var subscribedOn = new Date();
+            subscribedOn.setHours(0,0,0,0);
+            var expiresOn = new Date();
+            expiresOn.setHours(0,0,0,0);
+          	if (subscription.billingCycle === 'monthly') {
+              expiresOn.setMonth(expiresOn.getMonth()+1);
+            	priceSubscribedTo = plan.pricePerMonth;
+          	} else if (subscription.billingCycle === 'yearly') {
+              expiresOn.setMonth(expiresOn.getMonth()+12);
+            	priceSubscribedTo = plan.pricePerYear;
+          	}
+
+          	const expirationDate = new Date(subscription.expiresOn);
+        		expirationDate.setHours(0,0,0,0);
+          	const currentDate = new Date();
+          	currentDate.setHours(0,0,0,0);
+          	if (expirationDate > currentDate) {
+          		var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+          		const remainingDaysCount = Math.round(Math.abs((expirationDate.getTime() - currentDate.getTime()) / (oneDay)));
+          		// push the var expiresOn's date by the number of remained days
+          		var incrementedExpiryDate = new Date(expiresOn.setDate(expiresOn.getDate() + remainingDaysCount)).toISOString().substr(0,10);
+          		var expiresOn = new Date(incrementedExpiryDate);
+          		expiresOn.setHours(0,0,0,0);
+          	}
+
+            Subscriptions.update(
+          		{ _id: subscriptionId }, {
+          			$set : {
+                  subscribedOn,
+                  expiresOn,
+                  priceSubscribedTo,
+                  assignerId: Meteor.user()._id
+          			}
+	            }, (err, res) => {
+	              if (err) {
+	              	var message = '';
+	              	if (err.error) {
+	                	message = TAPi18n.__(err.error);
+	              	} else {
+	              		message = err;
+	              	}
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+	              } else if (res) {
+	                UserGroups.update(
+	              		{ _id: userGroup._id }, {
+	              			$set : {
+	              				usersQuota: plan.usersQuota + userGroup.usersQuota,
+	              				boardsQuota: plan.boardsQuota + userGroup.boardsQuota,
+	              			}
+	    	            }, (err, res) => {
+	    	              if (err) {
+	    	              	var message = '';
+	    	              	if (err.error) {
+	    	                	message = TAPi18n.__(err.error);
+	    	              	} else {
+	    	              		message = err;
+	    	              	}
+	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    	                $('#header-main-bar').before($errorMessage);
+	    	                $errorMessage.delay(10000).slideUp(500, function() {
+	    	                  $(this).remove();
+	    	                });
+	    	              } else if (res) {
+	    	                if ($(e.target).closest('tr').hasClass('expired')) {
+	    	                	$(e.target).closest('tr').removeClass('expired');
+	    	                }
+	    	              	var message = TAPi18n.__('subscription-renewed-successfully');
+	    	                var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	    	                $('#header-main-bar').before($successMessage);
+	    	                $successMessage.delay(10000).slideUp(500, function() {
+	    	                  $(this).remove();
+	    	                });
+
+	    	                const subscriber = user.username;
+	    	                const planTitle = plan.title;
+	    	                const userGroupTitle = userGroup.title;
+	    	                const subscriberEmail = user.emails[0].address;
+    	    		  	      const lang = 'en-GB';
+    	    		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+    	    		  	      	lang = user.profile.language;
+    	    		  	      }
+    	    		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+    	    		          Meteor.call('mailSubscriptionRenewalSuccess', subscriberEmail, lang, params, (err, ret) => {
+    	    		            if (err) {
+    	    	              	var message = '';
+    	    	              	if (err.error) {
+    	    	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+    	    	              	} else {
+    	    	              		message = err + TAPi18n.__('mail-not-sent');
+    	    	              	}
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output != 'success') {
+    	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output == 'success') {
+    	    			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+    	    			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    			            $('#header-main-bar').before($successMessage);
+    	    			            $successMessage.delay(10000).slideUp(500, function() {
+    	    			              $(this).remove();
+    	    			            });
+    	    		            }
+    	    		          });
+	    	              }
+	    	            }
+	                );
+	              }
+	            }
+            );
+          } else {
+            return false;
+          }
+        });
+      }
+    }
+  },
+
+  'click .upgradeSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+		Popup.open('upgradeSubscription')(e);
+    Session.set('upgradeSubscriptionOfIdentifier', subscriptionId);
+  },
+
+  'click .archiveSubscription'(e) {
+    const subscriptionId = $(e.target).data('subscription-id');
+    const subscription = Subscriptions.findOne(subscriptionId);
+    if (subscription && subscription._id) {
+    	const user = Users.findOne(subscription.subscriberId);
+    	const userGroup = UserGroups.findOne(subscription.userGroupId);
+    	const plan = Plans.findOne(subscription.planId);
+    	if (user && user.username && userGroup && userGroup.title && plan && plan.title) {
+        swal({
+          title: 'Confirm subscription cancellation!',
+          text: "Cancel "+user.username+"'s subscription of UserGroup '"+userGroup.title+"' to Plan '"+plan.title+"'?",
+          icon: 'warning',
+          buttons: ['No', 'Yes'],
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+          	Subscriptions.update(
+        			{ _id: subscriptionId }, {
+        				$set: {
+        					archived: true,
+        				}
+        			}, (err, res) => {
+	            	if (err) {
+	            		swal(err, {
+	                  icon: "error",
+	                });
+	            	} else if (res) {
+	            		UserGroups.update(
+            				{_id: subscription.userGroupId}, {
+            					$set: {
+            						usersQuota: 0,
+            						usedUsersQuota: 0,
+            						boardsQuota: 0,
+            						usedBoardsQuota: 0,
+            					}
+            				}, (err, res) => {
+      	            	if (err) {
+      	            		swal(err, {
+      	                  icon: "error",
+      	                });
+      	            	} else if (res) {
+      	            		var message = TAPi18n.__('subscription_was_successfully_archived');
+      	            		swal(message, {
+      	                  icon: "success",
+      	                });
+      	            	}
+              			}
+          				);
+
+	            	}
+        			}
+      			);
+          } else {
+            return false;
+          }
+        });
+    	}
+    }
+  },
+
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+
+	onRendered() {
+    this.setLoading(false);
+
+		// had to use two different session keys and setting them in different stages as the popup calls its helper function twice each time it opens and this was not setting 
+		// the session for the key 'upgradeSubscriptionOfId' with the right value at both times, it was either the in the first call or the second call that the right value was being set. 
+		// But using the two session keys 'upgradeSubscriptionOfIdentifier' and 'upgradeSubscriptionOfId', and setting/getting them at different stages and deleting the keys when the popup closes,
+		// made sure that the popup's helper funstion would always set the right value for the key 'upgradeSubscriptionOfId' 
+		const subscriptionId = Session.get('upgradeSubscriptionOfIdentifier')
+    Session.set('upgradeSubscriptionOfId', subscriptionId);
+	},
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+	subscription() {
+		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+		const subscription = Subscriptions.findOne({_id: subscriptionId});
+		if (subscription && subscription._id) {
+			const subscriber = Users.findOne({_id: subscription.subscriberId});
+			if (subscriber && subscriber._id) {
+				subscription.subscriberUsername = subscriber.username;
+			}
+			const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+			if (userGroup && userGroup._id) {
+				subscription.userGroupTitle = userGroup.title;
+			}
+			return subscription;
+		}
+	},
+
+	onDestroyed() {
+		delete Session.keys['upgradeSubscriptionOfIdentifier', 'upgradeSubscriptionOfId']
+	},
+
+	plans() {
+		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+		const subscription = Subscriptions.findOne({_id: subscriptionId});
+		if (subscription && subscription._id) {
+			const plan = Plans.findOne({_id: subscription.planId});
+			if (plan && plan._id) {
+				// Since in the future we'll need to give the admin the right to create new plans and since for now we have 
+				// no way of determining the inferior plans, so we'll just exclude the current plan of the subscription in the return.
+				return Plans.find({_id: {$ne: plan._id}});
+			}
+		}
+  },
+
+  events() {
+    return [{
+    	submit(e) {
+    		e.preventDefault();
+        $('.upgradeSubscriptionErrorMsg').hide();
+
+        const planId = this.find('.select-a-plan option:selected').value.trim();
+        const billingCycle = this.find('.select-billing-cycle option:selected').value.trim();
+
+        var notSelected = ['undefined', null, ''];
+        var planNotSelected = notSelected.indexOf(planId) > -1;
+        var billingCycleNotSelected = notSelected.indexOf(billingCycle) > -1;
+        if (planNotSelected) {
+        	$('.plan-error-msg.upgradeSubscriptionErrorMsg').show();
+        }
+        if (billingCycleNotSelected) {
+        	$('.billing-cycle-error-msg.upgradeSubscriptionErrorMsg').show();
+        }
+        if (planNotSelected || billingCycleNotSelected) {
+          return false;
+        }
+
+    		const subscriptionId = Session.get('upgradeSubscriptionOfId');
+    		const subscription = Subscriptions.findOne({_id: subscriptionId});
+    		const plan = Plans.findOne({_id: planId});
+    		if (subscription && subscription._id && plan && plan._id) {
+      		this.setLoading(true);
+
+          var priceSubscribedTo = null;
+          var subscribedOn = new Date();
+          subscribedOn.setHours(0,0,0,0);
+          var expiresOn = new Date();
+          expiresOn.setHours(0,0,0,0);
+        	if (billingCycle === 'monthly') {
+            expiresOn.setMonth(expiresOn.getMonth()+1);
+          	priceSubscribedTo = plan.pricePerMonth;
+        	} else if (billingCycle === 'yearly') {
+            expiresOn.setMonth(expiresOn.getMonth()+12);
+          	priceSubscribedTo = plan.pricePerYear;
+        	}
+
+        	const expirationDate = new Date(subscription.expiresOn);
+      		expirationDate.setHours(0,0,0,0);
+        	const currentDate = new Date();
+        	currentDate.setHours(0,0,0,0);
+        	if (expirationDate > currentDate) {
+        		var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+        		const remainingDaysCount = Math.round(Math.abs((expirationDate.getTime() - currentDate.getTime()) / (oneDay)));
+        		// push the var expiresOn's date by the number of remained days
+        		var incrementedExpiryDate = new Date(expiresOn.setDate(expiresOn.getDate() + remainingDaysCount)).toISOString().substr(0,10);
+        		var expiresOn = new Date(incrementedExpiryDate);
+        		expiresOn.setHours(0,0,0,0);
+        	}
+
+          Subscriptions.update(
+        		{_id: subscriptionId}, {
+        			$set: {
+        				planId,
+        				billingCycle,
+      					status: 'upgraded',
+      					statusSetOn: new Date(),
+      					priceSubscribedTo,
+    					  subscribedOn,
+    					  expiresOn,
+        			}
+        		}, (err, res) => {
+              if (err) {
+              	this.setLoading(false);
+              	var message = '';
+              	if (err.error) {
+                	message = TAPi18n.__(err.error);
+              	} else {
+              		message = err;
+              	}
+                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                $('#header-main-bar').before($errorMessage);
+                $errorMessage.delay(10000).slideUp(500, function() {
+                  $(this).remove();
+                });
+              } else if (res) {
+              	const plan = Plans.findOne({_id: planId});
+              	// update UserGroups, overwriting its usersQuota and boardsQuota with that of the upgraded plan and 
+              	// resetting the user-group's usedUsersQuota and usedBoardsQuota to zero.
+              	UserGroups.update(
+            			{_id: subscription.userGroupId}, {
+            				$set: {
+            					usersQuota: plan.usersQuota,
+            					usedUsersQuota: 0,
+            					boardsQuota: plan.boardsQuota,
+            					usedBoardsQuota: 0,
+            				}
+            			}, (err, res) => {
+                  	this.setLoading(false);
+                    if (err) {
+                    	var message = '';
+                    	if (err.error) {
+                      	message = TAPi18n.__(err.error);
+                    	} else {
+                    		message = err;
+                    	}
+                      var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                      $('#header-main-bar').before($errorMessage);
+                      $errorMessage.delay(10000).slideUp(500, function() {
+                        $(this).remove();
+                      });
+                    } else if (res) {
+                    	var message = TAPi18n.__('subscription-upgraded-successfully');
+                      var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                      $('#header-main-bar').before($successMessage);
+                      $successMessage.delay(10000).slideUp(500, function() {
+                        $(this).remove();
+                      });
+
+                      const user = Users.findOne({_id: subscription.subscriberId});
+                      const plan = Plans.findOne({_id: planId});
+                      const userGroup = UserGroups.findOne({_id: subscription.userGroupId});
+
+                      if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+      	                const subscriber = user.username;
+      	                const planTitle = plan.title;
+      	                const userGroupTitle = userGroup.title;
+      	                const subscriberEmail = user.emails[0].address;
+    	    		  	      const lang = 'en-GB';
+    	    		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+    	    		  	      	lang = user.profile.language;
+    	    		  	      }
+    	    		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+    	    		          Meteor.call('mailSubscriptionUpgradeSuccess', subscriberEmail, lang, params, (err, ret) => {
+    	    		            if (err) {
+    	    	              	var message = '';
+    	    	              	if (err.error) {
+    	    	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+    	    	              	} else {
+    	    	              		message = err + TAPi18n.__('mail-not-sent');
+    	    	              	}
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output != 'success') {
+    	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+    	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    	                $('#header-main-bar').before($errorMessage);
+    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+    	    	                  $(this).remove();
+    	    	                });
+    	    		            } else if (ret.output && ret.output == 'success') {
+    	    			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+    	    			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+    	    			            $('#header-main-bar').before($successMessage);
+    	    			            $successMessage.delay(10000).slideUp(500, function() {
+    	    			              $(this).remove();
+    	    			            });
+    	    		            }
+    	    		          });
+                      }
+
+                      Popup.close();
+                    }
+                  }
+          			);
+              }
+              Popup.close();
+            }
+      		);
+    		}
+    	},
+    }];
+  },
+}).register('upgradeSubscriptionPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  
+  onRendered() {
+    this.setLoading(false);
+  },
+  
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  users() {
+    return Users.find();
+  },
+
+	plans() {
+    return Plans.find();
+  },
+
+  events() {
+    return [{
+    	'change #select-subscriber'(e) {
+  			$('#user-group-error-msg').hide();
+  			$('#user-group-not-selected').hide();
+  			$('#already-assigned-user-group-to-subscription').hide();
+  			$('#already-assigned-user-groups-to-subscriptions').hide();
+    		const selector = $('select#select-a-user-group');
+				selector.empty();
+				selector.prop('disabled', true);
+				$('#saveNewSubscription').prop('disabled', true);
+    		const subscriberId = $(e.target).val();
+    		const assignedUserGroups = AssignedUserGroups.find({userId: subscriberId});
+    		var userGroupsIds = new Array();
+    		if (assignedUserGroups && assignedUserGroups.count() > 0) {
+    			assignedUserGroups.forEach((assignedUG) => {
+    				userGroupsIds.push(assignedUG.userGroupId);
+    			});
+    		}
+    		const subscribedUGs = new Array();
+  			Subscriptions.find({
+  				archived: {$ne: true}
+  			}).forEach((subscription) => {
+  				if (!subscribedUGs.includes(subscription.userGroupId)) {
+    				subscribedUGs.push(subscription.userGroupId);
+  				}
+    		});
+    		const subscriberUserGroupsOptions = UserGroups.find({ 
+    			$and: [ 
+    				{ _id: { $in: userGroupsIds } }, 
+    				{ _id: { $nin: subscribedUGs } } 
+  				] 
+    		});
+    		if (subscriberUserGroupsOptions && subscriberUserGroupsOptions.count() > 0) {
+  				selector.prop('disabled', false);
+  				$('#saveNewSubscription').prop('disabled', false);
+  				selector.append('<option value="">Select One</option>');
+    			subscriberUserGroupsOptions.forEach((group) => {
+    				selector.append('<option value='+group._id+'>'+group.title+'</option>');
+    			});
+    		} else {
+      		const subscriberUserGroups = UserGroups.find({_id: { $in: userGroupsIds } });
+      		if (subscriberUserGroups && subscriberUserGroups.count() > 1) {
+      			$('#already-assigned-user-groups-to-subscriptions').show();
+      		} 
+      		if (subscriberUserGroups && subscriberUserGroups.count() > 0 && subscriberUserGroups.count() < 2) {
+      			$('#already-assigned-user-group-to-subscription').show();
+      		} 
+      		if (subscriberUserGroups.count() < 1) {
+      			$('#user-group-error-msg').show();
+      		}
+    		}
+    	},
+
+    	submit(evt) {
+        evt.preventDefault();
+        $('.newSubscriptionErrorMsg').hide();
+
+        const planId = this.find('.select-a-plan option:selected').value.trim();
+        const billingCycle = this.find('.select-billing-cycle option:selected').value.trim();
+        const subscriberId = this.find('#select-subscriber option:selected').value.trim();
+        const userGroupId = this.find('#select-a-user-group option:selected').value.trim();
+
+        var notSelected = ['undefined', null, ''];
+        var planNotSelected = notSelected.indexOf(planId) > -1;
+        var billingCycleNotSelected = notSelected.indexOf(billingCycle) > -1;
+        var subscriberNotSelected = notSelected.indexOf(subscriberId) > -1;
+        var userGroupNotSelected = notSelected.indexOf(userGroupId) > -1;
+        if (planNotSelected) {
+        	$('.plan-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (billingCycleNotSelected) {
+        	$('.billing-cycle-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (subscriberNotSelected) {
+        	$('#subscriber-error-msg.newSubscriptionErrorMsg').show();
+        }
+        if (userGroupNotSelected) {
+        	$('#user-group-not-selected.newSubscriptionErrorMsg').show();
+        }
+        if (planNotSelected || billingCycleNotSelected || subscriberNotSelected || userGroupNotSelected) {
+          return false;
+        }
+
+        var priceSubscribedTo = null;
+        var subscribedOn = new Date();
+        var expiresOn = new Date();
+        const plan = Plans.findOne({_id: planId});
+        if (plan && plan._id) {
+        	if (billingCycle === 'monthly') {
+          	priceSubscribedTo = plan.pricePerMonth;
+            expiresOn.setMonth(expiresOn.getMonth()+1);
+        	} else if (billingCycle === 'yearly') {
+          	priceSubscribedTo = plan.pricePerYear;
+            expiresOn.setMonth(expiresOn.getMonth()+12);
+        	}
+        }
+
+      	this.setLoading(true);
+        Subscriptions.insert({
+        	planId,
+          userGroupId,
+          subscriberId,
+          subscribedOn,
+          expiresOn,
+          billingCycle,
+          priceSubscribedTo,
+          assignerId: Meteor.user()._id
+        }, (err, res) => {
+        	this.setLoading(false);
+          if (err) {
+          	var message = '';
+          	if (err.error) {
+            	message = TAPi18n.__(err.error);
+          	} else {
+          		message = err;
+          	}
+            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($errorMessage);
+            $errorMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          } else if (res) {
+          	var message = TAPi18n.__('new-subscription-added');
+            var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($successMessage);
+            $successMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+
+            const user = Users.findOne({_id: subscriberId});
+            const plan = Plans.findOne({_id: planId});
+            const userGroup = UserGroups.findOne({_id: userGroupId});
+
+            if (user && user._id && plan && plan._id && userGroup && userGroup._id) {
+              const subscriber = user.username;
+              const planTitle = plan.title;
+              const userGroupTitle = userGroup.title;
+              const subscriberEmail = user.emails[0].address;
+		  	      const lang = 'en-GB';
+		  	      if (user.profile && user.profile.language && user.profile.language.length > 0) {
+		  	      	lang = user.profile.language;
+		  	      }
+		  	      const params = { subscriber, planTitle, userGroupTitle, };
+
+		          Meteor.call('mailNewSubscriptionSuccess', subscriberEmail, lang, params, (err, ret) => {
+		            if (err) {
+	              	var message = '';
+	              	if (err.error) {
+	                	message = TAPi18n.__(err.error) + TAPi18n.__('mail-not-sent');
+	              	} else {
+	              		message = err + TAPi18n.__('mail-not-sent');
+	              	}
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+		            } else if (ret.output && ret.output != 'success') {
+	              	var message = ret.output + TAPi18n.__('mail-not-sent');
+	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+	                $('#header-main-bar').before($errorMessage);
+	                $errorMessage.delay(10000).slideUp(500, function() {
+	                  $(this).remove();
+	                });
+		            } else if (ret.output && ret.output == 'success') {
+			          	var message = TAPi18n.__('successfully-mailed-subscriber');
+			            var $successMessage = $('<div class="successStatus inviteSent"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+			            $('#header-main-bar').before($successMessage);
+			            $successMessage.delay(10000).slideUp(500, function() {
+			              $(this).remove();
+			            });
+		            }
+		          });
+            }
+
+            Popup.close();
+          }
+        });
+      },
+
+      'click #cancelButton'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('addSubscriptionPopup');
+
+

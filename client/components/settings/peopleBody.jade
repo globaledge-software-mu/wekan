@@ -17,6 +17,13 @@ template(name="people")
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+              li.active
+                a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
+              li.active
+                a.js-setting-menu(data-id="subscriptions-setting") {{_ 'subscriptions'}}
+                  if hasExpiredSubscriptions
+                    span#expiredSubscriptionsBadge
+                      | {{expiredSubscriptionsCount}}
         .main-body
           if loading.get
             +spinner
@@ -28,6 +35,8 @@ template(name="people")
             +userGroupsGeneral
           else if plans.get
             +plansGeneral
+          else if subscriptions.get
+            +subscriptionsGeneral
 
 template(name="createNewUserPopup")
   if loading.get
@@ -445,5 +454,132 @@ template(name="editUserGroup")
 
 
 template(name="plansGeneral")
-  button.btn.btn-primary {{_ 'test'}}
+  table
+    tbody
+      tr
+        th {{_ 'title'}}
+        th {{_ 'users-quota'}}
+        th {{_ 'boards-quota'}}
+        th {{_ 'price-per-month'}}
+        th {{_ 'price-per-year'}}
+      if currentUser.isAdmin
+        each plan in plans
+          +planRow(planId=plan._id)
+
+template(name="planRow")
+  tr
+    td {{ plan.title }}
+    td {{ plan.usersQuota }}
+    td {{ plan.boardsQuota }}
+    td {{_'€'}} {{ plan.pricePerMonth }}
+    td {{_'€'}} {{ plan.pricePerYear }}
+
+template(name="subscriptionsGeneral")
+  button#add-subscription.btn.btn-primary {{_ 'add-subscription'}}
+  table#subscriptionsDataTable
+    tbody
+      tr
+        th {{_ 'subscriber'}}
+        th {{_ 'plan'}}
+        th {{_ 'user-group'}}
+        th {{_ 'subscribed-on'}}
+        th {{_ 'expires-on'}}
+        th {{_ 'billing-cycle'}}
+        th {{_ 'action'}}
+      if currentUser.isAdmin
+        each subscription in subscriptions
+          +subscriptionRow(subscriptionId=subscription._id)
+
+template(name="subscriptionRow")
+  tr(id=subscription._id)
+    td {{ subscription.subscriberUsername }}
+    td {{ subscription.planTitle }}
+    td {{ subscription.userGroupTitle }}
+    td {{ moment subscription.subscribedOn 'LL' }}
+    td {{ moment subscription.expiresOn 'LL' }}
+    td {{_ subscription.billingCycle}}
+    td
+      a.renewSubscription(data-subscription-id=subscription._id)
+        | {{_ 'renew'}}
+      a.upgradeSubscription(data-subscription-id=subscription._id)
+        | {{_ 'upgrade'}}
+      a.archiveSubscription(data-subscription-id=subscription._id)
+        | {{_ 'cancel'}}
+
+template(name="addSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'plan'}}
+        .plan-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        .billing-cycle-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      // select user and have the usergroup dropdown options be only of the selected user's user groups 
+      label
+        | {{_ 'subscriber'}}
+        #subscriber-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-subscriber-not-selected'}}
+        select#select-subscriber
+          option(value='', selected='selected') Select One
+          each user in users
+            option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        #already-assigned-user-group-to-subscription.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupAlreadyAssignedToSubscription'}}
+        #already-assigned-user-groups-to-subscriptions.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupsAlreadyAssignedToSubscriptions'}}
+        #user-group-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-user-not-part-of-any-usergroups'}}
+        #user-group-not-selected.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupNotSelected'}}
+        select#select-a-user-group(disabled)
+      hr
+      div.buttonsContainer
+        input#saveNewSubscription.primary.wide(disabled type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="upgradeSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form#upgradeSubscriptionForm
+      input#upgradeSubscriptionHiddenInput
+      p.center.bold 
+        | {{_ 'subscriber'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.subscriberUsername}}
+      p.center.bold 
+        | {{_ 'user-group'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.userGroupTitle}}
+      hr
+      label
+        | {{_ 'plan'}}
+        .plan-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        .billing-cycle-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      hr
+      div.buttonsContainer
+        input#upgradeSubscription.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
 

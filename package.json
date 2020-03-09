@@ -28,14 +28,15 @@
     "bson-ext": "^2.0.0",
     "chart.js": "^2.7.2",
     "es6-promise": "^4.2.4",
-    "inputmask": "^4.0.0",
     "hoek": "^5.0.4",
+    "inputmask": "^4.0.0",
     "meteor-node-stubs": "^0.4.1",
+    "meteor-synced-cron": "^1.0.3",
     "os": "^0.1.1",
     "page": "^1.8.6",
     "qs": "^6.5.2",
     "source-map-support": "^0.5.9",
-    "xss": "^1.0.3",
-    "sweetalert": "2.1.2"
+    "sweetalert": "2.1.2",
+    "xss": "^1.0.3"
   }
 }

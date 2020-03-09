@@ -1,6 +1,7 @@
 *~
 *.swp
-.meteor-spk
+!/.meteor/
+/.meteor/local/**
 *.sublime-workspace
 tmp/
 node_modules/
