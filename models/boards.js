@@ -347,6 +347,18 @@ Boards.helpers({
     });
   },
 
+  searchBoard() {
+    $('a.folderOpener, a#templatesFolder, a#uncategorisedBoardsFolder').removeClass('selected');
+    $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
+    $('.emptyFolderMessage').remove();
+    $('li.searched_boards').show();
+    $('.board-list.clearfix.ui-sortable').prepend(
+      '<h1 class="searchedBoardsResultsHeader" style="margin-left: 8px;">' + 
+      TAPi18n.__('search-results-for')  + ' " ' + Session.get('searchingBoardTitle') + 
+      ' "</h1>'
+    );
+  },
+
   /**
    * Is supplied user authorized to view this board?
    */

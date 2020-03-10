@@ -4,6 +4,38 @@ Template.boardListHeaderBar.events({
   'click .js-open-archived-board'() {
     Modal.open('archivedBoards');
   },
+
+  'click #js-enable-search-board'(e) {
+  	$('#js-search-board').prop('disabled', false);
+  	$('#js-search-board').focus();
+  },
+
+  'keypress #js-search-board'(e) {
+  	const param = $('#js-search-board').val();
+  	Session.set('searchingBoardTitle', param);
+  	var keycode = (event.keyCode ? event.keyCode : event.which);
+  	if(keycode == '13'){
+    	const boards = Boards.findOne();
+    	// call method to search for the board
+    	boards.searchBoard();
+  	}
+  },
+
+  'click #search-board-icon'(e) {
+  	const param = $('#js-search-board').val();
+  	Session.set('searchingBoardTitle', param);
+  	const boards = Boards.findOne();
+  	// call method to search for the board
+  	boards.searchBoard();
+  },
+
+  'click a#reset-search-board-input'() {
+  	$('#js-search-board').val('');
+  },
+
+  'focusout #js-search-board'() {
+  	$('#js-search-board').prop('disabled', true);
+  },
 });
 
 Template.boardListHeaderBar.helpers({
@@ -361,6 +393,17 @@ BlazeComponent.extendComponent({
   	var currentBoard = Boards.findOne({_id: this.currentData()._id});
   	// returns true or false
   	return currentBoard && currentBoard.members[0].isAdmin == true && currentBoard.members[0].userId == Meteor.userId();
+  },
+
+  searchedBoards() {
+  	const typedTitle = Session.get('searchingBoardTitle');
+    return Boards.find({
+    	title: {$regex: typedTitle, $options: 'i'},
+      archived: false,
+      'members.userId': Meteor.userId(),
+    }, { 
+    	sort: ['title'] 
+    });
   },
 
   folderBoards() {

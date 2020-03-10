@@ -524,6 +524,7 @@
     "rules": "Rules",
     "search-cards": "Zoeken in kaart titels en omschrijvingen op dit bord",
     "search-example": "Tekst om naar te zoeken?",
+    "search-results-for": "zoekresultaten voor ",
     "select-color": "Selecteer kleur",
     "set-wip-limit-value": "Zet een limiet voor het maximaal aantal taken in deze lijst",
     "setWipLimitPopup-title": "Zet een WIP limiet",
