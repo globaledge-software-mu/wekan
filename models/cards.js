@@ -184,6 +184,17 @@ Cards.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: [],
   },
+  team_members: {
+    /**
+     * list of team members (user IDs)
+     * 
+     * Users that are not members of a board can be added as a team, 
+     * without giving them permissions to view the board or the card
+     */
+    type: [String],
+    optional: true,
+    defaultValue: [],
+  },
   receivedAt: {
     /**
      * Date the card was received
