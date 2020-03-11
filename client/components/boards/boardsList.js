@@ -397,13 +397,17 @@ BlazeComponent.extendComponent({
 
   searchedBoards() {
   	const typedTitle = Session.get('searchingBoardTitle');
-    return Boards.find({
-    	title: {$regex: typedTitle, $options: 'i'},
-      archived: false,
-      'members.userId': Meteor.userId(),
-    }, { 
-    	sort: ['title'] 
-    });
+  	if (typeof typedTitle === 'string') {
+      return Boards.find({
+      	title: {$regex: typedTitle, $options: 'i'},
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, { 
+      	sort: ['title'] 
+      });
+  	} else {
+  		return null;
+  	}
   },
 
   folderBoards() {
