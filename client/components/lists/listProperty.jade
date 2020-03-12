@@ -72,6 +72,14 @@ template(name="listPropertiesPopup")
               +propertyCardMembers
         tr
           td
+            a#teamMembers.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'team'}}is-checked{{/if}}")
+              span {{_ 'team'}}
+          td
+            a.edit-property
+              +propertyCardTeamMembers
+        tr
+          td
             a#labels.flex.card-property
               .materialCheckBox(class="{{#if getPropertyVisibility 'labels'}}is-checked{{/if}}")
               span {{_ 'labels'}}
@@ -145,7 +153,7 @@ template(name="listPropertiesPopup")
 
 template(name="editPropertyAlias")
   form.edit-property-alias
-    input(type="text" name="propertyAlias" value=showPropertyAlias autofocus)
+    input(type="text" name="propertyAlias" value=showPropertyAlias)
     br
     a#warning.flex.date-warnings
       .materialCheckBox(class="{{#if hasDateWarnings}}is-checked{{/if}}")
