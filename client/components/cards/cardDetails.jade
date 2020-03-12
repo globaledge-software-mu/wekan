@@ -97,6 +97,11 @@ template(name="cardDetails")
           if canModifyCard
             a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
               i.fa.fa-plus
+
+      if isPropertyVisible 'teamMembers'
+        .card-details-item.card-details-item-teamMembers
+          h3.card-details-item-title {{getPropertyAlias 'teamMembers'}}
+
     #historicScores
         canvas.card-details-item.score-line
     if reloadHistoricScoreChart
