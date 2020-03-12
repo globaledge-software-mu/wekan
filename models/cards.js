@@ -694,6 +694,64 @@ Cards.helpers({
     }
   },
 
+  getTeamMembers() {
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      const card = Cards.findOne({_id: this.linkedId});
+      return card.team_members;
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      return this.team_members;
+    }
+  },
+
+  // *** First a reminder: team member is a user that is not a member of the board. He cannot view the board or the card *** 
+  // For the feature Team's functionality of adding and displaying team members on the card, the back-end needs to return the 
+  // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member. 
+  // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options 
+  // based on the logged in user's role EXCEPT that we need to remove the users that are members of the board or the card's team
+  getTeamUsers() { 
+  	var memberIds = new Array();
+  	const boardMembers = this.getMembers();
+  	boardMembers.forEach((boardMember) => {
+  		memberIds.push(boardMember);
+  	});
+  	const teamMembers = this.getTeamMembers();
+  	teamMembers.forEach((teamMember) => {
+  		memberIds.push(teamMember);
+  	});
+
+    var users;
+    // if isAdmin, first get users of any of the roles
+    if (Meteor.user().isAdmin) {
+      users = Users.find({ _id: {$nin: memberIds} });
+    }
+    // if isManagerAndNotAdmin, first get users of the roles 'coach' or 'coachee'
+    if (Meteor.user().isManagerAndNotAdmin) {
+    	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
+      if (roles.count() > 0) {
+      	var roleIds = new Array();
+      	roles.forEach((role) => {
+      		roleIds.push(role._id);
+      	});
+      	users = Users.find({
+      		_id: { $nin: memberIds },
+      		roleId: {$in: roleIds}, 
+      	});
+      }
+    }
+    // if isCoachAndNotAdmin, first get users of the role 'coachee'
+    if (Meteor.user().isCoachAndNotAdmin) {
+    	const role = Roles.findOne({ name: 'Coachee' });
+      if (role && role._id) {
+      	users = Users.find({
+      		_id: { $nin: memberIds },
+      		roleId: role._id, 
+    		});
+      }
+    }
+
+  	 return users;
+  },
+
   assignMember(memberId) {
     if (this.isLinkedCard()) {
       return Cards.update(
