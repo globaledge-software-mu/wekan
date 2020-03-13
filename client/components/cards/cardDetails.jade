@@ -336,11 +336,25 @@ template(name="cardMembersPopup")
     each board.activeMembers
       li.item(class="{{#if isCardMember}}active{{/if}}")
         a.name.js-select-member(href="#")
+
           +userAvatar(userId=user._id)
           span.full-name
             = user.profile.fullname
             | (<span class="username">{{ user.username }}</span>)
           if isCardMember
+            i.fa.fa-check
+
+template(name="cardTeamMembersPopup")
+  ul.pop-over-list.js-card-member-list
+    each teamUsers
+      li.item(class="{{#if isCardTeamMember}}active{{/if}}")
+        a.name.js-select-teamMember(href="#")
+
+          +userAvatar(userId=user._id)
+          span.full-name
+            = user.profile.fullname
+            | (<span class="username">{{ user.username }}</span>)
+          if isCardTeamMember
             i.fa.fa-check
 
 template(name="cardMorePopup")

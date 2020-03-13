@@ -703,49 +703,83 @@ Cards.helpers({
     }
   },
 
-  // *** First a reminder: team member is a user that is not a member of the board. He cannot view the board or the card *** 
+  // *** Note: team member is a user that is not a member of the board. He cannot view the board or the card *** 
   // For the feature Team's functionality of adding and displaying team members on the card, the back-end needs to return the 
   // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member. 
   // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options 
   // based on the logged in user's role EXCEPT that we need to remove the users that are members of the board or the card's team
   getTeamUsers() { 
+  	var board;
+    var cardId;
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this.linkedId; 
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this._id; 
+    }
+
+    var boardMembers;
+    var teamMembers;
   	var memberIds = new Array();
-  	const boardMembers = this.getMembers();
-  	boardMembers.forEach((boardMember) => {
-  		memberIds.push(boardMember);
-  	});
-  	const teamMembers = this.getTeamMembers();
-  	teamMembers.forEach((teamMember) => {
-  		memberIds.push(teamMember);
-  	});
+
+    const card = Cards.findOne(cardId);
+    if (card) {
+      board = Boards.findOne({ _id: card.boardId });
+    	boardMembers = board.activeMembers();
+    	boardMembers.forEach((boardMember) => {
+    		memberIds.push(boardMember.userId);
+    	});
+    	teamMembers = this.getTeamMembers();
+    	teamMembers.forEach((teamMember) => {
+    		memberIds.push(teamMember.userId);
+    	});
+    }
 
     var users;
+
     // if isAdmin, first get users of any of the roles
     if (Meteor.user().isAdmin) {
       users = Users.find({ _id: {$nin: memberIds} });
     }
+
     // if isManagerAndNotAdmin, first get users of the roles 'coach' or 'coachee'
-    if (Meteor.user().isManagerAndNotAdmin) {
-    	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
-      if (roles.count() > 0) {
-      	var roleIds = new Array();
-      	roles.forEach((role) => {
-      		roleIds.push(role._id);
-      	});
-      	users = Users.find({
-      		_id: { $nin: memberIds },
-      		roleId: {$in: roleIds}, 
-      	});
+    const manager = Roles.findOne({ name: 'Manager' });
+    if (manager) {
+      const isManagerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+      if (isManagerAndNotAdmin) {
+      	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
+        if (roles.count() > 0) {
+        	var roleIds = new Array();
+        	roles.forEach((role) => {
+        		roleIds.push(role._id);
+        	});
+        	users = Users.find({
+        		_id: { $nin: memberIds },
+        		roleId: {$in: roleIds}, 
+        	});
+        }
       }
     }
+
     // if isCoachAndNotAdmin, first get users of the role 'coachee'
-    if (Meteor.user().isCoachAndNotAdmin) {
-    	const role = Roles.findOne({ name: 'Coachee' });
-      if (role && role._id) {
-      	users = Users.find({
-      		_id: { $nin: memberIds },
-      		roleId: role._id, 
-    		});
+    const coach = Roles.findOne({ name: 'Coach' });
+    if (coach) {
+      const isCoachAndNotAdmin = Users.findOne({ 
+      	_id: Meteor.user()._id, 
+      	roleId: coach._id, 
+      	$or: [ 
+      		{ isAdmin: { $exists: false } }, 
+      		{ isAdmin: false } 
+  			]
+    	});
+
+      if (isCoachAndNotAdmin) {
+      	const role = Roles.findOne({ name: 'Coachee' });
+        if (role && role._id) {
+        	users = Users.find({
+        		_id: { $nin: memberIds },
+        		roleId: role._id, 
+      		});
+        }
       }
     }
 
@@ -786,11 +820,47 @@ Cards.helpers({
     }
   },
 
+  assignTeamMember(teamMemberId) {
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        { $addToSet: { team_members: teamMemberId }}
+      );
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this._id },
+        { $addToSet: { team_members: teamMemberId}}
+      );
+    }
+  },
+
+  unassignTeamMember(teamMemberId) {
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        { $pull: { team_members: teamMemberId }}
+      );
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this._id },
+        { $pull: { team_members: teamMemberId}}
+      );
+    }
+  },
+
   toggleMember(memberId) {
     if (this.getMembers() && this.getMembers().indexOf(memberId) > -1) {
       return this.unassignMember(memberId);
     } else {
       return this.assignMember(memberId);
+    }
+  },
+
+  toggleTeamMember(teamMemberId) {
+    if (this.getTeamMembers() && this.getTeamMembers().indexOf(teamMemberId) > -1) {
+      return this.unassignTeamMember(teamMemberId);
+    } else {
+      return this.assignTeamMember(teamMemberId);
     }
   },
 

@@ -214,6 +214,33 @@ Template.cardMembersPopup.events({
   },
 });
 
+Template.cardTeamMembersPopup.helpers({
+  isCardTeamMember() {
+    const card = Template.parentData();
+    const cardTeamMembers = card.getTeamMembers();
+
+    return _.contains(cardTeamMembers, this._id);
+  },
+
+  teamUsers() {
+  	const card = Cards.findOne();
+    return card.getTeamUsers();
+  },
+
+  user() {
+    return Users.findOne(this._id);
+  },
+});
+
+Template.cardTeamMembersPopup.events({
+  'click .js-select-teamMember'(evt) {
+    const card = Cards.findOne(Session.get('currentCard'));
+    const teamMemberId = this._id;
+    card.toggleTeamMember(teamMemberId);
+    evt.preventDefault();
+  },
+});
+
 Template.cardMemberPopup.helpers({
   user() {
     return Users.findOne(this.userId);

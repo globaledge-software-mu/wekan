@@ -498,6 +498,7 @@ BlazeComponent.extendComponent({
       },
       'click .js-member': Popup.open('cardMember'),
       'click .js-add-members': Popup.open('cardMembers'),
+      'click .js-addTeamMembers': Popup.open('cardTeamMembers'),
       'click .js-add-labels': Popup.open('cardLabels'),
       'click .js-received-date': Popup.open('editCardReceivedDate'),
       'click .js-start-date': Popup.open('editCardStartDate'),
