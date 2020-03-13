@@ -695,11 +695,16 @@ Cards.helpers({
   },
 
   getTeamMembers() {
+  	var card;
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
-      const card = Cards.findOne({_id: this.linkedId});
-      return card.team_members;
+      card = Cards.findOne({_id: this.linkedId});
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
-      return this.team_members;
+      card = Cards.findOne({_id: this._id});
+    }
+    if (card && card.team_members) {
+      return card.team_members;
+    } else {
+    	return null;
     }
   },
 
