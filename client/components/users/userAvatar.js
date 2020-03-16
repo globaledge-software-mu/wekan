@@ -223,7 +223,7 @@ Template.cardTeamMembersPopup.helpers({
   },
 
   teamUsers() {
-  	const card = Cards.findOne();
+  	const card = Cards.findOne(this._id);
     return card.getTeamUsers();
   },
 

@@ -713,7 +713,7 @@ Cards.helpers({
   // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member. 
   // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options 
   // based on the logged in user's role EXCEPT that we need to remove the users that are members of the board or the card's team
-  getTeamUsers() { 
+  getTeamUsers() {
   	var board;
     var cardId;
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
@@ -725,9 +725,10 @@ Cards.helpers({
     var boardMembers;
     var teamMembers;
   	var memberIds = new Array();
+    var users;
 
     const card = Cards.findOne(cardId);
-    if (card) {
+    if (card && card.boardId) {
       board = Boards.findOne({ _id: card.boardId });
     	boardMembers = board.activeMembers();
     	boardMembers.forEach((boardMember) => {
@@ -737,58 +738,56 @@ Cards.helpers({
     	teamMembers.forEach((teamMember) => {
     		memberIds.push(teamMember.userId);
     	});
-    }
 
-    var users;
+      // if isAdmin, first get users of any of the roles
+      if (Meteor.user().isAdmin) {
+        users = Users.find({ _id: {$nin: memberIds} });
+      }
 
-    // if isAdmin, first get users of any of the roles
-    if (Meteor.user().isAdmin) {
-      users = Users.find({ _id: {$nin: memberIds} });
-    }
+      // if isManagerAndNotAdmin, first get users of the roles 'coach' or 'coachee'
+      const manager = Roles.findOne({ name: 'Manager' });
+      if (manager) {
+        const isManagerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+        if (isManagerAndNotAdmin) {
+        	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
+          if (roles.count() > 0) {
+          	var roleIds = new Array();
+          	roles.forEach((role) => {
+          		roleIds.push(role._id);
+          	});
+          	users = Users.find({
+          		_id: { $nin: memberIds },
+          		roleId: {$in: roleIds}, 
+          	});
+          }
+        }
+      }
 
-    // if isManagerAndNotAdmin, first get users of the roles 'coach' or 'coachee'
-    const manager = Roles.findOne({ name: 'Manager' });
-    if (manager) {
-      const isManagerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
-      if (isManagerAndNotAdmin) {
-      	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
-        if (roles.count() > 0) {
-        	var roleIds = new Array();
-        	roles.forEach((role) => {
-        		roleIds.push(role._id);
-        	});
-        	users = Users.find({
-        		_id: { $nin: memberIds },
-        		roleId: {$in: roleIds}, 
-        	});
+      // if isCoachAndNotAdmin, first get users of the role 'coachee'
+      const coach = Roles.findOne({ name: 'Coach' });
+      if (coach) {
+        const isCoachAndNotAdmin = Users.findOne({ 
+        	_id: Meteor.user()._id, 
+        	roleId: coach._id, 
+        	$or: [ 
+        		{ isAdmin: { $exists: false } }, 
+        		{ isAdmin: false } 
+    			]
+      	});
+
+        if (isCoachAndNotAdmin) {
+        	const role = Roles.findOne({ name: 'Coachee' });
+          if (role && role._id) {
+          	users = Users.find({
+          		_id: { $nin: memberIds },
+          		roleId: role._id, 
+        		});
+          }
         }
       }
     }
 
-    // if isCoachAndNotAdmin, first get users of the role 'coachee'
-    const coach = Roles.findOne({ name: 'Coach' });
-    if (coach) {
-      const isCoachAndNotAdmin = Users.findOne({ 
-      	_id: Meteor.user()._id, 
-      	roleId: coach._id, 
-      	$or: [ 
-      		{ isAdmin: { $exists: false } }, 
-      		{ isAdmin: false } 
-  			]
-    	});
-
-      if (isCoachAndNotAdmin) {
-      	const role = Roles.findOne({ name: 'Coachee' });
-        if (role && role._id) {
-        	users = Users.find({
-        		_id: { $nin: memberIds },
-        		roleId: role._id, 
-      		});
-        }
-      }
-    }
-
-  	 return users;
+ 	  return users;
   },
 
   assignMember(memberId) {
