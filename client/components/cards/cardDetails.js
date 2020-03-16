@@ -106,7 +106,29 @@ BlazeComponent.extendComponent({
   hasMembers() {
     const card = Cards.findOne({_id: this.currentData()._id});
     if (card && card.members && card.members.length > 0) {
-    	return true;
+    	const cardMembers = card.members;
+    	const membersCount = 0;
+    	for (var i = 0; i < cardMembers.length; i++) {
+    		const user = Users.findOne({_id: cardMembers[i]});
+    		if (!user) {
+    			Cards.update(
+  					{ _id: card._id }, {
+	  					$pull: {
+	              members: {
+	              	$eq: [i]
+	              },
+	            },
+  					}
+    			);
+    		} else {
+    			membersCount++;
+    		}
+    	}
+    	if (membersCount > 0) {
+      	return true;
+    	} else {
+      	return false;
+    	}
     } else {
     	return false;
     }

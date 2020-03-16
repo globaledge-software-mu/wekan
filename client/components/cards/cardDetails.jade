@@ -102,12 +102,13 @@ template(name="cardDetails")
       if isPropertyVisible 'teamMembers'
         .card-details-item.card-details-item-teamMembers
           h3.card-details-item-title {{getPropertyAlias 'teamMembers'}}
-          each getTeamMembers
-            +userAvatar(userId=this cardId=../_id)
-            | {{! XXX Hack to hide syntaxic coloration /// }}
-          if canModifyCard
-            a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
-              i.fa.fa-plus
+          if hasMembers
+            each getTeamMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
+            if canModifyCard
+              a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
+                i.fa.fa-plus
 
     #historicScores
         canvas.card-details-item.score-line
