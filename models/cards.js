@@ -687,7 +687,7 @@ Cards.helpers({
     } else if (this.isLinkedBoard()) {
       const board = Boards.findOne({_id: this.linkedId});
       return board.activeMembers().map((member) => {
-        return member.userId;
+        member.userId;
       });
     } else {
       return this.members;
