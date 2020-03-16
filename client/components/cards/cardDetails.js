@@ -103,6 +103,22 @@ BlazeComponent.extendComponent({
     return result;
   },
 
+  hasMembers() {
+    const card = Cards.findOne({_id: this.currentData()._id});
+    if (card && card.members && card.members.length > 0) {
+    	return true;
+    } else {
+    	return false;
+    }
+  },
+
+  getCardMembers() {
+    const card = Cards.findOne({_id: this.currentData()._id});
+    if (card && card._id) {
+    	return card.members;
+    }
+  },
+
   linkForCard() {
     const card = this.currentData();
     let result = '#';

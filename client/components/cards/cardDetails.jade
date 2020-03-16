@@ -79,12 +79,13 @@ template(name="cardDetails")
       if isPropertyVisible 'members'
         .card-details-item.card-details-item-members
           h3.card-details-item-title {{getPropertyAlias 'members'}}
-          each getMembers
-            +userAvatar(userId=this cardId=../_id)
-            | {{! XXX Hack to hide syntaxic coloration /// }}
-          if canModifyCard
-            a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
-              i.fa.fa-plus
+          if hasMembers
+            each getCardMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
+            if canModifyCard
+              a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
+                i.fa.fa-plus
 
       if isPropertyVisible 'labels'
         .card-details-item.card-details-item-labels
