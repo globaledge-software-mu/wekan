@@ -723,7 +723,6 @@ Cards.helpers({
     }
 
     var boardMembers;
-    var teamMembers;
   	var memberIds = new Array();
     var users;
 
@@ -734,10 +733,12 @@ Cards.helpers({
     	boardMembers.forEach((boardMember) => {
     		memberIds.push(boardMember.userId);
     	});
-    	teamMembers = this.getTeamMembers();
-    	teamMembers.forEach((teamMember) => {
-    		memberIds.push(teamMember.userId);
-    	});
+    	var teamMembers = this.getTeamMembers();
+    	if (teamMembers && teamMembers.length > 0) {
+      	teamMembers.forEach((teamMember) => {
+      		memberIds.push(teamMember.userId);
+      	});
+    	}
 
       // if isAdmin, first get users of any of the roles
       if (Meteor.user().isAdmin) {

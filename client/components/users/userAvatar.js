@@ -222,6 +222,20 @@ Template.cardTeamMembersPopup.helpers({
     return _.contains(cardTeamMembers, this._id);
   },
 
+  hasEligibleFutureTeamUsers() {
+  	const card = Cards.findOne(this._id);
+    if (card && card._id) {
+    	const teamUsers = card.getTeamUsers();
+      if (teamUsers.count() > 0) {
+      	return true;
+      } else {
+      	return false;
+      }
+    } else {
+    	return false;
+    }
+  },
+
   teamUsers() {
   	const card = Cards.findOne(this._id);
     return card.getTeamUsers();

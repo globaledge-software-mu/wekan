@@ -104,27 +104,52 @@ BlazeComponent.extendComponent({
   },
 
   hasMembers() {
-    const card = Cards.findOne({_id: this.currentData()._id});
+  	const carId = this.currentData()._id;
+    const card = Cards.findOne({_id: carId});
+
     if (card && card.members && card.members.length > 0) {
     	const cardMembers = card.members;
-    	const membersCount = 0;
-    	for (var i = 0; i < cardMembers.length; i++) {
-    		const user = Users.findOne({_id: cardMembers[i]});
+    	var membersCount = 0;
+    	var nonExistinUsersCount = 0;
+    	var needsToUpdateCardMembers = false;
+    	var idsToBeRemoved = [];
+
+    	cardMembers.forEach((cardMember) => {
+    		const user = Users.findOne({_id: cardMember});
     		if (!user) {
-    			Cards.update(
-  					{ _id: card._id }, {
-	  					$pull: {
-	              members: {
-	              	$eq: [i]
-	              },
-	            },
-  					}
-    			);
+    			needsToUpdateCardMembers = true;
+    			idsToBeRemoved.push(cardMember);
+    			nonExistinUsersCount++;
     		} else {
     			membersCount++;
     		}
+    	});
+
+    	var filteredMembers = [];
+    	if (needsToUpdateCardMembers) {
+    		cardMembers.forEach((cardMember) => {
+    			if (!idsToBeRemoved.includes(cardMember)) {
+    				filteredMembers.push(cardMember);
+    			}
+    		});
+    		Cards.update(
+  				{ _id: carId }, {
+  					$unset: {
+  						members: ''
+  					}
+  				}
+    		);
+    		Cards.update(
+  				{ _id: carId }, {
+  					$set: {
+  						members: filteredMembers
+  					}
+  				}
+    		);
     	}
-    	if (membersCount > 0) {
+
+    	const realMembersCount = membersCount - nonExistinUsersCount;
+    	if (realMembersCount > 0) {
       	return true;
     	} else {
       	return false;
