@@ -79,12 +79,13 @@ template(name="cardDetails")
       if isPropertyVisible 'members'
         .card-details-item.card-details-item-members
           h3.card-details-item-title {{getPropertyAlias 'members'}}
-          each getMembers
-            +userAvatar(userId=this cardId=../_id)
-            | {{! XXX Hack to hide syntaxic coloration /// }}
-          if canModifyCard
-            a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
-              i.fa.fa-plus
+          if hasMembers
+            each getCardMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
+            if canModifyCard
+              a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
+                i.fa.fa-plus
 
       if isPropertyVisible 'labels'
         .card-details-item.card-details-item-labels
@@ -97,6 +98,18 @@ template(name="cardDetails")
           if canModifyCard
             a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
               i.fa.fa-plus
+
+      if isPropertyVisible 'teamMembers'
+        .card-details-item.card-details-item-teamMembers
+          h3.card-details-item-title {{getPropertyAlias 'teamMembers'}}
+          if hasMembers
+            each getTeamMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
+            if canModifyCard
+              a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
+                i.fa.fa-plus
+
     #historicScores
         canvas.card-details-item.score-line
     if reloadHistoricScoreChart
@@ -325,12 +338,27 @@ template(name="cardMembersPopup")
     each board.activeMembers
       li.item(class="{{#if isCardMember}}active{{/if}}")
         a.name.js-select-member(href="#")
+
           +userAvatar(userId=user._id)
           span.full-name
             = user.profile.fullname
             | (<span class="username">{{ user.username }}</span>)
           if isCardMember
             i.fa.fa-check
+
+template(name="cardTeamMembersPopup")
+  ul.pop-over-list.js-card-member-list
+    if hasEligibleFutureTeamUsers
+      each teamUsers
+        li.item(class="{{#if isCardTeamMember}}active{{/if}}")
+          a.name.js-select-teamMember(href="#")
+
+            +userAvatar(userId=user._id)
+            span.full-name
+              = user.profile.fullname
+              | (<span class="username">{{ user.username }}</span>)
+            if isCardTeamMember
+              i.fa.fa-check
 
 template(name="cardMorePopup")
   p.quiet

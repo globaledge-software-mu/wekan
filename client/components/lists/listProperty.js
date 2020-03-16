@@ -150,7 +150,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -161,12 +164,34 @@
 (class extends ListProperty {
   onCreated() {
     super.onCreated();
+    this.data().getPropertyAlias('team') && this.property.set(this.data().getPropertyAlias('team'));
+  }
+
+  onRendered() {
+    super.onRendered();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
+  }
+
+  _storePropertyAlias(alias) {
+    super._storePropertyAlias(alias, 'team');
+  }
+}).register('editPropertyCardTeamMembersPopup');
+
+(class extends ListProperty {
+  onCreated() {
+    super.onCreated();
     this.data().getPropertyAlias('labels') && this.property.set(this.data().getPropertyAlias('labels'));
   }
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -182,7 +207,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -198,7 +226,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -214,7 +245,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -230,7 +264,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -246,7 +283,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -262,7 +302,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -278,7 +321,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -294,7 +340,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -444,6 +493,22 @@ Template.propertyAlias.helpers({
     });
   }
 }).register('propertyCardMembers');
+
+(class extends PropertyAliasForm {
+  onCreated() {
+    super.onCreated();
+    const self = this;
+    self.autorun(() => {
+      self.property.set(self.data().getPropertyAlias('team'));
+    });
+  }
+    
+  events() {
+    return super.events().concat({
+      'click .js-edit-property-alias': Popup.open('editPropertyCardTeamMembers'),
+    });
+  }
+}).register('propertyCardTeamMembers');
 
 (class extends PropertyAliasForm {
   onCreated() {

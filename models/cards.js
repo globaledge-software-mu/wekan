@@ -184,6 +184,17 @@ Cards.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: [],
   },
+  team_members: {
+    /**
+     * list of team members (user IDs)
+     * 
+     * Users that are not members of a board can be added as a team, 
+     * without giving them permissions to view the board or the card
+     */
+    type: [String],
+    optional: true,
+    defaultValue: [],
+  },
   receivedAt: {
     /**
      * Date the card was received
@@ -676,11 +687,108 @@ Cards.helpers({
     } else if (this.isLinkedBoard()) {
       const board = Boards.findOne({_id: this.linkedId});
       return board.activeMembers().map((member) => {
-        return member.userId;
+        member.userId;
       });
     } else {
       return this.members;
     }
+  },
+
+  getTeamMembers() {
+  	var card;
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      card = Cards.findOne({_id: this.linkedId});
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      card = Cards.findOne({_id: this._id});
+    }
+    if (card && card.team_members) {
+      return card.team_members;
+    } else {
+    	return null;
+    }
+  },
+
+  // *** Note: team member is a user that is not a member of the board. He cannot view the board or the card *** 
+  // For the feature Team's functionality of adding and displaying team members on the card, the back-end needs to return the 
+  // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member. 
+  // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options 
+  // based on the logged in user's role EXCEPT that we need to remove the users that are members of the board or the card's team
+  getTeamUsers() {
+  	var board;
+    var cardId;
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this.linkedId; 
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this._id; 
+    }
+
+    var boardMembers;
+  	var memberIds = new Array();
+    var users;
+
+    const card = Cards.findOne(cardId);
+    if (card && card.boardId) {
+      board = Boards.findOne({ _id: card.boardId });
+    	boardMembers = board.activeMembers();
+    	boardMembers.forEach((boardMember) => {
+    		memberIds.push(boardMember.userId);
+    	});
+    	var teamMembers = this.getTeamMembers();
+    	if (teamMembers && teamMembers.length > 0) {
+      	teamMembers.forEach((teamMember) => {
+      		memberIds.push(teamMember.userId);
+      	});
+    	}
+
+      // if isAdmin, first get users of any of the roles
+      if (Meteor.user().isAdmin) {
+        users = Users.find({ _id: {$nin: memberIds} });
+      }
+
+      // if isManagerAndNotAdmin, first get users of the roles 'coach' or 'coachee'
+      const manager = Roles.findOne({ name: 'Manager' });
+      if (manager) {
+        const isManagerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+        if (isManagerAndNotAdmin) {
+        	const roles = Roles.find({ $or: [{ name: 'Coach' }, { name: 'Coachee' }] });
+          if (roles.count() > 0) {
+          	var roleIds = new Array();
+          	roles.forEach((role) => {
+          		roleIds.push(role._id);
+          	});
+          	users = Users.find({
+          		_id: { $nin: memberIds },
+          		roleId: {$in: roleIds}, 
+          	});
+          }
+        }
+      }
+
+      // if isCoachAndNotAdmin, first get users of the role 'coachee'
+      const coach = Roles.findOne({ name: 'Coach' });
+      if (coach) {
+        const isCoachAndNotAdmin = Users.findOne({ 
+        	_id: Meteor.user()._id, 
+        	roleId: coach._id, 
+        	$or: [ 
+        		{ isAdmin: { $exists: false } }, 
+        		{ isAdmin: false } 
+    			]
+      	});
+
+        if (isCoachAndNotAdmin) {
+        	const role = Roles.findOne({ name: 'Coachee' });
+          if (role && role._id) {
+          	users = Users.find({
+          		_id: { $nin: memberIds },
+          		roleId: role._id, 
+        		});
+          }
+        }
+      }
+    }
+
+ 	  return users;
   },
 
   assignMember(memberId) {
@@ -717,11 +825,47 @@ Cards.helpers({
     }
   },
 
+  assignTeamMember(teamMemberId) {
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        { $addToSet: { team_members: teamMemberId }}
+      );
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this._id },
+        { $addToSet: { team_members: teamMemberId}}
+      );
+    }
+  },
+
+  unassignTeamMember(teamMemberId) {
+    if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this.linkedId },
+        { $pull: { team_members: teamMemberId }}
+      );
+    } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      return Cards.update(
+        { _id: this._id },
+        { $pull: { team_members: teamMemberId}}
+      );
+    }
+  },
+
   toggleMember(memberId) {
     if (this.getMembers() && this.getMembers().indexOf(memberId) > -1) {
       return this.unassignMember(memberId);
     } else {
       return this.assignMember(memberId);
+    }
+  },
+
+  toggleTeamMember(teamMemberId) {
+    if (this.getTeamMembers() && this.getTeamMembers().indexOf(teamMemberId) > -1) {
+      return this.unassignTeamMember(teamMemberId);
+    } else {
+      return this.assignTeamMember(teamMemberId);
     }
   },
 
