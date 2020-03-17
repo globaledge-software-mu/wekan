@@ -104,8 +104,8 @@ BlazeComponent.extendComponent({
   },
 
   hasMembers() {
-  	const carId = this.currentData()._id;
-    const card = Cards.findOne({_id: carId});
+  	const cardId = this.currentData()._id;
+    const card = Cards.findOne({_id: cardId});
 
     if (card && card.members && card.members.length > 0) {
     	const cardMembers = card.members;
@@ -133,14 +133,14 @@ BlazeComponent.extendComponent({
     			}
     		});
     		Cards.update(
-  				{ _id: carId }, {
+  				{ _id: cardId }, {
   					$unset: {
   						members: ''
   					}
   				}
     		);
     		Cards.update(
-  				{ _id: carId }, {
+  				{ _id: cardId }, {
   					$set: {
   						members: filteredMembers
   					}
@@ -154,6 +154,17 @@ BlazeComponent.extendComponent({
     	} else {
       	return false;
     	}
+    } else {
+    	return false;
+    }
+  },
+
+  hasTeamMembers() {
+  	const cardId = this.currentData()._id;
+    const card = Cards.findOne({_id: cardId});
+
+    if (card && card.team_members && card.team_members.length > 0) {
+    	return true;
     } else {
     	return false;
     }

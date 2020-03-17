@@ -83,9 +83,9 @@ template(name="cardDetails")
             each getCardMembers
               +userAvatar(userId=this cardId=../_id)
               | {{! XXX Hack to hide syntaxic coloration /// }}
-            if canModifyCard
-              a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
-                i.fa.fa-plus
+          if canModifyCard
+            a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
+              i.fa.fa-plus
 
       if isPropertyVisible 'labels'
         .card-details-item.card-details-item-labels
@@ -102,13 +102,13 @@ template(name="cardDetails")
       if isPropertyVisible 'teamMembers'
         .card-details-item.card-details-item-teamMembers
           h3.card-details-item-title {{getPropertyAlias 'teamMembers'}}
-          if hasMembers
+          if hasTeamMembers
             each getTeamMembers
               +userAvatar(userId=this cardId=../_id)
               | {{! XXX Hack to hide syntaxic coloration /// }}
-            if canModifyCard
-              a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
-                i.fa.fa-plus
+          if canModifyCard
+            a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
+              i.fa.fa-plus
 
     #historicScores
         canvas.card-details-item.score-line
