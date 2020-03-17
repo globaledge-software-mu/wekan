@@ -1144,34 +1144,57 @@ if (Meteor.isServer) {
 
   // Add a new activity if we add or remove a member to the board
   Boards.after.update((userId, doc, fieldNames, modifier) => {
-    if (!_.contains(fieldNames, 'members')) {
-      return;
-    }
 
-    // Say hello to the new member
-    if (modifier.$push && modifier.$push.members) {
-      const memberId = modifier.$push.members.userId;
-      Activities.insert({
-        userId,
-        memberId,
-        type: 'member',
-        activityType: 'addBoardMember',
-        boardId: doc._id,
-      });
-    }
-
-    // Say goodbye to the former member
-    if (modifier.$set) {
-      foreachRemovedMember(doc, modifier.$set, (memberId) => {
+  	// When member is added or removed
+    if (_.contains(fieldNames, 'members')) {
+      // Say hello to the new member
+      if (modifier.$push && modifier.$push.members) {
+        const memberId = modifier.$push.members.userId;
         Activities.insert({
           userId,
           memberId,
           type: 'member',
-          activityType: 'removeBoardMember',
+          activityType: 'addBoardMember',
           boardId: doc._id,
         });
-      });
+      }
+
+      // Say goodbye to the former member
+      if (modifier.$set) {
+        foreachRemovedMember(doc, modifier.$set, (memberId) => {
+          Activities.insert({
+            userId,
+            memberId,
+            type: 'member',
+            activityType: 'removeBoardMember',
+            boardId: doc._id,
+          });
+        });
+      }
     }
+
+  	// When a board is archived or restored
+    if (_.contains(fieldNames, 'archived')) {
+      // record the activity of archiving the board
+      if (modifier.$set && modifier.$set.archived && modifier.$set.archived === true) {
+        Activities.insert({
+          userId,
+          type: 'board',
+          activityTypeId: doc._id,
+          activityType: 'archivedBoard',
+          boardId: doc._id,
+        });
+      } else {  // record the activity of restoring the board
+        Activities.insert({
+          userId,
+          type: 'board',
+          activityTypeId: doc._id,
+          activityType: 'restoredBoard',
+          boardId: doc._id,
+        });
+      }
+    }
+
   });
 
   // Method executed before deleting a board from the database
