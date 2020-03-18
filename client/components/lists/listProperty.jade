@@ -120,6 +120,14 @@ template(name="listPropertiesPopup")
               +propertyCardAssignedBy
        tr
           td
+            a#aspectsList.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'aspectsList'}}is-checked{{/if}}")
+              span {{_ 'aspectsList'}}
+          td
+            a.edit-property
+              +propertyCardAspectsList
+       tr
+          td
             a#checklists.flex.card-property
               .materialCheckBox(class="{{#if getPropertyVisibility 'checklists'}}is-checked{{/if}}")
               span {{_ 'checklists'}}

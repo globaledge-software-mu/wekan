@@ -199,6 +199,14 @@ template(name="cardDetails")
             +viewer
               = getAssignedBy
 
+    if isPropertyVisible 'aspectsList'
+      hr
+      .card-details-item.card-details-item-name
+        h3.card-details-item-title {{getPropertyAlias 'aspectsList'}}
+        if canModifyCard
+          a#js-card-details-add-aspects-list
+            | {{_ 'add-an-aspect'}}
+
     if isPropertyVisible 'checklists'
       hr
       +checklists(cardId = _id)
