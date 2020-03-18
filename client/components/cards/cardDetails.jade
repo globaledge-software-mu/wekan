@@ -203,8 +203,17 @@ template(name="cardDetails")
       hr
       .card-details-item.card-details-item-name
         h3.card-details-item-title {{getPropertyAlias 'aspectsList'}}
+        each aspectsListItems
+          .aspects-list-items
+            p {{title}}
+        form.inlined-form.js-inlined-form#add-aspects-list-item-form
+          textarea#js-add-aspects-list-item(rows='1')
+          #add-aspects-list-item-controls.edit-controls.clearfix
+            button#js-submit-aspects-list-item-form.primary(type="button") {{_ 'save'}}
+            a#js-close-aspects-list-item-form.fa.fa-times-thin
         if canModifyCard
-          a#js-card-details-add-aspects-list
+          a#addAspect(title="{{_ 'add-an-aspect'}}")
+            i.fa.fa-plus
             | {{_ 'add-an-aspect'}}
 
     if isPropertyVisible 'checklists'

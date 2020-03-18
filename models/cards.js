@@ -285,6 +285,10 @@ Cards.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: '',
   },
+	aspectsListId: { 
+    type: String,
+    optional: true,
+  },
 }));
 
 Cards.allow({

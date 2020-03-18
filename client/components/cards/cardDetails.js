@@ -38,6 +38,8 @@ BlazeComponent.extendComponent({
     this.calculateNextPeak();
 
     Meteor.subscribe('unsaved-edits');
+    Meteor.subscribe('aspects_lists');
+    Meteor.subscribe('aspects_list_items');
   },
 
   isWatching() {
@@ -528,6 +530,13 @@ BlazeComponent.extendComponent({
     parentComponent.showOverlay.set(false);
   },
 
+  aspectsListItems() {
+    return AspectsListItems.find({ 
+    	aspectsListId: this.currentData().aspectsListId,
+    	cardId: this.currentData()._id 
+  	});
+  },
+
   events() {
     const events = {
       [`${CSSEvents.transitionend} .js-card-details`]() {
@@ -587,6 +596,56 @@ BlazeComponent.extendComponent({
       },
       'click #toggleButton'() {
         Meteor.call('toggleSystemMessages');
+      },
+
+      'click #addAspect' (evt) {
+        evt.preventDefault();
+        $('#addAspect').css('display', 'none');
+        $('#add-aspects-list-item-form').css('display', 'block');
+        const inputSelector = $('textarea#js-add-aspects-list-item');
+        inputSelector.val('');
+        inputSelector.focus();
+      },
+
+      'click #js-close-aspects-list-item-form' (evt) {
+        $('#add-aspects-list-item-form').css('display', 'none');
+        $('#addAspect').css('display', 'block');
+      },
+
+      // Pressing Enter should click the submit button
+      'keydown textarea#js-add-aspects-list-item'(evt) {
+        if (evt.keyCode === 13) {
+          $('#js-submit-aspects-list-item-form').click();
+          $('#js-close-aspects-list-item-form').click();
+        }
+      },
+
+      'click #js-submit-aspects-list-item-form'(evt) {
+        evt.preventDefault();
+        const title = $(evt.target).closest('#add-aspects-list-item-controls').siblings('#js-add-aspects-list-item').val();
+        if (title.length > 0) {
+        	const cardId = this.currentData()._id;
+        	const aspectsListId = '';
+        	const aspectsList = AspectsLists.findOne({ cardId });
+        	if (!aspectsList) {
+          	aspectsListId = AspectsLists.insert({ cardId });
+          	Cards.update(
+        			{ _id: cardId }, {
+        				$set: {
+        					aspectsListId
+        				}
+        			}
+          	);
+        	} else {
+          	aspectsListId = aspectsList._id;
+        	}
+        	AspectsListItems.insert({
+        		aspectsListId,
+        		cardId,
+        	  title
+        	});
+        }
+        $('#js-close-aspects-list-item-form').click();
       },
 
       // chart's data-points click event
