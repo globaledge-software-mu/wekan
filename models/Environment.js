@@ -37,16 +37,15 @@ if (Meteor.isServer) {
 	    		title: 'development'
 	    	});
 	    }
-		} 
-  	// Since currently the staging env too is returning true on the check of Meteor.isProduction. 
+		}
+  	// Since currently the staging env too is returning true on the check of Meteor.isProduction.
   	// That's why we will not be using it to check if we are on the production server
   	else { // else has to be on either Staging or Production
   		const env = Environment.findOne();
-  		// I had manually entered the doc for the collection Environment for the staging environment
-  		// so we'll need two types of checks, 1st, to check with existing environment doc (for the startups 
-  		// post the insert in the if block below) and comparing the the string value of the title. 
-  		// And 2nd, where there is no doc present (for the first run of this code)
+  		// I have manually entered the doc for the collection Environment for the staging platform
   		if (env && env.title && env.title === 'production') {
+  			return false;
+  		} else if (env && env.title && env.title === 'staging') {
   			return false;
   		} else {
 	    	Environment.insert({
