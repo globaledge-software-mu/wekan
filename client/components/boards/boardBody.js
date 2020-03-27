@@ -16,7 +16,7 @@ BlazeComponent.extendComponent({
       if (!currentBoardId) {
         return;
       }
-      Meteor.subscribe('board', currentBoardId, false);
+      subManager.subscribe('board', currentBoardId, false);
       Tracker.nonreactive(() => {
         Tracker.autorun(() => {
           this.isBoardReady.set(true);
