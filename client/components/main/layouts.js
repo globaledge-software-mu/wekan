@@ -28,7 +28,6 @@ Template.userFormsLayout.onCreated(function() {
   Meteor.subscribe('setting', {
     onReady() {
       instance.currentSetting.set(Settings.findOne());
-      this.unblock();
       return this.stop();
     },
   });

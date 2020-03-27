@@ -16,10 +16,10 @@ BlazeComponent.extendComponent({
       if (!currentBoardId) {
         return;
       }
-      const handle = Meteor.subscribe('board', currentBoardId, false);
+      Meteor.subscribe('board', currentBoardId, false);
       Tracker.nonreactive(() => {
         Tracker.autorun(() => {
-          this.isBoardReady.set(handle.ready());
+          this.isBoardReady.set(true);
         });
       });
     });
