@@ -98,13 +98,13 @@ Template.dateBadge.helpers({
     this.data().getReceived() && this.date.set(moment(this.data().getReceived()));
     this.data().getInitialScore() && this.score.set(this.data().getInitialScore());
   }
-  
+
   onRendered() {
     super.onRendered();
     if (!this.data().isPropertyVisible('card-received-score-title')) {
       $('.score').remove();
     }
-    
+
     //Remove 'Time' from UI if not selected in list properties for the Alias of Name 'Received'
     var listId = this.data().list()._id;
     this.removeTimeUI(listId, 'card-received');
@@ -133,9 +133,35 @@ Template.dateBadge.helpers({
   _deleteDate() {
     this.card.setReceived(null);
   }
-  
+
   _deleteScore() {
     this.card.setInitialScore(null);
+  }
+
+  events() {
+    return [{
+      'click #score'(e) {
+        const cardId = this.card._id;
+        var hasAspects = false;
+        var hasTeamMembers = false;
+
+        const aspects = AspectsListItems.find({ cardId });
+        if (aspects.count() > 0) {
+          hasAspects = true;
+        }
+
+        const actualCard = Cards.findOne({ _id: cardId });
+        if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+          hasTeamMembers = true;
+        }
+
+        if (hasAspects || hasTeamMembers) {
+          e.preventDefault();
+          Popup.close();
+          Modal.open('editCardReceivedComposedScoreModal');
+        }
+      },
+    }];
   }
 }).register('editCardReceivedDatePopup');
 
@@ -144,8 +170,8 @@ Template.dateBadge.helpers({
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    // The following if condition distinguishes whether the edit button was clicked directly 
-    // or it was triggered from the click event of the historical chart's datapoint 
+    // The following if condition distinguishes whether the edit button was clicked directly
+    // or it was triggered from the click event of the historical chart's datapoint
     if (!this.data().dataPointDate) {
       this.date.set(moment());
       this.data().getCurrentScore() && this.score.set(this.data().getCurrentScore());
@@ -220,12 +246,12 @@ Template.dateBadge.helpers({
   _deleteDate() {
     this.card.setStart(null);
   }
-  
+
   _deleteScore() {
     if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
       this.card.setCurrentScore(null);
     } else {
-      // from chart datapoint 
+      // from chart datapoint
       cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
@@ -241,14 +267,40 @@ Template.dateBadge.helpers({
       }
     }
   }
+
+  events() {
+    return [{
+      'click #score'(e) {
+        const cardId = this.card._id;
+        var hasAspects = false;
+        var hasTeamMembers = false;
+
+        const aspects = AspectsListItems.find({ cardId });
+        if (aspects.count() > 0) {
+          hasAspects = true;
+        }
+
+        const actualCard = Cards.findOne({ _id: cardId });
+        if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+          hasTeamMembers = true;
+        }
+
+        if (hasAspects || hasTeamMembers) {
+          e.preventDefault();
+          Popup.close();
+          Modal.open('editCardStartComposedScoreModal');
+        }
+      },
+    }];
+  }
 }).register('editCardStartDatePopup');
 
 // editCardDueDatePopup
 (class extends DatePicker {
   onCreated() {
     super.onCreated();
-    // The following if condition distinguishes whether the edit button was clicked directly 
-    // or it was triggered from the click event of the historical chart's datapoint 
+    // The following if condition distinguishes whether the edit button was clicked directly
+    // or it was triggered from the click event of the historical chart's datapoint
     if (!this.data().dataPointDate) {
       this.data().getDue() && this.date.set(moment(this.data().getDue()));
       this.data().getTargetScore() && this.score.set(this.data().getTargetScore());
@@ -288,7 +340,7 @@ Template.dateBadge.helpers({
       }
     }
   }
-  
+
   _storeScore(score) {
     this.card.setTargetScore(score);
     this.card.reloadHistoricScoreChart();
@@ -297,12 +349,12 @@ Template.dateBadge.helpers({
   _deleteDate() {
     this.card.setDue(null);
   }
-  
+
   _deleteScore() {
     if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
       this.card.setTargetScore(null);
     } else {
-      // from chart datapoint 
+      // from chart datapoint
       cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'target', cardId: this.card._id });
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
@@ -346,7 +398,7 @@ Template.dateBadge.helpers({
   _storeDate(date) {
     this.card.setEnd(date);
   }
-  
+
   _storeScore(score) {
     this.card.setEndScore(score);
   }
@@ -354,7 +406,7 @@ Template.dateBadge.helpers({
   _deleteDate() {
     this.card.setEnd(null);
   }
-  
+
   _deleteScore() {
     this.card.setEndScore(null);
   }
@@ -432,7 +484,7 @@ class CardReceivedDate extends CardDate {
     }
     return classes;
   }
-  
+
   distinguishDate() {
   	return 'card-received';
   }
@@ -479,7 +531,7 @@ class CardStartDate extends CardDate {
     }
     return classes;
   }
-  
+
   distinguishDate() {
   	return 'card-start';
   }
@@ -529,7 +581,7 @@ class CardDueDate extends CardDate {
     }
     return classes;
   }
-  
+
   distinguishDate() {
   	return 'card-due';
   }
@@ -572,7 +624,7 @@ class CardEndDate extends CardDate {
     }
     return classes;
   }
-  
+
   distinguishDate() {
   	return 'card-end';
   }

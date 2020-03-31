@@ -8,3 +8,38 @@ template(name="dateBadge")
       time(datetime="{{showISODate}}")
         | {{showDate distinguishDate}}
 
+template(name="editCardReceivedComposedScoreModal")
+  #modalBanner
+    h4#modalLabel
+      | {{_ 'edit-card-received-score'}}
+  hr.hrEditCardReceivedComposedScoreForm
+  #editCardReceivedComposedScoreFormContainer
+    form#editCardReceivedComposedScoreForm
+      label.bold
+        | {{_ 'aspects-no-1'}}
+        span.error.hide.aspects-blank.aspects-not-edited
+          | {{_ 'aspects-blank'}}
+        input.aspects(type="text" value="")
+      label.bold
+        | {{_ 'team-member'}}
+        span.error.hide.team-member-score-blank.team-member-score-not-edited
+          | {{_ 'team-member-score-blank'}}
+        input.team-member-score(type="text" value="")
+
+template(name="editCardStartComposedScoreModal")
+  #modalBanner
+    h4#modalLabel
+      | {{_ 'edit-card-start-score'}}
+  hr.hrEditCardStartComposedScoreForm
+  #editCardStartComposedScoreFormContainer
+    form#editCardStartComposedScoreForm
+      label.bold
+        | {{_ 'aspects-no-1'}}
+        span.error.hide.aspects-blank.aspects-not-edited
+          | {{_ 'aspects-blank'}}
+        input.aspects(type="text" value="")
+      label.bold
+        | {{_ 'team-member'}}
+        span.error.hide.team-member-score-blank.team-member-score-not-edited
+          | {{_ 'team-member-score-blank'}}
+        input.team-member-score(type="text" value="")
