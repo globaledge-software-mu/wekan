@@ -15,33 +15,40 @@ template(name="editCardReceivedComposedScoreModal")
   hr.hrEditCardReceivedComposedScoreForm
   #editCardReceivedComposedScoreFormContainer
     form#editCardReceivedComposedScoreForm
-      if hasOnlyAspects
-        each aspects
-          label.bold
-            | {{title}}
-            span.error.hide.aspects-blank.aspects-not-edited
-              | {{_ 'aspects-blank'}}
-            input.aspects(type="text" value="{{score}}")
-      if hasOnlyTeamMembers
-        each teamMembers
-          label.bold
-            | {{username}}
-            span.error.hide.team-member-score-blank.team-member-score-not-edited
-              | {{_ 'team-member-score-blank'}}
-            input.team-member-score(type="text" value="{{score}}")
-      if hasBothTeamMembersAndAspects
-        each teamMembers
-          label.bold
-            | {{username}}
-            span.error.hide.team-member-score-blank.team-member-score-not-edited
-              | {{_ 'team-member-score-blank'}}
-            input.team-member-score(type="text" value="{{score}}")
-            each aspects
-              label.bold
-                | {{title}}
-                span.error.hide.aspects-blank.aspects-not-edited
-                  | {{_ 'aspects-blank'}}
-                input.aspects(type="text" value="{{score}}")
+      .saveDetailedScores
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+      .scrollableList
+        if hasOnlyAspects
+          each aspects
+            label.bold
+              | {{title}}
+              span.error.hide.aspects-blank.aspects-not-edited
+                | {{_ 'aspects-blank'}}
+              input.aspects(type="text" value="{{score}}")
+        if hasOnlyTeamMembers
+          each teamMembers
+            label.bold
+              | {{username}}
+              span.error.hide.team-member-score-blank.team-member-score-not-edited
+                | {{_ 'team-member-score-blank'}}
+              input.team-member-score(type="text" value="{{score}}")
+        if hasBothTeamMembersAndAspects
+          each teamMembers
+            .bothAspectsAndTeamMembersContainer
+              .teamMembersContainer(style="display: flex;")
+                label.team-member-label.bold(style="line-height: 40px;")
+                  | {{username}}
+                  span.error.hide.team-member-score-blank.team-member-score-not-edited
+                    | {{_ 'team-member-score-blank'}}
+                input.team-member-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each aspects
+                .aspectsContainer(style="margin-left: 50px; display: flex;")
+                  label.aspects-label.bold(style="line-height: 40px;")
+                    | {{title}}
+                    span.error.hide.aspects-blank.aspects-not-edited
+                      | {{_ 'aspects-blank'}}
+                  input.aspects-score-input(type="text" value="{{score}}" style="width: fit-content; margin-left: 8px;")
+            hr
 
 template(name="editCardStartComposedScoreModal")
   #modalBanner
@@ -50,30 +57,37 @@ template(name="editCardStartComposedScoreModal")
   hr.hrEditCardStartComposedScoreForm
   #editCardStartComposedScoreFormContainer
     form#editCardStartComposedScoreForm
-      if hasOnlyAspects
-        each aspects
-          label.bold
-            | {{title}}
-            span.error.hide.aspects-blank.aspects-not-edited
-              | {{_ 'aspects-blank'}}
-            input.aspects(type="text" value="{{score}}")
-      if hasOnlyTeamMembers
-        each teamMembers
-          label.bold
-            | {{username}}
-            span.error.hide.team-member-score-blank.team-member-score-not-edited
-              | {{_ 'team-member-score-blank'}}
-            input.team-member-score(type="text" value="{{score}}")
-      if hasBothTeamMembersAndAspects
-        each teamMembers
-          label.bold
-            | {{username}}
-            span.error.hide.team-member-score-blank.team-member-score-not-edited
-              | {{_ 'team-member-score-blank'}}
-            input.team-member-score(type="text" value="{{score}}")
-            each aspects
-              label.bold
-                | {{title}}
-                span.error.hide.aspects-blank.aspects-not-edited
-                  | {{_ 'aspects-blank'}}
-                input.aspects(type="text" value="{{score}}")
+      .saveDetailedScores
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+      .scrollableList
+        if hasOnlyAspects
+          each aspects
+            label.bold
+              | {{title}}
+              span.error.hide.aspects-blank.aspects-not-edited
+                | {{_ 'aspects-blank'}}
+              input.aspects(type="text" value="{{score}}")
+        if hasOnlyTeamMembers
+          each teamMembers
+            label.bold
+              | {{username}}
+              span.error.hide.team-member-score-blank.team-member-score-not-edited
+                | {{_ 'team-member-score-blank'}}
+              input.team-member-score(type="text" value="{{score}}")
+        if hasBothTeamMembersAndAspects
+          each teamMembers
+            .bothAspectsAndTeamMembersContainer
+              .teamMembersContainer(style="display: flex;")
+                label.team-member-label.bold(style="line-height: 40px;")
+                  | {{username}}
+                  span.error.hide.team-member-score-blank.team-member-score-not-edited
+                    | {{_ 'team-member-score-blank'}}
+                input.team-member-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each aspects
+                .aspectsContainer(style="margin-left: 50px; display: flex;")
+                  label.aspects-label.bold(style="line-height: 40px;")
+                    | {{title}}
+                    span.error.hide.aspects-blank.aspects-not-edited
+                      | {{_ 'aspects-blank'}}
+                  input.aspects-score-input(type="text" value="{{score}}" style="width: fit-content; margin-left: 8px;")
+            hr
