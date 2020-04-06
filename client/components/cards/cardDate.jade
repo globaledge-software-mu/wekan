@@ -9,14 +9,13 @@ template(name="dateBadge")
         | {{showDate distinguishDate}}
 
 template(name="editCardReceivedComposedScoreModal")
-  #modalBanner
-    h4#modalLabel
-      | {{_ 'edit-card-received-score'}}
-  hr.hrEditCardReceivedComposedScoreForm
   #editCardReceivedComposedScoreFormContainer
     form#editCardReceivedComposedScoreForm
-      .saveDetailedScores
-        input.primary.wide(type="submit" value="{{_ 'save'}}")
+      .formHeader(style="margin-top: 25px; display: flex;")
+        p#modalLabel(style="line-height: 60px;")
+          | {{_ 'card-received-score'}}
+        .saveDetailedScores(style="text-align: right; margin-left: auto;")
+          input#submitDetailedInitialScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
       .scrollableList
         if hasOnlyAspects
           each aspects
@@ -24,23 +23,23 @@ template(name="editCardReceivedComposedScoreModal")
               | {{title}}
               span.error.hide.aspects-blank.aspects-not-edited
                 | {{_ 'aspects-blank'}}
-              input.aspects(type="text" value="{{score}}")
+              input.aspects-score-input(type="text" value="{{score}}")
         if hasOnlyTeamMembers
           each teamMembers
             label.bold
               | {{username}}
-              span.error.hide.team-member-score-blank.team-member-score-not-edited
-                | {{_ 'team-member-score-blank'}}
-              input.team-member-score(type="text" value="{{score}}")
+              span.error.hide.team-members-score-blank.team-members-score-not-edited
+                | {{_ 'team-members-score-blank'}}
+              input.team-members-score(type="text" value="{{score}}")
         if hasBothTeamMembersAndAspects
           each teamMembers
             .bothAspectsAndTeamMembersContainer
               .teamMembersContainer(style="display: flex;")
                 label.team-member-label.bold(style="line-height: 40px;")
                   | {{username}}
-                  span.error.hide.team-member-score-blank.team-member-score-not-edited
-                    | {{_ 'team-member-score-blank'}}
-                input.team-member-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+                  span.error.hide.team-members-score-blank.team-members-score-not-edited
+                    | {{_ 'team-members-score-blank'}}
+                input.team-members-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
               each aspects
                 .aspectsContainer(style="margin-left: 50px; display: flex;")
                   label.aspects-label.bold(style="line-height: 40px;")
@@ -51,14 +50,13 @@ template(name="editCardReceivedComposedScoreModal")
             hr
 
 template(name="editCardStartComposedScoreModal")
-  #modalBanner
-    h4#modalLabel
-      | {{_ 'edit-card-start-score'}}
-  hr.hrEditCardStartComposedScoreForm
   #editCardStartComposedScoreFormContainer
     form#editCardStartComposedScoreForm
-      .saveDetailedScores
-        input.primary.wide(type="submit" value="{{_ 'save'}}")
+      .formHeader(style="margin-top: 25px; display: flex;")
+        p#modalLabel(style="line-height: 60px;")
+          | {{_ 'card-start-score'}}
+        .saveDetailedScores(style="text-align: right; margin-left: auto;")
+          input#submitDetailedCurrentScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
       .scrollableList
         if hasOnlyAspects
           each aspects
@@ -66,23 +64,23 @@ template(name="editCardStartComposedScoreModal")
               | {{title}}
               span.error.hide.aspects-blank.aspects-not-edited
                 | {{_ 'aspects-blank'}}
-              input.aspects(type="text" value="{{score}}")
+              input.aspects-score-input(type="text" value="{{score}}")
         if hasOnlyTeamMembers
           each teamMembers
             label.bold
               | {{username}}
-              span.error.hide.team-member-score-blank.team-member-score-not-edited
-                | {{_ 'team-member-score-blank'}}
-              input.team-member-score(type="text" value="{{score}}")
+              span.error.hide.team-members-score-blank.team-members-score-not-edited
+                | {{_ 'team-members-score-blank'}}
+              input.team-members-score(type="text" value="{{score}}")
         if hasBothTeamMembersAndAspects
           each teamMembers
             .bothAspectsAndTeamMembersContainer
               .teamMembersContainer(style="display: flex;")
                 label.team-member-label.bold(style="line-height: 40px;")
                   | {{username}}
-                  span.error.hide.team-member-score-blank.team-member-score-not-edited
-                    | {{_ 'team-member-score-blank'}}
-                input.team-member-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+                  span.error.hide.team-members-score-blank.team-members-score-not-edited
+                    | {{_ 'team-members-score-blank'}}
+                input.team-members-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
               each aspects
                 .aspectsContainer(style="margin-left: 50px; display: flex;")
                   label.aspects-label.bold(style="line-height: 40px;")

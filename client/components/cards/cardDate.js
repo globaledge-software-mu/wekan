@@ -678,7 +678,13 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-    	//
+    	'click #submitDetailedInitialScores'(e) {
+        e.preventDefault();
+
+        /////
+        console.log('clicked #submitDetailedInitialScores');
+
+      },
     }];
   },
 }).register('editCardReceivedComposedScoreModal');
@@ -776,7 +782,13 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-    	//
+    	'click #submitDetailedCurrentScores'(e) {
+        e.preventDefault();
+
+        /////
+        console.log('clicked #submitDetailedCurrentScores');
+
+      },
     }];
   },
 }).register('editCardStartComposedScoreModal');

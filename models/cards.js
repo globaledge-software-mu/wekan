@@ -130,19 +130,19 @@ Cards.attachSchema(new SimpleSchema({
   },
   initialScore: {
     type: String,
-    optional: true, 
+    optional: true,
   },
   endScore: {
     type: String,
-    optional: true, 
+    optional: true,
   },
   currentScore: {
     type: String,
-    optional: true, 
+    optional: true,
   },
   targetScore: {
     type: String,
-    optional: true, 
+    optional: true,
   },
   description: {
     /**
@@ -187,8 +187,8 @@ Cards.attachSchema(new SimpleSchema({
   team_members: {
     /**
      * list of team members (user IDs)
-     * 
-     * Users that are not members of a board can be added as a team, 
+     *
+     * Users that are not members of a board can be added as a team,
      * without giving them permissions to view the board or the card
      */
     type: [String],
@@ -285,7 +285,7 @@ Cards.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: '',
   },
-	aspectsListId: { 
+	aspectsListId: {
     type: String,
     optional: true,
   },
@@ -712,18 +712,18 @@ Cards.helpers({
     }
   },
 
-  // *** Note: team member is a user that is not a member of the board. He cannot view the board or the card *** 
-  // For the feature Team's functionality of adding and displaying team members on the card, the back-end needs to return the 
-  // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member. 
-  // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options 
+  // *** Note: team member is a user that is not a member of the board. He cannot view the board or the card ***
+  // For the feature Team's functionality of adding and displaying team members on the card, the back-end needs to return the
+  // users that the logged in user can add as a 'Team member' to the card excluding the ones that are already the board's or the team's member.
+  // So basically the users to return is going to be the same as the users of the roles we send to the 'Roles' drop-down list options
   // based on the logged in user's role EXCEPT that we need to remove the users that are members of the board or the card's team
   getTeamUsers() {
   	var board;
     var cardId;
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
-      cardId = this.linkedId; 
+      cardId = this.linkedId;
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
-      cardId = this._id; 
+      cardId = this._id;
     }
 
     var boardMembers;
@@ -762,7 +762,7 @@ Cards.helpers({
           	});
           	users = Users.find({
           		_id: { $nin: memberIds },
-          		roleId: {$in: roleIds}, 
+          		roleId: {$in: roleIds},
           	});
           }
         }
@@ -771,12 +771,12 @@ Cards.helpers({
       // if isCoachAndNotAdmin, first get users of the role 'coachee'
       const coach = Roles.findOne({ name: 'Coach' });
       if (coach) {
-        const isCoachAndNotAdmin = Users.findOne({ 
-        	_id: Meteor.user()._id, 
-        	roleId: coach._id, 
-        	$or: [ 
-        		{ isAdmin: { $exists: false } }, 
-        		{ isAdmin: false } 
+        const isCoachAndNotAdmin = Users.findOne({
+        	_id: Meteor.user()._id,
+        	roleId: coach._id,
+        	$or: [
+        		{ isAdmin: { $exists: false } },
+        		{ isAdmin: false }
     			]
       	});
 
@@ -785,7 +785,7 @@ Cards.helpers({
           if (role && role._id) {
           	users = Users.find({
           		_id: { $nin: memberIds },
-          		roleId: role._id, 
+          		roleId: role._id,
         		});
           }
         }
@@ -830,30 +830,53 @@ Cards.helpers({
   },
 
   assignTeamMember(teamMemberId) {
+    var cardId = '';
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this.linkedId;
       return Cards.update(
-        { _id: this.linkedId },
+        { _id: cardId },
         { $addToSet: { team_members: teamMemberId }}
       );
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this._id;
       return Cards.update(
-        { _id: this._id },
+        { _id: cardId },
         { $addToSet: { team_members: teamMemberId}}
       );
     }
+
+    AspectsListItems.find({cardId}).forEach((aspect) => {
+      TeamMembersAspects.insert({
+        userId: teamMemberId,
+        cardId,
+        aspectsId: aspect._id,
+      });
+    });
   },
 
   unassignTeamMember(teamMemberId) {
+    var cardId = '';
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this.linkedId;
       return Cards.update(
-        { _id: this.linkedId },
+        { _id: cardId },
         { $pull: { team_members: teamMemberId }}
       );
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
+      cardId = this._id;
       return Cards.update(
-        { _id: this._id },
+        { _id: cardId },
         { $pull: { team_members: teamMemberId}}
       );
+    }
+
+    var idsToRemove = new Array();
+    TeamMembersAspects.find({cardId, userId: teamMemberId}).forEach((teamMemberAspect) => {
+      idsToRemove.push(teamMemberAspect._id);
+    });
+
+    for (var i = 0; i < idsToRemove.length; i++) {
+      TeamMembersAspects.remove({_id: idsToRemove[i]});
     }
   },
 
@@ -953,7 +976,7 @@ Cards.helpers({
         return this.dueAt;
       }
     }
-    
+
   },
 
   setDue(dueAt) {
@@ -1120,7 +1143,7 @@ Cards.helpers({
       );
     }
   },
-  
+
   setInitialScore(initialScore) {
     let cardId = this._id;
     if (this.isLinkedCard()) {
@@ -1131,7 +1154,7 @@ Cards.helpers({
       {$set: {'initialScore': initialScore}}
     );
   },
-    
+
   getInitialScore() {
     let card = this;
     if (this.isLinkedCard()) {
@@ -1143,7 +1166,7 @@ Cards.helpers({
       return null;
     }
   },
-    
+
   setEndScore(endScore) {
     let cardId = this._id;
     if (this.isLinkedCard()) {
@@ -1154,7 +1177,7 @@ Cards.helpers({
       {$set: {'endScore': endScore}}
     );
   },
-    
+
   getEndScore() {
     let card = this;
     if (this.isLinkedCard()) {
@@ -1166,17 +1189,17 @@ Cards.helpers({
       return null;
     }
   },
-    
+
   scores() {
     return CardScores.find({ cardId: this._id }, {sort: {date: 1}});
   },
-  
+
   setCurrentScore(currentScore) {
     const card = Cards.findOne(this._id);
     if (this.isLinkedCard()) {
       card = Cards.findOne(this.linkedId);
     }
-    
+
     let lastDateStart = new Date(card.startAt);
     let lastDateEnd = new Date(card.startAt);
     lastDateStart.setHours(0,0,0,0);
@@ -1185,14 +1208,14 @@ Cards.helpers({
       {_id: card._id},
       {$set: {'currentScore': currentScore}}
     );
-    
+
     // If currentScore is null it can be deleted from card and it should not affect historic scores
     // because it was this action was triggered directly from the button
     if (currentScore === null && !this.dataPointDate) {
       return true;
     }
 
-    // If currentScore is null and the action was carried out from the popup that opened from 
+    // If currentScore is null and the action was carried out from the popup that opened from
     // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
     if (currentScore === null && this.dataPointDate) {
       cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'current', cardId: this._id });
@@ -1208,7 +1231,7 @@ Cards.helpers({
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
     }
-    
+
     return CardScores.insert({
       boardId: card.boardId,
       cardId: card._id,
@@ -1217,7 +1240,7 @@ Cards.helpers({
       date: card.startAt
     });
   },
-  
+
   getCurrentScore() {
     let card = this;
     if (this.isLinkedCard()) {
@@ -1238,7 +1261,7 @@ Cards.helpers({
       return null;
     }
   },
-  
+
   setTargetScore(targetScore) {
     const card = Cards.findOne(this._id);
     if (this.isLinkedCard()) {
@@ -1259,7 +1282,7 @@ Cards.helpers({
       return true;
     }
 
-    // If targetScore is null and the action was carried out from the popup that opened from 
+    // If targetScore is null and the action was carried out from the popup that opened from
     // when a datapoint from the historic scores chart was clicked, then the datapoint needs to be removed
     if (targetScore === null && this.dataPointDate) {
       cardScoreDoc = CardScores.findOne({ date: this.dataPointDate, score: this.dataPointScore, type: 'target', cardId: this._id });
@@ -1269,8 +1292,8 @@ Cards.helpers({
       return true;
     }
 
-    // The following parts are for when there is any edit for the targetScore (to a real value) 
-    // or just creating a new targetScore (Keeping it in history). If we already have a card_scores document(record) for 
+    // The following parts are for when there is any edit for the targetScore (to a real value)
+    // or just creating a new targetScore (Keeping it in history). If we already have a card_scores document(record) for
     // the specific date for this card then we update it, and if we did not have it, then we create we create a new one
     let dueDateStart = new Date(card.dueAt);
     let dueDateEnd = new Date(card.dueAt);
@@ -1288,7 +1311,7 @@ Cards.helpers({
       date: card.dueAt
     });
   },
-  
+
   getTargetScore() {
     let card = this;
     if (this.isLinkedCard()) {
@@ -1303,7 +1326,7 @@ Cards.helpers({
       return null;
     }
   },
-  
+
   reloadHistoricScoreChart() {
     const cardScores = this.scores();
     if (this.isLinkedCard()) {
@@ -1322,7 +1345,7 @@ Cards.helpers({
         }
         scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
         showChart = true;
-    	} 
+    	}
     });
     if (cardScores.count() > 0 && scoreChart !== null) {
       scoreChart.data.labels = labels;
@@ -1342,7 +1365,7 @@ Cards.helpers({
       $('#historicScores').hide();
   	}
   },
-  
+
   getArchived() {
     if (this.isLinkedCard()) {
       const card = Cards.findOne({ _id: this.linkedId });
@@ -1415,7 +1438,7 @@ Cards.helpers({
     }
     return visible;
   },
-    
+
   getPropertyAlias(key) {
     const property = ListProperties.findOne({listId: this.list()._id, i18nKey: key});
     let alias = TAPi18n.__(key);
@@ -1424,7 +1447,7 @@ Cards.helpers({
     }
     return alias;
   },
-  
+
   displayScores() {
     let card = this;
     if (this.isLinkedCard()) {

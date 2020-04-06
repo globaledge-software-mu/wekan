@@ -317,29 +317,29 @@ BlazeComponent.extendComponent({
 			sort: {date: -1}
 		}).fetch();
 		// If no CardScores and If Cards has initialScore and no currentScore
-		if (startScores.length < 1 && 
-				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null && 
+		if (startScores.length < 1 &&
+				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null &&
 				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null &&
 				this.currentData().startAt
 		) {
 			CardScores.insert({
 				boardId: this.currentData().boardId,
-        cardId: this.currentData()._id, 
-        score: this.currentData().initialScore, 
+        cardId: this.currentData()._id,
+        score: this.currentData().initialScore,
         type: 'current',
         date: this.currentData().startAt,
         userId: this.currentData().userId
 			});
-		} 
+		}
 		// else if no CardScores and If Cards has currentScore and no initialScore
-		else if (startScores.length < 1 && 
+		else if (startScores.length < 1 &&
 				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null &&
 				this.currentData().startAt
 		) {
 			CardScores.insert({
 				boardId: this.currentData().boardId,
-        cardId: this.currentData()._id, 
-        score: this.currentData().currentScore, 
+        cardId: this.currentData()._id,
+        score: this.currentData().currentScore,
         type: 'current',
         date: this.currentData().startAt,
         userId: this.currentData().userId
@@ -361,7 +361,7 @@ BlazeComponent.extendComponent({
         scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
     	}
     });
-    
+
     $('#historicScores').hide();
     if (labels.length > 0) {
       $('#historicScores').show();
@@ -410,7 +410,7 @@ BlazeComponent.extendComponent({
     if (cardDue !== null) {
       cardDueColor = cardDue.color;
     }
-    
+
     let chartCtx = $('.score-line');
 
     let receivedScore = '';
@@ -420,13 +420,13 @@ BlazeComponent.extendComponent({
 
     if (this.currentData() && this.currentData().initialScore && this.currentData().initialScore.length > 0) {
     	receivedScore = this.currentData().initialScore;
-    } 
+    }
     if (this.currentData() && this.currentData().currentScore && this.currentData().currentScore.length > 0) {
     	currentScore = this.currentData().currentScore;
     }
     if (this.currentData() && this.currentData().targetScore && this.currentData().targetScore.length > 0) {
     	targetScore = this.currentData().targetScore;
-    } 
+    }
     if (this.currentData() && this.currentData().endScore && this.currentData().endScore.length > 0) {
     	endScore = this.currentData().endScore;
     }
@@ -531,9 +531,9 @@ BlazeComponent.extendComponent({
   },
 
   aspectsListItems() {
-    return AspectsListItems.find({ 
+    return AspectsListItems.find({
     	aspectsListId: this.currentData().aspectsListId,
-    	cardId: this.currentData()._id 
+    	cardId: this.currentData()._id
   	});
   },
 
@@ -607,6 +607,47 @@ BlazeComponent.extendComponent({
         inputSelector.focus();
       },
 
+      'click .removeAspect' (evt) {
+
+        const aspectId = $(evt.target).closest('p').data('aspect-id');
+        const aspectTitle = $(evt.target).closest('p').data('title');
+
+        swal({
+          title: 'Confirm remove aspect "'+aspectTitle+'"!',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: [true, 'Remove'],
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            AspectsListItems.remove({ _id: aspectId }, (err, res) => {
+              if (err) {
+                swal(err, {
+                  icon: "success",
+                });
+              } else if (res) {
+                const idsToRemove = new Array();
+                TeamMembersAspects.find({ aspectsId: aspectId}).forEach((teamMemberAspect) => {
+                  idsToRemove.push(teamMemberAspect._id);
+                });
+
+                for (var i = 0; i < idsToRemove.length; i++) {
+                  TeamMembersAspects.remove({_id: idsToRemove[i]});
+                }
+
+                message = TAPi18n.__('Successfully removed aspect');
+                swal(message, {
+                  icon: "success",
+                });
+              }
+            });
+          } else {
+            return false;
+          }
+        });
+      },
+
       'click #js-close-aspects-list-item-form' (evt) {
         $('#add-aspects-list-item-form').css('display', 'none');
         $('#addAspect').css('display', 'block');
@@ -638,12 +679,25 @@ BlazeComponent.extendComponent({
           	);
         	} else {
           	aspectsListId = aspectsList._id;
-        	}
-        	AspectsListItems.insert({
+          }
+
+        	const aspectId = AspectsListItems.insert({
         		aspectsListId,
         		cardId,
         	  title
-        	});
+          });
+
+          const actualCard = Cards.findOne({_id: cardId});
+          if (actualCard && actualCard._id) {
+            const teamMembers = actualCard.team_members;
+            for (var i = 0; i < teamMembers.length; i++) {
+              TeamMembersAspects.insert({
+                userId: teamMembers[i],
+                cardId,
+                aspectsId: aspectId,
+              });
+            }
+          }
         }
         $('#js-close-aspects-list-item-form').click();
       },
@@ -652,7 +706,7 @@ BlazeComponent.extendComponent({
       'click canvas.card-details-item.score-line.chartjs-render-monitor': function(evt) {
         evt.preventDefault();
         evt.stopImmediatePropagation();
-        
+
         if (Meteor.user().canAlterCard()) {
           var activePoints = scoreChart.getElementAtEvent(evt);
           if (activePoints.length > 0) {
