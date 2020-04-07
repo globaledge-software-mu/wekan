@@ -845,6 +845,11 @@ Cards.helpers({
       );
     }
 
+    TeamMembersScores.insert({
+      userId: teamMemberId,
+      cardId
+    });
+
     AspectsListItems.find({cardId}).forEach((aspect) => {
       TeamMembersAspects.insert({
         userId: teamMemberId,
@@ -868,6 +873,18 @@ Cards.helpers({
         { _id: cardId },
         { $pull: { team_members: teamMemberId}}
       );
+    }
+
+    var teamScoresIds = new Array();
+    const teamScores = TeamMembersScores.find({ userId: teamMemberId, cardId });
+    if (teamScores.count() > 0) {
+      teamScores.forEach((score) => {
+        teamScoresIds.push(score._id);
+      });
+
+      for (var h = 0; h < teamScoresIds.length; h++) {
+        TeamMembersScores.remove({_id: teamScoresIds[h]});
+      }
     }
 
     var idsToRemove = new Array();
