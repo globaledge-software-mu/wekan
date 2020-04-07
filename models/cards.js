@@ -684,7 +684,51 @@ Cards.helpers({
     }
   },
 
+  checkIfAnyInexistantUser () {
+    const isNotLinkedCardNorIsLinkedBoard = !this.isLinkedCard() && !this.isLinkedBoard();
+    if (this.isLinkedCard() || isNotLinkedCardNorIsLinkedBoard) {
+      var cardIdentifier = '';
+      if (this.isLinkedCard()) {
+        cardIdentifier = this.linkedId;
+      } else if (!this.isLinkedBoard()) {
+        cardIdentifier = this._id;
+      }
+
+      const card = Cards.findOne({_id: cardIdentifier});
+      if (card && card._id) {
+        for (var i = 0; i < card.members.length; i++) {
+          const users = Users.find({ _id: card.members[i] });
+          if (users.count() < 1) {
+
+        /////
+        console.log('cc');
+
+            Cards.update(
+              { _id: card._id },
+              { $pull: { members: card.members[i] }}
+            );
+          }
+        }
+      }
+    } else if (this.isLinkedBoard()) {
+      const board = Boards.findOne({_id: this.linkedId});
+      if (board && board._id) {
+        for (var i = 0; i < board.members.length; i++) {
+          const users = Users.find({ _id: board.members[i].userId });
+          if (users.count() < 1) {
+            Boards.update(
+              { _id: this.linkedId },
+              { $pull: { members: board.members[i].userId }}
+            );
+          }
+        }
+      }
+    }
+  },
+
   getMembers() {
+    this.checkIfAnyInexistantUser();
+
     if (this.isLinkedCard()) {
       const card = Cards.findOne({_id: this.linkedId});
       return card.members;
@@ -1874,19 +1918,22 @@ function cardMembers(userId, doc, fieldNames, modifier) {
   // Say goodbye to the former member
   if (modifier.$pull && modifier.$pull.members) {
     memberId = modifier.$pull.members;
-    const username = Users.findOne(memberId).username;
-    // Check that the former member is member of the card
-    if (_.contains(doc.members, memberId)) {
-      Activities.insert({
-        userId,
-        username,
-        activityType: 'unjoinMember',
-        boardId: doc.boardId,
-        cardId: doc._id,
-        memberId,
-        listId: doc.listId,
-        swimlaneId: doc.swimlaneId,
-      });
+    const users = Users.find(memberId);
+    if (users.count() > 0) {
+      const username = Users.findOne(memberId).username;
+      // Check that the former member is member of the card
+      if (_.contains(doc.members, memberId)) {
+        Activities.insert({
+          userId,
+          username,
+          activityType: 'unjoinMember',
+          boardId: doc.boardId,
+          cardId: doc._id,
+          memberId,
+          listId: doc.listId,
+          swimlaneId: doc.swimlaneId,
+        });
+      }
     }
   }
 }
