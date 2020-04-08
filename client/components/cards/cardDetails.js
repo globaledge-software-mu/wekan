@@ -579,7 +579,7 @@ BlazeComponent.extendComponent({
           this.data().setRequestedBy(requester);
         }
       },
-      'click .js-member': Popup.open('cardMember'),
+      'click .js-member:not(.team-member)': Popup.open('cardMember'),
       'click .js-add-members': Popup.open('cardMembers'),
       'click .js-addTeamMembers': Popup.open('cardTeamMembers'),
       'click .js-add-labels': Popup.open('cardLabels'),

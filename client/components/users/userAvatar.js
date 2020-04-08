@@ -1,3 +1,7 @@
+Template.userAvatar.onRendered(() => {
+  $('.card-details-item-teamMembers').find('.member.js-member').addClass('team-member');
+});
+
 Template.userAvatar.helpers({
   userData() {
     // We need to handle a special case for the search results provided by the
