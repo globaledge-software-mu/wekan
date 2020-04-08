@@ -921,26 +921,21 @@ Cards.helpers({
       );
     }
 
-    Tracker.autorun(() => {
-      Meteor.subscribe('team_members_scores');
-      Meteor.subscribe('team_members_aspects');
+    const teamScore = TeamMembersScores.findOne({ userId: teamMemberId, cardId });
+    if (teamScore && teamScore._id) {
+      TeamMembersScores.remove({_id: teamScore._id});
+    }
 
-      const teamScore = TeamMembersScores.findOne({ userId: teamMemberId, cardId });
-      if (teamScore && teamScore._id) {
-        TeamMembersScores.remove({_id: teamScore._id});
-      }
-
-      var idsToRemove = new Array();
-      TeamMembersAspects.find({cardId, userId: teamMemberId}).forEach((teamMemberAspect) => {
-        idsToRemove.push(teamMemberAspect._id);
-      });
-
-      for (var i = 0; i < idsToRemove.length; i++) {
-        TeamMembersAspects.remove({_id: idsToRemove[i]});
-      }
-
-      return true;
+    var idsToRemove = new Array();
+    TeamMembersAspects.find({cardId, userId: teamMemberId}).forEach((teamMemberAspect) => {
+      idsToRemove.push(teamMemberAspect._id);
     });
+
+    for (var i = 0; i < idsToRemove.length; i++) {
+      TeamMembersAspects.remove({_id: idsToRemove[i]});
+    }
+
+    return true;
   },
 
   toggleMember(memberId) {
