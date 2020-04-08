@@ -877,13 +877,13 @@ Cards.helpers({
     var cardId = '';
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
       cardId = this.linkedId;
-      return Cards.update(
+      Cards.update(
         { _id: cardId },
         { $addToSet: { team_members: teamMemberId }}
       );
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
       cardId = this._id;
-      return Cards.update(
+      Cards.update(
         { _id: cardId },
         { $addToSet: { team_members: teamMemberId}}
       );
@@ -901,44 +901,46 @@ Cards.helpers({
         aspectsId: aspect._id,
       });
     });
+
+    return true;
   },
 
   unassignTeamMember(teamMemberId) {
     var cardId = '';
     if (this.isLinkedCard() && !this.isLinkedBoard()) {
       cardId = this.linkedId;
-      return Cards.update(
+      Cards.update(
         { _id: cardId },
         { $pull: { team_members: teamMemberId }}
       );
     } else if (!this.isLinkedCard() && !this.isLinkedBoard()) {
       cardId = this._id;
-      return Cards.update(
+      Cards.update(
         { _id: cardId },
         { $pull: { team_members: teamMemberId}}
       );
     }
 
-    var teamScoresIds = new Array();
-    const teamScores = TeamMembersScores.find({ userId: teamMemberId, cardId });
-    if (teamScores.count() > 0) {
-      teamScores.forEach((score) => {
-        teamScoresIds.push(score._id);
+    Tracker.autorun(() => {
+      Meteor.subscribe('team_members_scores');
+      Meteor.subscribe('team_members_aspects');
+
+      const teamScore = TeamMembersScores.findOne({ userId: teamMemberId, cardId });
+      if (teamScore && teamScore._id) {
+        TeamMembersScores.remove({_id: teamScore._id});
+      }
+
+      var idsToRemove = new Array();
+      TeamMembersAspects.find({cardId, userId: teamMemberId}).forEach((teamMemberAspect) => {
+        idsToRemove.push(teamMemberAspect._id);
       });
 
-      for (var h = 0; h < teamScoresIds.length; h++) {
-        TeamMembersScores.remove({_id: teamScoresIds[h]});
+      for (var i = 0; i < idsToRemove.length; i++) {
+        TeamMembersAspects.remove({_id: idsToRemove[i]});
       }
-    }
 
-    var idsToRemove = new Array();
-    TeamMembersAspects.find({cardId, userId: teamMemberId}).forEach((teamMemberAspect) => {
-      idsToRemove.push(teamMemberAspect._id);
+      return true;
     });
-
-    for (var i = 0; i < idsToRemove.length; i++) {
-      TeamMembersAspects.remove({_id: idsToRemove[i]});
-    }
   },
 
   toggleMember(memberId) {
