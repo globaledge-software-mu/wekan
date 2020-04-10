@@ -138,32 +138,9 @@ Template.dateBadge.helpers({
     this.card.setInitialScore(null);
   }
 
-  events() {
-    return [{
-      // 'click #score'(e) {
-      //   const cardId = this.card._id;
-      //   var hasAspects = false;
-      //   var hasTeamMembers = false;
+  // Do not add event handlers here, it will breakup the score saving ability,
+  // all the event handlers are to found on the page datepicker.js from client/lib/datepicker.js
 
-      //   const aspects = AspectsListItems.find({ cardId });
-      //   if (aspects.count() > 0) {
-      //     hasAspects = true;
-      //   }
-
-      //   const actualCard = Cards.findOne({ _id: cardId });
-      //   if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
-      //     hasTeamMembers = true;
-      //   }
-
-      //   if (hasAspects || hasTeamMembers) {
-      //     e.preventDefault();
-      //     Popup.close();
-      //     Modal.open('editCardReceivedComposedScoreModal');
-      //     Session.set('composedReceivedScoreCardId', cardId);
-      //   }
-      // },
-    }];
-  }
 }).register('editCardReceivedDatePopup');
 
 
@@ -269,32 +246,9 @@ Template.dateBadge.helpers({
     }
   }
 
-  events() {
-    return [{
-      // 'click #score'(e) {
-      //   const cardId = this.card._id;
-      //   var hasAspects = false;
-      //   var hasTeamMembers = false;
+  // Do not add event handlers here, it will breakup the score saving ability,
+  // all the event handlers are to found on the page datepicker.js from client/lib/datepicker.js
 
-      //   const aspects = AspectsListItems.find({ cardId });
-      //   if (aspects.count() > 0) {
-      //     hasAspects = true;
-      //   }
-
-      //   const actualCard = Cards.findOne({ _id: cardId });
-      //   if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
-      //     hasTeamMembers = true;
-      //   }
-
-      //   if (hasAspects || hasTeamMembers) {
-      //     e.preventDefault();
-      //     Popup.close();
-      //     Modal.open('editCardStartComposedScoreModal');
-      //     Session.set('composedStartScoreCardId', cardId);
-      //   }
-      // },
-    }];
-  }
 }).register('editCardStartDatePopup');
 
 // editCardDueDatePopup
