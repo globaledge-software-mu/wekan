@@ -21,7 +21,7 @@ template(name="editCardReceivedComposedScoreModal")
           each aspects
             label.bold
               | {{title}}
-              input.aspects-score-input(id="{{_id}}" type="text" value="{{score}}")
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{initialScore}}")
             hr(style="background: #005377;")
         if hasOnlyTeamMembers
           each teamMembers
@@ -56,7 +56,7 @@ template(name="editCardStartComposedScoreModal")
           each aspects
             label.bold
               | {{title}}
-              input.aspects-score-input(id="{{_id}}" type="text" value="{{score}}")
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{currentScore}}")
             hr(style="background: #005377;")
         if hasOnlyTeamMembers
           each teamMembers
