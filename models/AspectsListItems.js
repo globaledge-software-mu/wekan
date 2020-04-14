@@ -10,12 +10,12 @@ AspectsListItems.attachSchema(new SimpleSchema({
   title: {
     type: String,
   },
-  scoreOf: {
-    type: String, // current or initial
+  initialScore: {
+    type: String,
     optional: true,
   },
-  score: {
-    type: Number,
+  currentScore: {
+    type: String,
     optional: true,
   },
   createdAt: {

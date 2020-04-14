@@ -8,11 +8,11 @@ TeamMembersScores.attachSchema(new SimpleSchema({
     type: String,
   },
   initialScore: {
-    type: Number,
+    type: String,
     optional: true,
   },
   currentScore: {
-    type: Number,
+    type: String,
     optional: true,
   },
   createdAt: {

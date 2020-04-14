@@ -12,8 +12,8 @@ template(name="editCardReceivedComposedScoreModal")
   #editCardReceivedComposedScoreFormContainer
     form#editCardReceivedComposedScoreForm
       .formHeader(style="margin-top: 25px; display: flex;")
-        p#modalLabel(style="line-height: 60px;")
-          | {{_ 'card-received-score'}}
+        p#modalLabel(style="line-height: 60px; margin-left: 20px;")
+          | {{_ 'Initial Score'}}
         .saveDetailedScores(style="text-align: right; margin-left: auto;")
           input#submitDetailedInitialScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
       .scrollableList
@@ -21,40 +21,34 @@ template(name="editCardReceivedComposedScoreModal")
           each aspects
             label.bold
               | {{title}}
-              span.error.hide.aspects-blank.aspects-not-edited
-                | {{_ 'aspects-blank'}}
-              input.aspects-score-input(type="text" value="{{score}}")
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{score}}")
+            hr(style="background: #005377;")
         if hasOnlyTeamMembers
           each teamMembers
             label.bold
               | {{username}}
-              span.error.hide.team-members-score-blank.team-members-score-not-edited
-                | {{_ 'team-members-score-blank'}}
-              input.team-members-score(type="text" value="{{score}}")
+              input.team-members-score-input(id="{{_id}}" type="text" value="{{teamMemberScore(_id)}}")
+            hr(style="background: #005377;")
         if hasBothTeamMembersAndAspects
           each teamMembers
             .bothAspectsAndTeamMembersContainer
               .teamMembersContainer(style="display: flex;")
                 label.team-member-label.bold(style="line-height: 40px;")
                   | {{username}}
-                  span.error.hide.team-members-score-blank.team-members-score-not-edited
-                    | {{_ 'team-members-score-blank'}}
-                input.team-members-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
-              each aspects
+                input.team-members-score-input(id="{{_id}}" disabled type="text" value="{{teamMemberScore(_id)}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each teamMemberAspects _id
                 .aspectsContainer(style="margin-left: 50px; display: flex;")
                   label.aspects-label.bold(style="line-height: 40px;")
-                    | {{title}}
-                    span.error.hide.aspects-blank.aspects-not-edited
-                      | {{_ 'aspects-blank'}}
-                  input.aspects-score-input(type="text" value="{{score}}" style="width: fit-content; margin-left: 8px;")
-            hr
+                    | {{teamMemberAspectTitle(_id)}}
+                  input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{initialScore}}" style="width: fit-content; margin-left: 8px;")
+            hr(style="background: #005377;")
 
 template(name="editCardStartComposedScoreModal")
   #editCardStartComposedScoreFormContainer
     form#editCardStartComposedScoreForm
       .formHeader(style="margin-top: 25px; display: flex;")
-        p#modalLabel(style="line-height: 60px;")
-          | {{_ 'card-start-score'}}
+        p#modalLabel(style="line-height: 60px; margin-left: 20px;")
+          | {{_ 'Start Score'}}
         .saveDetailedScores(style="text-align: right; margin-left: auto;")
           input#submitDetailedCurrentScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
       .scrollableList
@@ -62,30 +56,24 @@ template(name="editCardStartComposedScoreModal")
           each aspects
             label.bold
               | {{title}}
-              span.error.hide.aspects-blank.aspects-not-edited
-                | {{_ 'aspects-blank'}}
-              input.aspects-score-input(type="text" value="{{score}}")
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{score}}")
+            hr(style="background: #005377;")
         if hasOnlyTeamMembers
           each teamMembers
             label.bold
               | {{username}}
-              span.error.hide.team-members-score-blank.team-members-score-not-edited
-                | {{_ 'team-members-score-blank'}}
-              input.team-members-score(type="text" value="{{score}}")
+              input.team-members-score-input(id="{{_id}}" type="text" value="{{teamMemberScore(_id)}}")
+            hr(style="background: #005377;")
         if hasBothTeamMembersAndAspects
           each teamMembers
             .bothAspectsAndTeamMembersContainer
               .teamMembersContainer(style="display: flex;")
                 label.team-member-label.bold(style="line-height: 40px;")
                   | {{username}}
-                  span.error.hide.team-members-score-blank.team-members-score-not-edited
-                    | {{_ 'team-members-score-blank'}}
-                input.team-members-score-input(disabled type="text" value="{{score}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
-              each aspects
+                input.team-members-score-input(id="{{_id}}" disabled type="text" value="{{teamMemberScore(_id)}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each teamMemberAspects _id
                 .aspectsContainer(style="margin-left: 50px; display: flex;")
                   label.aspects-label.bold(style="line-height: 40px;")
-                    | {{title}}
-                    span.error.hide.aspects-blank.aspects-not-edited
-                      | {{_ 'aspects-blank'}}
-                  input.aspects-score-input(type="text" value="{{score}}" style="width: fit-content; margin-left: 8px;")
-            hr
+                    | {{teamMemberAspectTitle(_id)}}
+                  input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{currentScore}}" style="width: fit-content; margin-left: 8px;")
+            hr(style="background: #005377;")
