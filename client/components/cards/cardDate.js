@@ -214,7 +214,7 @@ Template.dateBadge.helpers({
   _storeScore(score) {
     this.card.setCurrentScore(score);
   	// If initial is not set yet, set it too
-  	const initialScore = this.data().getCurrentScore();
+  	const initialScore = this.data().getInitialScore();
   	if (!initialScore || initialScore.length < 1 || initialScore == '') {
   		this.card.setInitialScore(score);
   	}
@@ -681,6 +681,11 @@ BlazeComponent.extendComponent({
 
             const card = Cards.findOne({ _id: cardId });
             if (card && card._id) {
+              // If CurrentScore is not set yet, set it too
+              const currentScore = card.getCurrentScore();
+              if (!currentScore || currentScore.length < 1 || currentScore == '') {
+                card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
+              }
               card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
               Modal.close('editCardReceivedComposedScoreModal');
             }
@@ -716,6 +721,11 @@ BlazeComponent.extendComponent({
 
             const card = Cards.findOne({ _id: cardId });
             if (card && card._id) {
+              // If CurrentScore is not set yet, set it too
+              const currentScore = card.getCurrentScore();
+              if (!currentScore || currentScore.length < 1 || currentScore == '') {
+                card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
+              }
               card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
               Modal.close('editCardReceivedComposedScoreModal');
             }
@@ -769,6 +779,11 @@ BlazeComponent.extendComponent({
 
                   const card = Cards.findOne({ _id: cardId });
                   if (card && card._id) {
+                    // If CurrentScore is not set yet, set it too
+                    const currentScore = card.getCurrentScore();
+                    if (!currentScore || currentScore.length < 1 || currentScore == '') {
+                      card.setCurrentScore(teamMembersTotalScore);
+                    }
                     card.setInitialScore(teamMembersTotalScore);
                     Modal.close('editCardReceivedComposedScoreModal');
                   }
@@ -948,6 +963,11 @@ BlazeComponent.extendComponent({
 
             const card = Cards.findOne({ _id: cardId });
             if (card && card._id) {
+              // If initial is not set yet, set it too
+              const initialScore = card.getInitialScore();
+              if (!initialScore || initialScore.length < 1 || initialScore == '') {
+                this.card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
+              }
               card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
               Modal.close('editCardStartComposedScoreModal');
             }
@@ -983,6 +1003,11 @@ BlazeComponent.extendComponent({
 
             const card = Cards.findOne({ _id: cardId });
             if (card && card._id) {
+              // If initial is not set yet, set it too
+              const initialScore = card.getInitialScore();
+              if (!initialScore || initialScore.length < 1 || initialScore == '') {
+                this.card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
+              }
               card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
               Modal.close('editCardStartComposedScoreModal');
             }
@@ -1036,7 +1061,12 @@ BlazeComponent.extendComponent({
 
                   const card = Cards.findOne({ _id: cardId });
                   if (card && card._id) {
-                    card.setInitialScore(teamMembersTotalScore);
+                    // If initial is not set yet, set it too
+                    const initialScore = card.getInitialScore();
+                    if (!initialScore || initialScore.length < 1 || initialScore == '') {
+                      this.card.setInitialScore(teamMembersTotalScore);
+                    }
+                    card.setCurrentScore(teamMembersTotalScore);
                     Modal.close('editCardStartComposedScoreModal');
                   }
                 }
