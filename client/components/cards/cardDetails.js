@@ -611,6 +611,11 @@ BlazeComponent.extendComponent({
 
         const aspectId = $(evt.target).closest('p').data('aspect-id');
         const aspectTitle = $(evt.target).closest('p').data('title');
+        var cardId = '';
+        const teamMemberAspect = TeamMembersAspects.findOne({ aspectsId: aspectId});
+        if (teamMemberAspect && teamMemberAspect._id) {
+          cardId = teamMemberAspect.cardId;
+        }
 
         swal({
           title: 'Confirm remove aspect "'+aspectTitle+'"!',
@@ -634,6 +639,99 @@ BlazeComponent.extendComponent({
 
                 for (var i = 0; i < idsToRemove.length; i++) {
                   TeamMembersAspects.remove({_id: idsToRemove[i]});
+                }
+
+                // Recalculate the card's composed initial/current scores by first checking if
+                // (i)  card has only aspect(s) remaining or
+                // (ii) card has both aspect(s) and team member(s) remaining
+                // If case (i) is present, recalculate the card's composed initial/current scores
+                // by simply adding the initial/current scores of the aspects
+                // If case (ii) is present, recalculate the card's composed initial/current scores
+                // by first recalculating the TeamMembersScores with the total of their remaining TeamMembersAspects scores
+                // and then by adding the card's TeamMembersScores
+                const card = Cards.findOne(cardId);
+                if (card && card._id) {
+                  var hasAspectsonly = false;
+                  var hasbothAspectsAndTeamMembers = false;
+
+                  const aspects = AspectsListItems.find({ cardId: card._id });
+                  if (aspects.count() > 0 && card.team_members.length < 1) {
+                    hasAspectsonly = true;
+                  }
+
+                  if (card.team_members.length > 0 && aspects.count() > 0) {
+                    hasbothAspectsAndTeamMembers = true;
+                  }
+
+                  if (hasAspectsonly) {
+                    var totalAspectsInitialScore = 0;
+                    var totalAspectsCurrentScore = 0;
+                    aspects.forEach((aspect) => {
+                      if (aspect.initialScore) {
+                        var initialScore = parseFloat(aspect.initialScore);
+                        if (initialScore > 0) {
+                          totalAspectsInitialScore += initialScore;
+                        }
+                      }
+                      if (aspect.currentScore) {
+                        var currentScore = parseFloat(aspect.currentScore);
+                        if (currentScore > 0) {
+                          totalAspectsCurrentScore += currentScore;
+                        }
+                      }
+                    });
+
+                    card.setInitialScore(totalAspectsInitialScore.toFixed(2).toString());
+                    card.setCurrentScore(totalAspectsCurrentScore.toFixed(2).toString());
+                  } else if (hasbothAspectsAndTeamMembers) {
+                    const teamMembers = card.team_members;
+                    teamMembers.forEach((teamMember) => {
+                      var teamMemberInitialScore = 0;
+                      var teamMemberCurrentScore = 0;
+                      const teamMembersAspects = TeamMembersAspects.find({ userId: teamMember, cardId });
+                      if (teamMembersAspects.count() > 0) {
+                        teamMembersAspects.forEach((teamMemberAspect) => {
+                          var initialScore = parseFloat(teamMemberAspect.initialScore);
+                          if (initialScore > 0) {
+                            teamMemberInitialScore += initialScore;
+                          }
+                          var currentScore = parseFloat(teamMemberAspect.currentScore);
+                          if (currentScore > 0) {
+                            teamMemberCurrentScore += currentScore;
+                          }
+                        });
+                        const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
+                        if (teamMemberScore && teamMemberScore._id) {
+                          TeamMembersScores.update(
+                            { _id: teamMemberScore._id },
+                            { $set: {
+                              initialScore: teamMemberInitialScore.toFixed(2).toString(),
+                              currentScore: teamMemberCurrentScore.toFixed(2).toString()
+                            } }
+                          );
+                        }
+                      }
+                    });
+
+                    const teamMembersScores = TeamMembersScores.find({ cardId });
+                    if (teamMembersScores.count() > 0) {
+                      var totalTeamMembersInitialScores = 0;
+                      var totalTeamMembersCurrentScores = 0;
+                      teamMembersScores.forEach((teamMemberScore) => {
+                        var teamMemberInitialScore = parseFloat(teamMemberScore.initialScore);
+                        if (teamMemberInitialScore > 0) {
+                          totalTeamMembersInitialScores += teamMemberInitialScore;
+                        }
+                        var teamMemberCurrentScore = parseFloat(teamMemberScore.currentScore);
+                        if (teamMemberCurrentScore > 0) {
+                          totalTeamMembersCurrentScores += teamMemberCurrentScore;
+                        }
+                      });
+
+                      card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
+                      card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
+                    }
+                  }
                 }
 
                 message = TAPi18n.__('Successfully removed aspect');

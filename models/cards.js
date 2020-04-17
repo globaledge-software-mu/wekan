@@ -935,6 +935,70 @@ Cards.helpers({
       TeamMembersAspects.remove({_id: idsToRemove[i]});
     }
 
+    // Recalculate the TeamMembersScores in both scenarios
+    // (i)  card has only team member(s) remaining or
+    // (ii) card has both team member(s) and aspect(s) remaining
+    // Then add the team members scores to get the composed initial/current scores
+    // and update the card's initial/current scores
+    const card = Cards.findOne(cardId);
+    if (card && card._id) {
+      const teamMembers = card.team_members;
+      teamMembers.forEach((teamMember) => {
+        var teamMemberInitialScore = 0;
+        var teamMemberCurrentScore = 0;
+        const teamMembersAspects = TeamMembersAspects.find({ userId: teamMember, cardId });
+        if (teamMembersAspects.count() > 0) {
+          teamMembersAspects.forEach((teamMemberAspect) => {
+            if (teamMemberAspect.initialScore) {
+              var initialScore = parseFloat(teamMemberAspect.initialScore);
+              if (initialScore > 0) {
+                teamMemberInitialScore += initialScore;
+              }
+            }
+            if (teamMemberAspect.currentScore) {
+              var currentScore = parseFloat(teamMemberAspect.currentScore);
+              if (currentScore > 0) {
+                teamMemberCurrentScore += currentScore;
+              }
+            }
+          });
+          const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
+          if (teamMemberScore && teamMemberScore._id) {
+            TeamMembersScores.update(
+              { _id: teamMemberScore._id },
+              { $set: {
+                initialScore: teamMemberInitialScore.toFixed(2).toString(),
+                currentScore: teamMemberCurrentScore.toFixed(2).toString()
+              } }
+            );
+          }
+        }
+      });
+
+      const teamMembersScores = TeamMembersScores.find({ cardId });
+      if (teamMembersScores.count() > 0) {
+        var totalTeamMembersInitialScores = 0;
+        var totalTeamMembersCurrentScores = 0;
+        teamMembersScores.forEach((teamMemberScore) => {
+          if (teamMemberScore.initialScore) {
+            var teamMemberInitialScore = parseFloat(teamMemberScore.initialScore);
+            if (teamMemberInitialScore > 0) {
+              totalTeamMembersInitialScores += teamMemberInitialScore;
+            }
+          }
+          if (teamMemberScore.currentScore) {
+            var teamMemberCurrentScore = parseFloat(teamMemberScore.currentScore);
+            if (teamMemberCurrentScore > 0) {
+              totalTeamMembersCurrentScores += teamMemberCurrentScore;
+            }
+          }
+        });
+
+        card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
+        card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
+      }
+    }
+
     return true;
   },
 
