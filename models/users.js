@@ -1075,14 +1075,51 @@ if (Meteor.isServer) {
       } else {
         user = Users.findOne(username) || Users.findOne({username});
       }
+
+      var continueExecution = true;
+      var removedUnconfirmedUser = false;
       if (user) {
+        continueExecution = false;
+
         if (user._id !== inviter._id) {
           board.addMember(user._id);
           user.addInvite(boardId);
+          
+          // If its a user that was already invited and has already set its own password, 
+          // we just send the invite to join the board
+          if (user && user.services && user.services.password && user.services.password.bcrypt) {
+
+            // Send Invite 'Login To Accept Invite To Board'
+            try {
+              const params = {
+                user: user.username,
+                inviter: inviter.username,
+                board: board.title,
+                url: board.absoluteUrl(),
+              };
+              const lang = user.getLanguage();
+              Email.send({
+                to: user.emails[0].address.toLowerCase(),
+                from: Accounts.emailTemplates.from,
+                subject: TAPi18n.__('email-invite-subject', params, lang),
+                text: TAPi18n.__('email-invite-text', params, lang),
+              });
+            } catch (e) {
+              throw new Meteor.Error('email-fail', e.message);
+            }
+            
+          } else {
+            Users.remove(user._id);
+            removedUnconfirmedUser = true;
+            continueExecution = true;
+          }
+
         } else {
         	throw new Meteor.Error('error-user-notAllowSelf');
         }
-      } else {
+      } 
+
+      if (continueExecution) {
         if (posAt <= 0) throw new Meteor.Error('error-user-doesNotExist');
         if (Settings.findOne().disableRegistration) throw new Meteor.Error('error-user-notCreated');
         // Set in lowercase email before creating account
@@ -1093,6 +1130,7 @@ if (Meteor.isServer) {
         if (!newUserId) {
         	throw new Meteor.Error('error-user-notCreated');
         }
+
         // assume new user speak same language with inviter
         if (inviter.profile && inviter.profile.language) {
           Users.update(newUserId, {
@@ -1102,63 +1140,72 @@ if (Meteor.isServer) {
           });
         }
 
-      	// Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
-      	// And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
-        var updateUsingDefaultGroupOrder = false;
-        // Check if the user had selected any specific user group's quota to use or not!
-        var quotaGroupId = null;
-        if (selectedUserGroupId.length > 0) {
-        	quotaGroupId = selectedUserGroupId;
-      		const userGroup = UserGroups.findOne({_id: quotaGroupId});
-      		if (userGroup && userGroup._id) {
-      			const usableQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
-      			if (usableQuota > 0) {
-        			var usedQuota = userGroup.usedUsersQuota  + 1;
-        			// Update usedUsersQuota in UserGroups
-        			UserGroups.update(
-      					{ _id: userGroup._id }, 
-      					{ $set: { usedUsersQuota: usedQuota } }
-      				);
-        			// Update quotaGroupId in Users
-        			Users.update(
-      					{ _id: newUserId }, 
-      					{ $set: { quotaGroupId: userGroup._id } }
-      				);
-      			} 
-      			// Have to add this else here as the settings tab of the admin panel also use this method to create users
-      			// and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
-      			// and let's say the selected usergroup has only 2 usable usersQuota and the user had input 4 e-mails to create 4 users
-      			// so then the system would create the first two users using the selected user group and the rest of the users shall be 
-      			// created using the default system check for the order of the user's userGroups based on its usable usersQuota
-      			else {
-      				updateUsingDefaultGroupOrder = true;
-      			}
-      		}
-        } else {
-        	updateUsingDefaultGroupOrder = true;
+        if (!removedUnconfirmedUser) {
+          // Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
+          // And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
+          var updateUsingDefaultGroupOrder = false;
+          // Check if the user had selected any specific user group's quota to use or not!
+          var quotaGroupId = null;
+          if (selectedUserGroupId.length > 0) {
+            quotaGroupId = selectedUserGroupId;
+            const userGroup = UserGroups.findOne({_id: quotaGroupId});
+            if (userGroup && userGroup._id) {
+              const usableQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+              if (usableQuota > 0) {
+                var usedQuota = userGroup.usedUsersQuota  + 1;
+                // Update usedUsersQuota in UserGroups
+                UserGroups.update(
+                  { _id: userGroup._id }, 
+                  { $set: { usedUsersQuota: usedQuota } }
+                );
+                // Update quotaGroupId in Users
+                Users.update(
+                  { _id: newUserId }, 
+                  { $set: { quotaGroupId: userGroup._id } }
+                );
+              } 
+              // Have to add this else here as the settings tab of the admin panel also use this method to create users
+              // and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
+              // and let's say the selected usergroup has only 2 usable usersQuota and the user had input 4 e-mails to create 4 users
+              // so then the system would create the first two users using the selected user group and the rest of the users shall be 
+              // created using the default system check for the order of the user's userGroups based on its usable usersQuota
+              else {
+                updateUsingDefaultGroupOrder = true;
+              }
+            }
+          } else {
+            updateUsingDefaultGroupOrder = true;
+          }
+          if (updateUsingDefaultGroupOrder) {
+            const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
+            var hadUsableQuota = false;
+            for (var i = 0; i < userAssignedUserGroups.length; i++) {
+              const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+              if (userGroup && userGroup._id) {
+                var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+                if (quotaDifference > 0) {
+                  var usedQuota = userGroup.usedUsersQuota  + 1;
+                  // Update usedUsersQuota in UserGroups
+                  UserGroups.update(
+                    { _id: userGroup._id }, 
+                    { $set: { usedUsersQuota: usedQuota } }
+                  );
+                  // Update quotaGroupId in Users
+                  Users.update(
+                    { _id: userAssignedUserGroups[i].userId }, 
+                    { $set: { quotaGroupId: userGroup._id } }
+                  );
+                  hadUsableQuota = true;
+                  break;
+                }
+              }
+            };
+          }
         }
-        if (updateUsingDefaultGroupOrder) {
-        	const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
-        	for (var i = 0; i < userAssignedUserGroups.length; i++) {
-        		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
-        		if (userGroup && userGroup._id) {
-          		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
-          		if (quotaDifference > 0) {
-          			var usedQuota = userGroup.usedUsersQuota  + 1;
-          			// Update usedUsersQuota in UserGroups
-          			UserGroups.update(
-        					{ _id: userGroup._id }, 
-        					{ $set: { usedUsersQuota: usedQuota } }
-        				);
-          			// Update quotaGroupId in Users
-          			Users.update(
-        					{ _id: userAssignedUserGroups[i].userId }, 
-        					{ $set: { quotaGroupId: userGroup._id } }
-        				);
-          			break;
-          		}
-        		}
-        	};
+        
+        if (!hadUsableQuota) {
+          Users.remove(newUserId);
+          throw new Meteor.Error('Email not sent as could not create user due to lack of quota');
         }
 
         // Send Enrollment Email
@@ -1184,36 +1231,7 @@ if (Meteor.isServer) {
         }
       }
 
-      // Send Invite 'Login To Accept Invite To Board'
-//      try {
-//        const params = {
-//          user: user.username,
-//          inviter: inviter.username,
-//          board: board.title,
-//          url: board.absoluteUrl(),
-//        };
-//        const lang = user.getLanguage();
-//        Email.send({
-//          to: user.emails[0].address.toLowerCase(),
-//          from: Accounts.emailTemplates.from,
-//          subject: TAPi18n.__('email-invite-subject', params, lang),
-//          text: TAPi18n.__('email-invite-text', params, lang),
-//        });
-//      } catch (e) {
-//        throw new Meteor.Error('email-fail', e.message);
-//      }
-
-      // Since above we've commented the part where an email is sent even when an existing user is 
-      // invited to a board, so now the response will defer on the successful execution of this method,
-      // as email is being sent in only One case out of 2.
-      // Below we need to perform a small verification to know when this method was 
-      // called (when inviting a freshly created user [password is not set at this point] or when inviting
-      // an existing user to a board [naturally his password would have been set])
-      if (user && user.services && user.services.password && user.services.password.bcrypt) {
-        return {userID: user._id, username: user.username, email: user.emails[0].address, passwordIsSet: true};
-      } else {
-        return {userID: user._id, username: user.username, email: user.emails[0].address};
-      }
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
 
   });
