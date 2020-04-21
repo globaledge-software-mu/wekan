@@ -894,15 +894,30 @@ Cards.helpers({
       cardId
     });
 
-    AspectsListItems.find({cardId}).forEach((aspect) => {
-      TeamMembersAspects.insert({
-        userId: teamMemberId,
-        cardId,
-        aspectsId: aspect._id,
-      });
-    });
+    const card = Cards.findOne({_id: cardId});
+    if (card && card._id) {
+      const teamMembersCount = card.team_members.length;
 
-    return true;
+      AspectsListItems.find({cardId}).forEach((aspect) => {
+        TeamMembersAspects.insert({
+          userId: teamMemberId,
+          cardId,
+          aspectsId: aspect._id,
+        });
+
+        if (teamMembersCount == 1) {
+          AspectsListItems.update(
+            { _id: aspect._id }, 
+            { $set: {
+              initialScore: '',
+              currentScore: ''
+            } }
+          );
+        }
+      });
+
+      return true;
+    }
   },
 
   unassignTeamMember(teamMemberId) {
