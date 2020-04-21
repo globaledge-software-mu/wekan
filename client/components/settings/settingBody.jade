@@ -1,6 +1,6 @@
 template(name="setting")
   .setting-content
-    unless currentUser.isAdmin
+    unless currentUser.isAuthorised
       | {{_ 'error-notAuthorized'}}
     else
       .content-title
@@ -45,18 +45,19 @@ template(name="general")
             .title {{_ 'role'}}
             .select-role-msg.hide {{_ 'error-roleNotSelected'}}
             select.select-role.js-profile-role
-              option(value='', selected='selected') Select One
-              // if isAdmin, user gets to choose from all the roles
-              if currentUser.isAdmin
-                each role in roles
-                  option(value='{{role._id}}') {{role.name}}
-              // if isManagerAndNotAdmin, user gets to choose from 'coach' or 'coachee'
-              if currentUser.isManagerAndNotAdmin
-                each role in coachOrCoacheeRoles
-                  option(value='{{role._id}}') {{role.name}}
-              // if isCoachAndNotAdmin, user gets to choose 'coachee'
+              // if isCoachAndNotAdmin, user gets the only slected choice 'coachee' by default
               if currentUser.isCoachAndNotAdmin
-                option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
+                option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
+              else
+                option(value='', selected='selected') Select One
+                // if isAdmin, user gets to choose from all the roles
+                if currentUser.isAdmin
+                  each role in roles
+                    option(value='{{role._id}}') {{role.name}}
+                // if isManagerAndNotAdmin, user gets to choose from 'coach' or 'coachee'
+                if currentUser.isManagerAndNotAdmin
+                  each role in coachOrCoacheeRoles
+                    option(value='{{role._id}}') {{role.name}}
           li(style="margin-bottom: 8px")
             .title {{_ 'to-boards'}}
             .select-board-msg.hide {{_ 'error-boardNotSelected'}}
