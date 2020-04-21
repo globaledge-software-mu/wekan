@@ -114,7 +114,7 @@ template(name="cardDetails")
         canvas.card-details-item.score-line
     if reloadHistoricScoreChart
       span
-    
+
     .card-details-items
       each customFieldsWD
         .card-details-item.card-details-item-customfield
@@ -199,6 +199,25 @@ template(name="cardDetails")
             +viewer
               = getAssignedBy
 
+    if isPropertyVisible 'aspectsList'
+      hr
+      .card-details-item.card-details-item-name
+        h3.card-details-item-title {{getPropertyAlias 'aspectsList'}}
+        .aspects-list-items
+          each aspectsListItems
+            .aspectItem
+              p.generalFont(data-aspect-id="{{_id}}" data-title="{{title}}") {{title}}
+                span.fa.fa-trash.pull-right.removeAspect(title="Remove {{title}}")
+        form.inlined-form.js-inlined-form#add-aspects-list-item-form
+          textarea#js-add-aspects-list-item(rows='1')
+          #add-aspects-list-item-controls.edit-controls.clearfix
+            button#js-submit-aspects-list-item-form.primary(type="button") {{_ 'save'}}
+            a#js-close-aspects-list-item-form.fa.fa-times-thin
+        if canModifyCard
+          a#addAspect(title="{{_ 'add-an-aspect'}}")
+            i.fa.fa-plus
+            | {{_ 'add-an-aspect'}}
+
     if isPropertyVisible 'checklists'
       hr
       +checklists(cardId = _id)
@@ -213,7 +232,7 @@ template(name="cardDetails")
         | {{getPropertyAlias 'attachments'}}
 
       +attachmentsGalery
-    
+
     if isPropertyVisible 'activity'
       hr
       unless currentUser.isNoComments
@@ -257,7 +276,7 @@ template(name="editCardAssignerForm")
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-assigner-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
-    
+
 template(name="cardDetailsActionsPopup")
   ul.pop-over-list
     li: a.js-toggle-watch-card {{#if isWatching}}{{_ 'unwatch'}}{{else}}{{_ 'watch'}}{{/if}}

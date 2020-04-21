@@ -1,3 +1,25 @@
+Template.userAvatar.onCreated(() => {
+  // This is part 1 of 2 of the subscription to the collections
+  // It important to have both parts as otherwise we will not
+  // be able to fetch the collections correctly in the model Cards
+  // of its method unassignTeamMember
+  Meteor.subscribe('team_members_scores');
+  Meteor.subscribe('team_members_aspects');
+});
+
+Template.userAvatar.onRendered(() => {
+  // This is part 2 of 2 of the subscription to the collections
+  // It important to have both parts as otherwise we will not
+  // be able to fetch the collections correctly in the model Cards
+  // of its method unassignTeamMember
+  Meteor.subscribe('team_members_scores');
+  Meteor.subscribe('team_members_aspects');
+
+  const selector = $('.card-details-item-teamMembers').find('.member.js-member');
+  selector.addClass('team-member');
+  selector.css('cursor', 'default');
+});
+
 Template.userAvatar.helpers({
   userData() {
     // We need to handle a special case for the search results provided by the

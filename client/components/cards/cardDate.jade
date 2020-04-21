@@ -8,3 +8,72 @@ template(name="dateBadge")
       time(datetime="{{showISODate}}")
         | {{showDate distinguishDate}}
 
+template(name="editCardReceivedComposedScoreModal")
+  #editCardReceivedComposedScoreFormContainer
+    form#editCardReceivedComposedScoreForm
+      .formHeader(style="margin-top: 25px; display: flex;")
+        p#modalLabel(style="line-height: 60px; margin-left: 20px;")
+          | {{_ 'Initial Score'}}
+        .saveDetailedScores(style="text-align: right; margin-left: auto;")
+          input#submitDetailedInitialScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
+      .scrollableList
+        if hasOnlyAspects
+          each aspects
+            label.bold
+              | {{title}}
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{initialScore}}")
+            hr(style="background: #005377;")
+        if hasOnlyTeamMembers
+          each teamMembers
+            label.bold
+              | {{username}}
+              input.team-members-score-input(id="{{_id}}" type="text" value="{{teamMemberScore(_id)}}")
+            hr(style="background: #005377;")
+        if hasBothTeamMembersAndAspects
+          each teamMembers
+            .bothAspectsAndTeamMembersContainer
+              .teamMembersContainer(style="display: flex;")
+                label.team-member-label.bold(style="line-height: 40px;")
+                  | {{username}}
+                input.team-members-score-input(id="{{_id}}" disabled type="text" value="{{teamMemberScore(_id)}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each teamMemberAspects _id
+                .aspectsContainer(style="margin-left: 50px; display: flex;")
+                  label.aspects-label.bold(style="line-height: 40px;")
+                    | {{teamMemberAspectTitle(_id)}}
+                  input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{initialScore}}" style="width: fit-content; margin-left: 8px;")
+            hr(style="background: #005377;")
+
+template(name="editCardStartComposedScoreModal")
+  #editCardStartComposedScoreFormContainer
+    form#editCardStartComposedScoreForm
+      .formHeader(style="margin-top: 25px; display: flex;")
+        p#modalLabel(style="line-height: 60px; margin-left: 20px;")
+          | {{_ 'Start Score'}}
+        .saveDetailedScores(style="text-align: right; margin-left: auto;")
+          input#submitDetailedCurrentScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
+      .scrollableList
+        if hasOnlyAspects
+          each aspects
+            label.bold
+              | {{title}}
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{currentScore}}")
+            hr(style="background: #005377;")
+        if hasOnlyTeamMembers
+          each teamMembers
+            label.bold
+              | {{username}}
+              input.team-members-score-input(id="{{_id}}" type="text" value="{{teamMemberScore(_id)}}")
+            hr(style="background: #005377;")
+        if hasBothTeamMembersAndAspects
+          each teamMembers
+            .bothAspectsAndTeamMembersContainer
+              .teamMembersContainer(style="display: flex;")
+                label.team-member-label.bold(style="line-height: 40px;")
+                  | {{username}}
+                input.team-members-score-input(id="{{_id}}" disabled type="text" value="{{teamMemberScore(_id)}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each teamMemberAspects _id
+                .aspectsContainer(style="margin-left: 50px; display: flex;")
+                  label.aspects-label.bold(style="line-height: 40px;")
+                    | {{teamMemberAspectTitle(_id)}}
+                  input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{currentScore}}" style="width: fit-content; margin-left: 8px;")
+            hr(style="background: #005377;")

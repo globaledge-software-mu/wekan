@@ -97,8 +97,8 @@ BlazeComponent.extendComponent({
     return users;
   },
   hasExpiredSubscriptions() {
-  	const expiredSubscription = Subscriptions.findOne({ 
-  		archived: { $ne: true }, 
+  	const expiredSubscription = Subscriptions.findOne({
+  		archived: { $ne: true },
   		expiresOn: { $lt: new Date() },
 		});
 
@@ -109,8 +109,8 @@ BlazeComponent.extendComponent({
   	}
   },
   expiredSubscriptionsCount() {
-  	const expiredSubscriptions = Subscriptions.find({ 
-  		archived: { $ne: true }, 
+  	const expiredSubscriptions = Subscriptions.find({
+  		archived: { $ne: true },
   		expiresOn: { $lt: new Date() },
 		});
   	if (expiredSubscriptions && expiredSubscriptions.count() > 0) {
@@ -222,11 +222,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.loading = new ReactiveVar(false);
   },
-  
+
   onRendered() {
     this.setLoading(false);
   },
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -234,7 +234,7 @@ BlazeComponent.extendComponent({
   isLoading() {
     return this.loading.get();
   },
-  
+
   events() {
     return [{
     	submit(evt) {
@@ -289,7 +289,7 @@ BlazeComponent.extendComponent({
 
         const usernameMessageElement = this.$('.username-taken');
         const emailMessageElement = this.$('.email-taken');
-        
+
         if (duplicateUserEmail && duplicateUserName) {
           usernameMessageElement.show();
           emailMessageElement.show();
@@ -385,11 +385,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.loading = new ReactiveVar(false);
   },
-  
+
   onRendered() {
     this.setLoading(false);
   },
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -467,7 +467,7 @@ BlazeComponent.extendComponent({
                   const errorElement = error.error;
                   if (errorElement === 'username-already-taken') {
                   	this.$('.username-taken').show();
-                  } 
+                  }
                   if (errorElement === 'email-already-taken') {
                   	this.$('.email-taken').show();
                   }
@@ -517,7 +517,7 @@ BlazeComponent.extendComponent({
         .then((okDelete) => {
           if (okDelete) {
         		// If the user to be deleted was an admin of a board, we need to
-          	// make one of the would-be remaining members of that board an admin of those specific boards, 
+          	// make one of the would-be remaining members of that board an admin of those specific boards,
           	// only if there is no other boardadmin for that specific board,
           	// preferably a member with the highest user role of the board
             Boards.find({
@@ -525,7 +525,7 @@ BlazeComponent.extendComponent({
             	'members.isAdmin': true,
           	}).forEach((board) => {
           		Boards.update(
-        				{ _id: board._id }, 
+        				{ _id: board._id },
                 { $pull: {
                     members: {
                       userId: toBeDeletedUserId,
@@ -550,7 +550,7 @@ BlazeComponent.extendComponent({
               	});
               	if (adminRoleMember) {
               		Boards.update(
-            				{ _id: board._id }, 
+            				{ _id: board._id },
                     { $pull: {
                         members: {
                           userId: adminRoleMember._id,
@@ -559,7 +559,7 @@ BlazeComponent.extendComponent({
                     }
           				);
               		Boards.update(
-            				{ _id: board._id }, 
+            				{ _id: board._id },
                     { $push: {
                         members: {
                           isAdmin: true,
@@ -587,7 +587,7 @@ BlazeComponent.extendComponent({
                       	if (!coachRoleMember) {
                       		const randomMemberId = memberIds[0].userId;
                       		Boards.update(
-                    				{ _id: board._id }, 
+                    				{ _id: board._id },
                             { $pull: {
                                 members: {
                                   userId: randomMemberId,
@@ -596,7 +596,7 @@ BlazeComponent.extendComponent({
                             }
                   				);
                       		Boards.update(
-                    				{ _id: board._id }, 
+                    				{ _id: board._id },
                             { $push: {
                                 members: {
                                   isAdmin: true,
@@ -609,7 +609,7 @@ BlazeComponent.extendComponent({
                   				);
                       	} else {
                       		Boards.update(
-                    				{ _id: board._id }, 
+                    				{ _id: board._id },
                             { $pull: {
                                 members: {
                                   userId: coachRoleMember._id,
@@ -618,7 +618,7 @@ BlazeComponent.extendComponent({
                             }
                   				);
                       		Boards.update(
-                    				{ _id: board._id }, 
+                    				{ _id: board._id },
                             { $push: {
                                 members: {
                                   isAdmin: true,
@@ -633,7 +633,7 @@ BlazeComponent.extendComponent({
                   		}
                   	} else {
                   		Boards.update(
-                				{ _id: board._id }, 
+                				{ _id: board._id },
                         { $pull: {
                             members: {
                               userId: managerRoleMember._id,
@@ -642,7 +642,7 @@ BlazeComponent.extendComponent({
                         }
               				);
                   		Boards.update(
-                				{ _id: board._id }, 
+                				{ _id: board._id },
                         { $push: {
                             members: {
                               isAdmin: true,
@@ -664,7 +664,7 @@ BlazeComponent.extendComponent({
             	'members.userId': toBeDeletedUserId,
           	}).forEach((board) => {
           		Boards.update(
-        				{ _id: board._id }, 
+        				{ _id: board._id },
                 { $pull: {
                     members: {
                       userId: toBeDeletedUserId,
@@ -673,7 +673,7 @@ BlazeComponent.extendComponent({
                 }
       				);
           	});
-            
+
             // Remove User
             Users.remove(toBeDeletedUserId);
           } else {
@@ -771,8 +771,8 @@ Template.createRolePopup.events({
       });
       if (colour) {
       	RoleColors.insert({
-      		roleId: newRoleId, 
-      		color: colour, 
+      		roleId: newRoleId,
+      		color: colour,
       		roleName: name
       	});
       }
@@ -787,15 +787,15 @@ Template.createRolePopup.events({
       	const roleColor = RoleColors.findOne({ roleId: this.roleId });
       	if (roleColor && roleColor._id) {
       		RoleColors.update(
-      			{ _id: roleColor._id }, 
-      			{ $set: 
-      				{  color: colour, roleName: name } 
+      			{ _id: roleColor._id },
+      			{ $set:
+      				{  color: colour, roleName: name }
       			}
     			);
       	} else {
         	RoleColors.insert({
-        		roleId: this.roleId, 
-        		color: colour, 
+        		roleId: this.roleId,
+        		color: colour,
         		roleName: name
         	});
       	}
@@ -848,11 +848,11 @@ Template.createRolePopup.helpers({
     return Roles.findOne(this.roleId);
   },
   managerCoachOrCoacheeDoc(id) {
-  	var role = Roles.findOne({ 
-  		_id: id, 
-  		name: { 
-  			$in: ['Manager', 'Coach', 'Coachee'] 
-  		} 
+  	var role = Roles.findOne({
+  		_id: id,
+  		name: {
+  			$in: ['Manager', 'Coach', 'Coachee']
+  		}
   	});
 
   	if (role) {
@@ -861,18 +861,18 @@ Template.createRolePopup.helpers({
   	return false;
   },
   colors() {
-  	return [ 
-  		'green', 'yellow', 'orange', 'red', 
-  		'purple', 'blue', 'sky', 'lime', 
-  		'pink', 'peachpuff', 'crimson', 'plum', 
-  		'darkgreen', 'slateblue', 'magenta', 'gold', 
-  		'navy', 'saddlebrown', 'paleturquoise', 'indigo' 
+  	return [
+  		'green', 'yellow', 'orange', 'red',
+  		'purple', 'blue', 'sky', 'lime',
+  		'pink', 'peachpuff', 'crimson', 'plum',
+  		'darkgreen', 'slateblue', 'magenta', 'gold',
+  		'navy', 'saddlebrown', 'paleturquoise', 'indigo'
   	];
   },
   isSelected(id, colour) {
   	const roleColor = RoleColors.findOne({
   		roleId: { $exists: true, $eq: id },
-  		color: colour 
+  		color: colour
   	});
   	if (roleColor) {
   		return true;
@@ -880,7 +880,7 @@ Template.createRolePopup.helpers({
   	return false;
   },
 });
-  
+
 BlazeComponent.extendComponent({
   userGroupsList() {
   	return UserGroups.find();
@@ -929,11 +929,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.loading = new ReactiveVar(false);
   },
-  
+
   onRendered() {
     this.setLoading(false);
   },
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -941,7 +941,7 @@ BlazeComponent.extendComponent({
   isLoading() {
     return this.loading.get();
   },
-  
+
   events() {
     return [{
     	submit(evt) {
@@ -973,7 +973,7 @@ BlazeComponent.extendComponent({
         }
         this.setLoading(true);
 
-        UserGroups.insert({ 
+        UserGroups.insert({
         	title, boardsQuota, usersQuota
       	}, (err, res) => {
 	        	this.setLoading(false);
@@ -1013,11 +1013,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.loading = new ReactiveVar(false);
   },
-  
+
   onRendered() {
     this.setLoading(false);
   },
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -1078,10 +1078,10 @@ BlazeComponent.extendComponent({
     		const assignedUG = AssignedUserGroups.findOne({ userGroupId, userId });
     		if (assignedUG && assignedUG._id) {
       		AssignedUserGroups.update(
-    				{ _id: assignedUG._id }, 
-    				{ $set: { 
-    					groupAdmin: 'Yes' 
-  					} }, 
+    				{ _id: assignedUG._id },
+    				{ $set: {
+    					groupAdmin: 'Yes'
+  					} },
     				(err, res) => {
   	        	this.setLoading(false);
   	          if (err) {
@@ -1117,10 +1117,10 @@ BlazeComponent.extendComponent({
     		const assignedUG = AssignedUserGroups.findOne({ userGroupId, userId });
     		if (assignedUG && assignedUG._id) {
       		AssignedUserGroups.update(
-    				{ _id: assignedUG._id }, 
-    				{ $set: { 
-    					groupAdmin: 'No' 
-  					} }, 
+    				{ _id: assignedUG._id },
+    				{ $set: {
+    					groupAdmin: 'No'
+  					} },
     				(err, res) => {
   	        	this.setLoading(false);
   	          if (err) {
@@ -1219,8 +1219,8 @@ BlazeComponent.extendComponent({
         this.setLoading(true);
 
         UserGroups.update(
-      		{ _id: userGroupId }, 
-      		{ $set: { title, boardsQuota, usersQuota } }, 
+      		{ _id: userGroupId },
+      		{ $set: { title, boardsQuota, usersQuota } },
       		(err, res) => {
 	        	this.setLoading(false);
 	        	$("#modal").scrollTop(0);
@@ -1358,7 +1358,7 @@ Template.editUserGroup.helpers({
 
   groupAdmins() {
 		const groupId = Session.get('manageUserGroupId');
-		const userIds = new Array(); 
+		const userIds = new Array();
 		AssignedUserGroups.find({ userGroupId: groupId, groupAdmin: {$in: ['Yes', 'yes']} }).forEach((assignedUG) => {
 			userIds.push(assignedUG.userId);
 		});
@@ -1480,13 +1480,15 @@ Template.subscriptionRow.events({
         })
         .then((okDelete) => {
           if (okDelete) {
-          	// Update its expiration date by adding the new billing cycle's span to the date to set the expiration date, only if its previous expiration date had not reached yet. 
-            // Renewing a subscription does not allow change in plan, in other words the same plan is subscribed again. 
-          	// The user-group too is not allowed to be tampered with here. 
-          	// The user-group's usersQuota and boardsQuota gets incremented (adding on the existing) with the plan's quota
+            // Upon a renewal, there are two case scenarios, either of which is going to play out here,
+            // first one is if the subscription is expired or having status "cancelled", in this one both the expiration date and the quotas are updated and
+            // the second one is if the subscription is not expired yet and its status is also not "cancelled", in this one, only the quotas are updated and the expiration date stays the same
+            // In Both cases, the fields priceSubscribedTo, the assignerId, the status and the statusSetOn too are updated
+            // The plan cannot be changed upon a renewal
+            // The userGroups' quota is replenished with that of the subscribed plan's quota
             var priceSubscribedTo = null;
-            var subscribedOn = new Date();
-            subscribedOn.setHours(0,0,0,0);
+            var statusSetOn = new Date();
+            statusSetOn.setHours(0,0,0,0);
             var expiresOn = new Date();
             expiresOn.setHours(0,0,0,0);
           	if (subscription.billingCycle === 'monthly') {
@@ -1500,24 +1502,31 @@ Template.subscriptionRow.events({
           	const expirationDate = new Date(subscription.expiresOn);
         		expirationDate.setHours(0,0,0,0);
           	const currentDate = new Date();
-          	currentDate.setHours(0,0,0,0);
-          	if (expirationDate > currentDate) {
-          		var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
-          		const remainingDaysCount = Math.round(Math.abs((expirationDate.getTime() - currentDate.getTime()) / (oneDay)));
-          		// push the var expiresOn's date by the number of remained days
-          		var incrementedExpiryDate = new Date(expiresOn.setDate(expiresOn.getDate() + remainingDaysCount)).toISOString().substr(0,10);
-          		var expiresOn = new Date(incrementedExpiryDate);
-          		expiresOn.setHours(0,0,0,0);
-          	}
+            currentDate.setHours(0,0,0,0);
+            var fieldsToUpdate = {};
+            if (typeof subscription.status !== 'string') {
+              subscription.status = '';
+            }
+          	if (expirationDate < currentDate || expirationDate === currentDate || subscription.status === 'cancelled') {
+              fieldsToUpdate = {
+                expiresOn,
+                priceSubscribedTo,
+                assignerId: Meteor.user()._id,
+                status: 'renewed',
+                statusSetOn
+              };
+          	} else {
+              fieldsToUpdate = {
+                priceSubscribedTo,
+                assignerId: Meteor.user()._id,
+                status: 'renewed',
+                statusSetOn
+              };
+            }
 
             Subscriptions.update(
           		{ _id: subscriptionId }, {
-          			$set : {
-                  subscribedOn,
-                  expiresOn,
-                  priceSubscribedTo,
-                  assignerId: Meteor.user()._id
-          			}
+          			$set: fieldsToUpdate
 	            }, (err, res) => {
 	              if (err) {
 	              	var message = '';
@@ -1692,14 +1701,14 @@ BlazeComponent.extendComponent({
 	onRendered() {
     this.setLoading(false);
 
-		// had to use two different session keys and setting them in different stages as the popup calls its helper function twice each time it opens and this was not setting 
-		// the session for the key 'upgradeSubscriptionOfId' with the right value at both times, it was either the in the first call or the second call that the right value was being set. 
+		// had to use two different session keys and setting them in different stages as the popup calls its helper function twice each time it opens and this was not setting
+		// the session for the key 'upgradeSubscriptionOfId' with the right value at both times, it was either the in the first call or the second call that the right value was being set.
 		// But using the two session keys 'upgradeSubscriptionOfIdentifier' and 'upgradeSubscriptionOfId', and setting/getting them at different stages and deleting the keys when the popup closes,
-		// made sure that the popup's helper funstion would always set the right value for the key 'upgradeSubscriptionOfId' 
+		// made sure that the popup's helper funstion would always set the right value for the key 'upgradeSubscriptionOfId'
 		const subscriptionId = Session.get('upgradeSubscriptionOfIdentifier')
     Session.set('upgradeSubscriptionOfId', subscriptionId);
 	},
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -1734,7 +1743,7 @@ BlazeComponent.extendComponent({
 		if (subscription && subscription._id) {
 			const plan = Plans.findOne({_id: subscription.planId});
 			if (plan && plan._id) {
-				// Since in the future we'll need to give the admin the right to create new plans and since for now we have 
+				// Since in the future we'll need to give the admin the right to create new plans and since for now we have
 				// no way of determining the inferior plans, so we'll just exclude the current plan of the subscription in the return.
 				return Plans.find({_id: {$ne: plan._id}});
 			}
@@ -1822,7 +1831,7 @@ BlazeComponent.extendComponent({
                 });
               } else if (res) {
               	const plan = Plans.findOne({_id: planId});
-              	// update UserGroups, overwriting its usersQuota and boardsQuota with that of the upgraded plan and 
+              	// update UserGroups, overwriting its usersQuota and boardsQuota with that of the upgraded plan and
               	// resetting the user-group's usedUsersQuota and usedBoardsQuota to zero.
               	UserGroups.update(
             			{_id: subscription.userGroupId}, {
@@ -1918,11 +1927,11 @@ BlazeComponent.extendComponent({
   onCreated() {
     this.loading = new ReactiveVar(false);
   },
-  
+
   onRendered() {
     this.setLoading(false);
   },
-  
+
 	setLoading(w) {
     this.loading.set(w);
   },
@@ -1966,11 +1975,11 @@ BlazeComponent.extendComponent({
     				subscribedUGs.push(subscription.userGroupId);
   				}
     		});
-    		const subscriberUserGroupsOptions = UserGroups.find({ 
-    			$and: [ 
-    				{ _id: { $in: userGroupsIds } }, 
-    				{ _id: { $nin: subscribedUGs } } 
-  				] 
+    		const subscriberUserGroupsOptions = UserGroups.find({
+    			$and: [
+    				{ _id: { $in: userGroupsIds } },
+    				{ _id: { $nin: subscribedUGs } }
+  				]
     		});
     		if (subscriberUserGroupsOptions && subscriberUserGroupsOptions.count() > 0) {
   				selector.prop('disabled', false);
@@ -1983,10 +1992,10 @@ BlazeComponent.extendComponent({
       		const subscriberUserGroups = UserGroups.find({_id: { $in: userGroupsIds } });
       		if (subscriberUserGroups && subscriberUserGroups.count() > 1) {
       			$('#already-assigned-user-groups-to-subscriptions').show();
-      		} 
+      		}
       		if (subscriberUserGroups && subscriberUserGroups.count() > 0 && subscriberUserGroups.count() < 2) {
       			$('#already-assigned-user-group-to-subscription').show();
-      		} 
+      		}
       		if (subscriberUserGroups.count() < 1) {
       			$('#user-group-error-msg').show();
       		}

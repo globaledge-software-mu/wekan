@@ -546,9 +546,7 @@ BlazeComponent.extendComponent({
       if (err) {
       	self.setError(err.error);
       	return false;
-      } else if (ret.email && ret.passwordIsSet && ret.passwordIsSet === true) {
-      	self.setError('invite-sent');
-      } else if (ret.email && !ret.passwordIsSet) {
+      } else if (ret.email) {
       	self.setError('email-sent');
       }
     });

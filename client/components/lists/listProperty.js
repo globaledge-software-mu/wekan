@@ -278,6 +278,25 @@
 (class extends ListProperty {
   onCreated() {
     super.onCreated();
+    this.data().getPropertyAlias('aspectsList') && this.property.set(this.data().getPropertyAlias('aspectsList'));
+  }
+
+  onRendered() {
+    super.onRendered();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
+  }
+
+  _storePropertyAlias(alias) {
+    super._storePropertyAlias(alias, 'aspectsList');
+  }
+}).register('editPropertyCardAspectsListsPopup');
+
+(class extends ListProperty {
+  onCreated() {
+    super.onCreated();
     this.data().getPropertyAlias('checklists') && this.property.set(this.data().getPropertyAlias('checklists'));
   }
 
@@ -589,6 +608,22 @@ Template.propertyAlias.helpers({
     });
   }
 }).register('propertyCardAssignedBy');
+
+(class extends PropertyAliasForm {
+  onCreated() {
+    super.onCreated();
+    const self = this;
+    self.autorun(() => {
+      self.property.set(self.data().getPropertyAlias('aspectsList'));
+    });
+  }
+      
+  events() {
+    return super.events().concat({
+      'click .js-edit-property-alias': Popup.open('editPropertyCardAspectsList'),
+    });
+  }
+}).register('propertyCardAspectsList');
 
 (class extends PropertyAliasForm {
   onCreated() {

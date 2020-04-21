@@ -79,6 +79,41 @@ DatePicker = BlazeComponent.extendComponent({
           this.error.set('');
         }
       },
+
+
+      'click #score'(evt) {
+        const formTitle = $(evt.currentTarget).closest('.content-wrapper').siblings('.header').find('.header-title').text();
+        if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title') || formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
+          const cardId = this.card._id;
+          var hasAspects = false;
+          var hasTeamMembers = false;
+
+          const aspects = AspectsListItems.find({ cardId });
+          if (aspects.count() > 0) {
+            hasAspects = true;
+          }
+
+          const actualCard = Cards.findOne({ _id: cardId });
+          if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+            hasTeamMembers = true;
+          }
+
+          if (hasAspects || hasTeamMembers) {
+            evt.preventDefault();
+            Popup.close();
+            if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title')) {
+              Modal.open('editCardReceivedComposedScoreModal');
+              Session.set('composedReceivedScoreCardId', cardId);
+            } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
+              Modal.open('editCardStartComposedScoreModal');
+              Session.set('composedStartScoreCardId', cardId);
+            }
+          }
+        } else {
+          return false;
+        }
+      },
+
       'submit .edit-date'(evt) {
         evt.preventDefault();
         const newDate = '';
@@ -96,7 +131,7 @@ DatePicker = BlazeComponent.extendComponent({
           const dateString = `${evt.target.date.value}`;
           newDate = moment(dateString, 'L', true);
         }
-        
+
         if (!newDate.isValid()) {
           this.error.set('invalid-date');
           evt.target.date.focus();
@@ -115,7 +150,7 @@ DatePicker = BlazeComponent.extendComponent({
             return false;
           }
         }
-        
+
         this._storeDate(newDate.toDate());
 
         if (evt.target && evt.target.score && evt.target.score.value) {
