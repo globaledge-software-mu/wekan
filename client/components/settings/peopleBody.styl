@@ -1,5 +1,208 @@
 .main-body
   overflow: scroll;
+  margin-bottom: 60px;
+
+#create-user-group
+  margin-bottom: 10px;
+
+#add-subscription
+  margin-bottom: 10px;
+
+#upgradeSubscriptionHiddenInput
+  display: none;
+
+.center
+  text-align: center;
+
+.expired
+  color: white;
+  background-color: indianred !important;
+
+#expiredSubscriptionsBadge
+  color: indianred;
+  font-size: 17px;
+  line-height: 17px;
+  margin-left: 10px;
+  font-weight: bold;
+
+#upgradeSubscriptionForm
+  p
+    .upgradeSubscriptionFormTitle
+      font-weight: bold;
+      font-size: 19px !important;
+      font-style: Arial !important;
+
+#assign-user-to-user-group
+  margin-bottom: 10px;
+
+.swal-button-container:nth-child(2){
+  float: left !important;
+}
+
+table#subscriptionsDataTable
+  tbody
+    tr
+     th
+       text-align: center;
+     td
+       padding-top: 15px;
+       padding-bottom: 15px;
+
+       a.renewSubscription
+         color: white;
+         background-color: #006d33;
+         padding: 4px 10px 4px 10px;
+         margin: 5px 5px 5px 10px;
+         border-radius: 3px;
+
+       a.upgradeSubscription
+         color: white;
+         background-color: #005377;
+         padding: 4px 10px 4px 10px;
+         margin: 5px 5px 5px 10px;
+         border-radius: 3px;
+       
+       a.archiveSubscription
+         color: white;
+         background-color: #7d0c0c;
+         padding: 4px 10px 4px 10px;
+         margin: 5px 10px 5px 5px;
+         border-radius: 3px;
+
+.bold
+  font-weight: bold;
+
+.error-msg
+  color: red;
+
+#modalLabel
+  text-align: center;
+  margin-top: 0px;
+  font-size: 20px;
+  font-weight: bold;
+
+#quota
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+
+#memberLabel
+  margin-bottom: 15px;
+  line-height: 30px;
+  font-size: 20px;
+
+#groupAdminLabel
+  margin-bottom: 15px;
+  line-height: 30px;
+  font-size: 20px;
+  font-weight: bold;
+
+  .fa-user-plus
+    font-size: 16px !important;
+
+#manageUserGroupContainer
+  display: inline-block;
+
+#manageUserGroup
+  display: flex;
+  margin: 0px 18px 0px 18px;
+
+  .listProperties
+    overflow: auto;
+    background-color: #dedede;
+    padding: 15px;
+    margin-bottom: 0px;
+    margin-top: 15px;
+    height: 150px;
+    border-radius: 5px;
+    border: 3px solid darkgray;
+
+    .listIndicator
+      font-size: 8px !important;
+      line-height: 30px;
+
+      .memberListComponent, .groupAdminListComponent
+        font-size: 14px;
+        font-weight: bold;
+        padding-left: 10px;
+        font-family: arial;
+
+      a
+        border: 1px solid #7d0c0c;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: bold;
+        padding: 0px 10px 2px 10px;
+        background-color: #7d0c0c !important;
+        color: white;
+        margin-left: 5px;
+
+        .fa-times-circle
+          font-size: 13px !important;
+
+  .displayContents
+    display: contents;
+    
+  .displayGrid
+    display: grid;
+
+#userGroupTitle
+  text-align: center; 
+  font-size: 25px; 
+  padding: 0px 20px 00px 20px;
+  margin-bottom: 0px !important;
+
+.hrEditUserGroupForm
+  background: darkgray;
+
+#manageQuota
+  background-color: whitesmoke;
+  padding: 15px 10px 20px 10px;
+  border-radius: 5px;
+  height: fit-content;
+
+#manageMembers
+  display: grid;
+  margin: 0px 30px 10px 30px;
+  background-color: whitesmoke;
+  padding: 10px 10px 30px 10px;
+  border-radius: 5px;
+  height: fit-content;
+
+#manageGroupAdmin
+  background-color: whitesmoke;
+  padding: 10px 10px 20px 10px;
+  border-radius: 5px;
+  height: fit-content;
+  display: grid;
+
+#deleteUGButton
+  margin-bottom: 0px !important;
+  margin-top: 8px;
+  line-height: 22px;
+  color: white;
+  background-color: #7d0c0c;
+  border-radius: 4px;
+  width: 150px;
+
+.errorResponse
+  text-align: center;
+  color: firebrick;
+  background-color: white;
+  padding: 5px;
+  font-size: larger;
+
+.successResponse
+  text-align: center;
+  color: darkgreen;
+  background-color: white;
+  padding: 5px;
+  font-size: larger;
+
+.closeResponse
+  margin-right: 5px;
+  padding-top: 0px;
+  padding-right: 0px;
 
 table
   border-collapse: collapse;
@@ -13,6 +216,48 @@ table
 
   tr:nth-child(even)
     background-color: #dddddd;
+
+    td.aUGCell
+      padding: 10 0 10 0;
+      width: auto;
+      height: auto;
+      .aUGIndividualCell:nth-child(odd)
+        color: black;
+        background-color: white;
+        border: 5px solid white;
+        width: auto;
+
+      .aUGIndividualCell:nth-child(even)
+        color: white;
+        background-color: #796e6e;
+        border: 5px solid #796e6e;
+        width: auto;
+
+  tr:nth-child(odd)
+    td.aUGCell
+      padding: 10 0 10 0;
+      width: auto;
+      height: auto;
+      .aUGIndividualCell:nth-child(odd)
+        color: black;
+        background-color: #dddddd;
+        border: 5px solid #dddddd;
+        width: auto;
+
+      .aUGIndividualCell:nth-child(even)
+        color: white;
+        background-color: #796e6e;
+        border: 5px solid #796e6e;
+        width: auto;
+
+.js-set-group-admin
+  width: auto !important;
+
+.aUGIndividualCell
+  text-align: center;
+
+.removeUGFromAUG
+  line-height: 18px;
 
 .ext-box
   display: flex;
@@ -61,3 +306,25 @@ table
       border-bottom-right-radius: 8px;
       border-top-right-radius: 8px;
       color: black;
+
+.checked-palette-color
+  padding-left: 5px
+  padding-right: 5px
+
+.palette-colors
+  display: flex
+  flex-wrap: wrap
+
+  .palette-color
+    flex-grow: 1
+    display: flex
+    align-items: center
+    justify-content: center
+    cursor: pointer
+
+.role-color-label
+  color: black
+  font-size: 14px
+
+#create-user
+  margin-bottom: 10px

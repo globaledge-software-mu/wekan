@@ -15,7 +15,7 @@ template(name="listBody")
       if (showSpinner (idOrNull ../../_id))
         +spinnerList
 
-      if canSeeAddCard
+      if currentUser.canSeeAddCard
         +inlinedForm(autoclose=false position="bottom")
           +addCardForm(listId=_id position="bottom")
         else
@@ -98,6 +98,13 @@ template(name="searchElementPopup")
     label
       | {{_ 'title'}}
       input.js-element-title(type="text" placeholder="{{_ 'title'}}" autofocus required dir="auto")
+    if currentUser.hasMultipleUsableBoardQuotaGroups
+      label
+        | {{_ 'choose-specific-quota-to-use'}}
+        select.select-specific-quota-to-use
+          option(value='', selected='selected') Select One
+          each usableBoardsQuotaGroup in currentUser.usableBoardsQuotaGroups
+            option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
   unless isTemplateSearch
     label {{_ 'boards'}}:
     .link-board-wrapper
@@ -105,8 +112,9 @@ template(name="searchElementPopup")
         option(value="")
         each boards
           option(value="{{_id}}") {{title}}
-  form.js-search-term-form
-    input(type="text" name="searchTerm" placeholder="{{_ 'search-example'}}" autofocus dir="auto")
+  if memberOfMoreThanTenTemplates
+    form.js-search-term-form
+      input(type="text" name="searchTerm" placeholder="{{_ 'search-example'}}" autofocus dir="auto")
   .list-body.js-perfect-scrollbar.search-card-results
     .minicards.clearfix.js-minicards
       if isBoardTemplateSearch

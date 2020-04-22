@@ -174,10 +174,6 @@ BlazeComponent.extendComponent({
     return list.cards(swimlaneId).count() > this.cardlimit.get();
   },
 
-  canSeeAddCard() {
-    return !this.reachedWipLimit() && Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly() && Meteor.user().hasPermission('cards', 'insert');
-  },
-
   reachedWipLimit() {
     const list = Template.currentData();
     return !list.getWipLimit('soft') && list.getWipLimit('enabled') && list.getWipLimit('value') <= list.cards().count();
@@ -475,6 +471,10 @@ BlazeComponent.extendComponent({
   },
 
   onCreated() {
+  	Tracker.nonreactive(() => {
+      Meteor.subscribe('userTemplateContainerBoard');
+      Meteor.subscribe('cards');
+  	});
     this.isCardTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-card-template');
     this.isListTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-list-template');
     this.isSwimlaneTemplateSearch = $(Popup._getTopStack().openerElement).hasClass('js-open-add-swimlane-menu');
@@ -484,23 +484,27 @@ BlazeComponent.extendComponent({
       this.isSwimlaneTemplateSearch ||
       this.isBoardTemplateSearch;
     let board = {};
-    if (this.isTemplateSearch) {
-      board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
-    } else {
-      // Prefetch first non-current board id
-      board = Boards.findOne({
-        archived: false,
-        'members.userId': Meteor.userId(),
-        _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
-      });
-    }
+  	Tracker.afterFlush(() => {
+      if (this.isTemplateSearch) {
+        board = Boards.findOne((Meteor.user().profile || {}).templatesBoardId);
+      } else {
+        // Prefetch first non-current board id
+        board = Boards.findOne({
+          archived: false,
+          'members.userId': Meteor.userId(),
+          _id: {$nin: [Session.get('currentBoard'), (Meteor.user().profile || {}).templatesBoardId]},
+        });
+      }
+  	});
     if (!board) {
       Popup.close();
       return;
     }
     const boardId = board._id;
     // Subscribe to this board
-    subManager.subscribe('board', boardId, false);
+    if (boardId) {
+      subManager.subscribe('board', boardId, false);
+    }
     this.selectedBoardId = new ReactiveVar(boardId);
 
     if (!this.isBoardTemplateSearch) {
@@ -533,6 +537,20 @@ BlazeComponent.extendComponent({
     return boards;
   },
 
+  memberOfMoreThanTenTemplates() {
+  	memberTemplates = Boards.find({
+  		type: 'template-board',
+  		'members.userId': Meteor.user()._id,
+  		archived: false,
+  	});
+
+  	if (memberTemplates.count() > 10) {
+  		return true;
+  	} else {
+    	return false;
+  	}
+  },
+
   results() {
     if (!this.selectedBoardId) {
       return [];
@@ -545,7 +563,56 @@ BlazeComponent.extendComponent({
     } else if (this.isSwimlaneTemplateSearch) {
       return board.searchSwimlanes(this.term.get());
     } else if (this.isBoardTemplateSearch) {
-      const boards = board.searchBoards(this.term.get());
+    	var boards;
+    	// If user is trying to search for a specific board template
+    	if (this.term.get()) {
+	      const regex = new RegExp(this.term.get(), 'i');
+	      const boardIds = new Array();
+	      const templates = Boards.find({
+	      	type: 'template-board', 
+	    		'members.userId': Meteor.user()._id, 
+	    		archived: false,  
+	    		$or: [
+	          { title: regex },
+	          { description: regex },
+	        ],
+	      }).forEach((template) => {
+	      	boardIds.push(template._id);
+	      }); 
+
+	      const projection = { limit: 15, sort: { createdAt: -1 } };
+
+	      boards = Cards.find({ 
+	      	linkedId: { $in: boardIds }
+	      }, projection);
+    	} else {
+      	// if Admin or Manager
+      	if (Meteor.user().isAdminOrManager()) {
+        	boards = Cards.find({
+            type: 'cardType-linkedBoard',
+            archived: false, 
+          });
+      	} 
+      	// else if Coach or Coachee
+      	else if (Meteor.user().isCoachOrCoachee()) {
+        	const linkedBoardCards = Cards.find({
+            type: 'cardType-linkedBoard',
+            archived: false, 
+          });
+        	var boardIds = [];
+        	linkedBoardCards.forEach((linkedBoardCard) => {
+        		var boardTemplate = Boards.findOne({_id: linkedBoardCard.linkedId});
+        		if (boardTemplate) {
+          		(boardTemplate.members).forEach((member) => {
+          			if (member.userId == Meteor.userId()) {
+          				boardIds.push(linkedBoardCard.linkedId);
+          			}
+          		});
+        		}
+        	});
+    			boards = Cards.find({ linkedId: {$in: boardIds} });
+      	}
+    	} 
       boards.forEach((board) => {
         subManager.subscribe('board', board.linkedId, false);
       });
@@ -604,8 +671,24 @@ BlazeComponent.extendComponent({
           board.sort = Boards.find({archived: false}).count();
           board.type = 'board';
           board.title = element.title;
+          board.members = [{
+            isAdmin: true,
+            isActive: true,
+            isCommentOnly: false,
+            userId: Meteor.userId(),
+          }]
+          const selectedUserGroupId = $('.select-specific-quota-to-use option:selected').val().trim();
+          // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
+          // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+          // default order of the UGs assigned to him and is usable.
+          if (selectedUserGroupId.length > 0) {
+            board.quotaGroupId = selectedUserGroupId;
+          }
+          var oldId = board._id;
           delete board.slug;
-          _id = board.copy();
+          _id = board.getNewBoardId();
+          board.copy(_id, oldId);
+          Utils.goBoardId(_id);
         }
         Popup.close();
       },

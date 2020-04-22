@@ -72,6 +72,14 @@ template(name="listPropertiesPopup")
               +propertyCardMembers
         tr
           td
+            a#teamMembers.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'teamMembers'}}is-checked{{/if}}")
+              span {{_ 'team'}}
+          td
+            a.edit-property
+              +propertyCardTeamMembers
+        tr
+          td
             a#labels.flex.card-property
               .materialCheckBox(class="{{#if getPropertyVisibility 'labels'}}is-checked{{/if}}")
               span {{_ 'labels'}}
@@ -112,6 +120,14 @@ template(name="listPropertiesPopup")
               +propertyCardAssignedBy
        tr
           td
+            a#aspectsList.flex.card-property
+              .materialCheckBox(class="{{#if getPropertyVisibility 'aspectsList'}}is-checked{{/if}}")
+              span {{_ 'aspectsList'}}
+          td
+            a.edit-property
+              +propertyCardAspectsList
+       tr
+          td
             a#checklists.flex.card-property
               .materialCheckBox(class="{{#if getPropertyVisibility 'checklists'}}is-checked{{/if}}")
               span {{_ 'checklists'}}
@@ -145,11 +161,15 @@ template(name="listPropertiesPopup")
 
 template(name="editPropertyAlias")
   form.edit-property-alias
-    input(type="text" name="propertyAlias" value=showPropertyAlias autofocus)
+    input(type="text" name="propertyAlias" value=showPropertyAlias autofocus autocomplete="off")
     br
     a#warning.flex.date-warnings
       .materialCheckBox(class="{{#if hasDateWarnings}}is-checked{{/if}}")
       span {{_ 'use-date-warnings'}}
+    br
+    a#time.flex.use-time
+      .materialCheckBox(class="{{#if hasTime}}is-checked{{/if}}")
+      span {{_ 'use-time'}}
     br
     .color
       label {{_ "select-color"}}

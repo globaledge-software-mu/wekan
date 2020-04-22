@@ -35,6 +35,10 @@ InlinedForm = BlazeComponent.extendComponent({
     EscapeActions.executeUpTo('inlinedForm');
     this.isOpen.set(true);
     currentlyOpenedForm.set(this);
+    const selector = $('#js-close-aspects-list-item-form');
+    if (selector.length > 0) {
+    	selector.click();
+    }
   },
 
   close() {

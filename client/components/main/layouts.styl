@@ -26,7 +26,8 @@ body
 #content
   position: relative
   flex: 1
-  overflow-x: hidden
+  overflow: hidden
+  margin: 0
 
   .sk-spinner
     margin-top: 30vh
@@ -34,6 +35,10 @@ body
   > .wrapper
     margin-top: 10px
     padding: 15px
+
+@media screen and (max-width: 991px)
+  #content
+    overflow-y: scroll
 
 #modal
   position: absolute

@@ -1,13 +1,10 @@
 template(name="people")
   .setting-content
-    unless currentUser.isAdmin
+    unless currentUser.isAuthorised
       | {{_ 'error-notAuthorized'}}
     else
       .content-title.ext-box
         .ext-box-left
-          span {{_ 'people'}}
-          input#searchInput(placeholder="{{_ 'search'}}")
-          button#searchButton {{_ 'search'}}
         .ext-box-right
           span {{_ 'people-number'}} #{peopleNumber}
       .content-body
@@ -15,8 +12,18 @@ template(name="people")
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
-            li.active
-              a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+            if currentUser.isAdmin
+              li.active.hide
+                a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
+              li.active
+                a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
+              li.active
+                a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
+              li.active
+                a.js-setting-menu(data-id="subscriptions-setting") {{_ 'subscriptions'}}
+                  if hasExpiredSubscriptions
+                    span#expiredSubscriptionsBadge
+                      | {{expiredSubscriptionsCount}}
         .main-body
           if loading.get
             +spinner
@@ -24,8 +31,63 @@ template(name="people")
             +peopleGeneral
           else if roles.get
             +rolesGeneral
+          else if userGroups.get
+            +userGroupsGeneral
+          else if plans.get
+            +plansGeneral
+          else if subscriptions.get
+            +subscriptionsGeneral
+
+template(name="createNewUserPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'fullname'}}
+        span.error.hide.fullname-blank.user-not-created
+          | {{_ 'error-fullname-blank'}}
+        input.js-profile-fullname(type="text" value="" autofocus)
+      label
+        | {{_ 'username'}}
+        span.error.hide.username-blank.user-not-created
+          | {{_ 'error-username-blank'}}
+        span.error.hide.username-taken.user-not-created
+          | {{_ 'error-username-taken'}}
+        input.js-profile-username(type="text" value="")
+      label
+        | {{_ 'email'}}
+        span.error.hide.valid-email-not-entered.user-not-created
+          | {{_ 'error-valid-email-not-entered'}}
+        span.error.hide.email-taken.user-not-created
+          | {{_ 'error-email-taken'}}
+        input.js-profile-email(type="email" value="")
+      if currentUser.isAdmin
+        label
+          | {{_ 'admin'}}
+          select.select-role.js-profile-isadmin
+            option(value="false" selected) {{_ 'no'}}
+            option(value="true") {{_ 'yes'}}
+      label
+        | {{_ 'role'}}
+        span.error.hide.role-not-selected.user-not-created
+          | {{_ 'error-role-not-selected'}}
+        +roleOptions
+      if currentUser.hasMultipleUsableUserQuotaGroups
+        label
+          | {{_ 'choose-specific-quota-to-use'}}
+          select.choose-specific-quota-to-use
+            option(value='', selected='selected') Select One
+            each usableBoardsQuotaGroup in currentUser.usableUsersQuotaGroups
+              option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
 
 template(name="peopleGeneral")
+  button#create-user.btn.btn-primary {{_ 'add-user'}}
   table
     tbody
       tr
@@ -39,8 +101,23 @@ template(name="peopleGeneral")
         th {{_ 'active'}}
         th {{_ 'authentication-method'}}
         th
-      each user in peopleList
-        +peopleRow(userId=user._id)
+      // If isAdmin
+      if currentUser.isAdmin
+        // List all the users
+        each user in peopleList
+          +peopleRow(userId=user._id)
+      // If isManagerAndNotAdmin
+      if currentUser.isManagerAndNotAdmin
+        // List users from his own groups which have either the role 'Coach' or 'Coachee'
+        each user in managerUserGroupsUsersList
+          +peopleRow(userId=user._id)
+
+      // If isCoachAndNotAdmin
+      if currentUser.isCoachAndNotAdmin
+        // List users from his own groups which have the role 'Coachee'
+        each user in coachUserGroupsUsersList
+          +peopleRow(userId=user._id)
+        
 
 template(name="peopleRow")
   tr
@@ -70,61 +147,77 @@ template(name="peopleRow")
         | {{_ 'edit'}}
 
 template(name="editUserPopup")
-  form
-    label.hide.userId(type="text" value=user._id)
-    label
-      | {{_ 'fullname'}}
-      input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
-    label
-      | {{_ 'username'}}
-      span.error.hide.username-taken
-        | {{_ 'error-username-taken'}}
-      if isLdap
-        input.js-profile-username(type="text" value=user.username readonly)
+  if loading.get
+    +spinner
+  else
+    form#editUserPopup
+      label.hide.userId(type="text" value=user._id)
+      label
+        | {{_ 'fullname'}}
+        input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
+      label
+        | {{_ 'username'}}
+        span.error.hide.username-taken
+          | {{_ 'error-username-taken'}}
+        if isLdap
+          input.js-profile-username(type="text" value=user.username readonly)
+        else
+          input.js-profile-username(type="text" value=user.username)
+      label
+        | {{_ 'email'}}
+        span.error.hide.email-taken
+          | {{_ 'error-email-taken'}}
+        if isLdap
+          input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
+        else
+          input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
+      if currentUser.isAdmin
+        label
+          | {{_ 'admin'}}
+          select.select-role.js-profile-isadmin
+            option(value="false") {{_ 'no'}}
+            option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
+      label
+        | {{_ 'role'}}
+        +roleOptions
+      label
+        | {{_ 'active'}}
+        select.select-active.js-profile-isactive
+          option(value="false") {{_ 'yes'}}
+          option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
+      hr
+      label
+        | {{_ 'password'}}
+        input.js-profile-password(type="password")
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        if currentUser.isAdmin
+          input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="roleOptions")
+  select.select-role.js-profile-role
+    option(value='', selected='selected') Select One
+    // if isAdmin, user gets to choose from all the roles
+    if currentUser.isAdmin
+      each role in roles
+        if currentRole role._id
+          option(value='{{role._id}}' selected) {{role.name}}
+        else
+          option(value='{{role._id}}') {{role.name}}
+    // if isManagerAndNotAdmin, user gets to choose from 'coach' or 'coachee'
+    if currentUser.isManagerAndNotAdmin
+      each role in coachOrCoacheeRoles
+        if currentRole role._id
+          option(value='{{role._id}}' selected) {{role.name}}
+        else
+          option(value='{{role._id}}') {{role.name}}
+    // if isCoachAndNotAdmin, user gets to choose 'coachee'
+    if currentUser.isCoachAndNotAdmin
+      if currentRole coacheeRole._id
+        option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
       else
-        input.js-profile-username(type="text" value=user.username)
-    label
-      | {{_ 'email'}}
-      span.error.hide.email-taken
-        | {{_ 'error-email-taken'}}
-      if isLdap
-        input.js-profile-email(type="email" value="{{user.emails.[0].address}}" readonly)
-      else
-        input.js-profile-email(type="email" value="{{user.emails.[0].address}}")
-    label
-      | {{_ 'admin'}}
-      select.select-role.js-profile-isadmin
-        option(value="false") {{_ 'no'}}
-        option(value="true" selected="{{user.isAdmin}}") {{_ 'yes'}}
-    label
-      | {{_ 'role'}}
-      select.select-role.js-profile-role
-        each role in roles
-          if currentRole role._id
-            option(value="{{role._id}}" selected) {{role.name}}
-          else
-            option(value="{{role._id}}") {{role.name}}
-    label
-      | {{_ 'active'}}
-      select.select-active.js-profile-isactive
-        option(value="false") {{_ 'yes'}}
-        option(value="true" selected="{{user.loginDisabled}}") {{_ 'no'}}
-    label
-      | {{_ 'authentication-type'}}
-      select.select-authenticationMethod.js-authenticationMethod
-        each authentications
-          if isSelected value
-            option(value="{{value}}" selected) {{_ value}}
-          else
-            option(value="{{value}}") {{_ value}}
-    hr
-    label
-      | {{_ 'password'}}
-      input.js-profile-password(type="password")
-    div.buttonsContainer
-      input.primary.wide(type="submit" value="{{_ 'save'}}")
-      div
-      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+        option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
 
 template(name="rolesGeneral")
   table.roleList
@@ -154,7 +247,20 @@ template(name="createRolePopup")
     label.hide.roleId(type="text" value=role._id)
     label
       | {{_ 'name'}} {{_id}}
-      input.js-role-name(type="text" value=role.name autofocus)
+      unless managerCoachOrCoacheeDoc role._id
+        input.js-role-name(type="text" value=role.name autofocus)
+      else
+        input.js-role-name(type="text" value=role.name disabled)
+    hr
+    label(style="padding-top: 5px")
+      span.role-color-label
+        | {{_ 'color'}}
+      .palette-colors: each color in colors
+        if isSelected role._id color
+          span.card-label.checked-palette-color.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
+            i.fa.fa-check
+        else
+          span.card-label.palette-color.js-palette-color(class="card-details-{{color}}" data-color="{{color}}")
     hr
     table
       tbody
@@ -179,4 +285,301 @@ template(name="createRolePopup")
     div.buttonsContainer
       input.primary.wide(type="submit" value="{{_ 'save'}}")
       div
-      input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+      unless managerCoachOrCoacheeDoc role._id
+        input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
+
+template(name="userGroupsGeneral")
+  button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
+  table
+    tbody
+      tr
+        th 
+          ul
+            li {{_ 'title'}}
+        th 
+          ul
+            li {{_ 'users-quota'}}   
+        th 
+          ul
+            li {{_ 'used-users-quota'}}   
+        th 
+          ul
+            li {{_ 'boards-quota'}}
+        th 
+          ul
+            li {{_ 'used-boards-quota'}}    
+        th 
+          ul
+            li {{_ 'group-admins'}} 
+        th 
+          ul
+            li {{_ 'createdAt'}} 
+        th 
+          ul
+            li {{_ 'action'}}
+          // if isAdmin
+      if currentUser.isAdmin
+        each userGroup in userGroupsList
+          +userGroupRow(userGroupId=userGroup._id)
+
+template(name="userGroupRow")
+  tr
+    td 
+      ul
+        li {{ userGroupData.title }}
+    td 
+      ul
+        li {{ userGroupData.usersQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedUsersQuota }}
+    td 
+      ul
+        li {{ userGroupData.boardsQuota }}
+    td 
+      ul
+        li {{ userGroupData.usedBoardsQuota }}
+    td
+      ul
+        each groupAdmin in userGroupData.groupAdmins 
+          li {{ groupAdmin }} <br />
+    td 
+      ul
+        li {{ moment userGroupData.createdAt 'LLL' }}
+    td
+      ul
+        li
+          a.manage-user-group(data-user-group-id=userGroupData._id)
+            | {{_ 'manage'}}
+
+template(name="createUserGroupPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'title'}}
+        span.error.hide.title-blank.user-group-not-created
+          | {{_ 'error-title-blank'}}
+        span.error.hide.title-duplicate.user-group-not-created
+          | {{_ 'error-title-duplicate'}}
+        input.js-user-group-title(type="text" value="" autofocus)
+      label
+        | {{_ 'boards-quota'}}
+        span.error.hide.boards-quota-blank.user-group-not-created
+          | {{_ 'error-boards-quota-blank'}}
+        input.js-user-group-boards-quota(type="text" value="")
+      label
+        | {{_ 'users-quota'}}
+        span.error.hide.users-quota-blank.user-group-not-created
+          | {{_ 'error-users-quota-blank'}}
+        input.js-user-group-users-quota(type="text" value="")
+      hr
+      div.buttonsContainer
+        input.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="editUserGroup")
+  #modalBanner
+    h4#modalLabel
+      | {{_ 'manage-user-group'}} 
+    h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
+      | {{userGroup.title}}
+  a#manageUserGroupResponse
+  hr.hrEditUserGroupForm
+  #manageUserGroupContainer
+    #manageUserGroup
+      #manageQuota
+        label#quota
+          | {{_ 'manage-quota'}}
+        if loading.get
+          +spinner
+        form#editUserGroupPopup
+          label.bold
+            | {{_ 'users-quota'}}
+            span.error.hide.users-quota-blank.user-group-not-edited
+              | {{_ 'error-users-quota-blank'}}
+            input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+          label.bold
+            | {{_ 'boards-quota'}}
+            span.error.hide.boards-quota-blank.user-group-not-edited
+              | {{_ 'error-boards-quota-blank'}}
+            input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+          div.editUGButtonsContainer
+            input.primary.wide(type="submit" value="{{_ 'save'}}")
+      #manageMembers.bold
+        label#memberLabel
+          | {{_ 'manage-members'}}
+        if canAddMoreMember
+          label
+            | {{_ 'add-member'}}
+            select#js-select-user
+              option(value='', selected='selected') Select One
+              each user in notUserGroupMember
+                option(value=user._id) {{user.username}}
+        #membersList(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
+          if hasUsersAssignedToIt
+            each user in users
+              .fa.fa-circle.listIndicator 
+                span.memberListComponent {{user.username}}
+                a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
+                  .fa.fa-times-circle
+          else
+            .fa.fa-circle.listIndicator 
+              span.memberListComponent {{_ 'none'}}
+      #manageGroupAdmin
+        label#groupAdminLabel
+          | {{_ 'manage-group-admin'}}
+        if canAddMoreGroupAdmin
+          label.bold
+            | {{_ 'add-group-admin'}}
+            select#js-select-group-admin
+              option(value='', selected='selected') Select One
+              each userGroupNonAdmin in userGroupNonAdmins
+                option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
+        #groupAdminslist(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
+          if hasGroupAdmin
+            each groupAdmin in userGroupAdmins
+              .fa.fa-circle.listIndicator 
+                span.groupAdminListComponent {{groupAdmin.username}}
+                a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
+                  .fa.fa-times-circle
+          else
+            .fa.fa-circle.listIndicator 
+              span.groupAdminListComponent {{_ 'none'}}
+     if notAsssignedToAnyUser
+       hr.hrEditUserGroupForm
+       input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
+
+
+template(name="plansGeneral")
+  table
+    tbody
+      tr
+        th {{_ 'title'}}
+        th {{_ 'users-quota'}}
+        th {{_ 'boards-quota'}}
+        th {{_ 'price-per-month'}}
+        th {{_ 'price-per-year'}}
+      if currentUser.isAdmin
+        each plan in plans
+          +planRow(planId=plan._id)
+
+template(name="planRow")
+  tr
+    td {{ plan.title }}
+    td {{ plan.usersQuota }}
+    td {{ plan.boardsQuota }}
+    td {{_'€'}} {{ plan.pricePerMonth }}
+    td {{_'€'}} {{ plan.pricePerYear }}
+
+template(name="subscriptionsGeneral")
+  button#add-subscription.btn.btn-primary {{_ 'add-subscription'}}
+  table#subscriptionsDataTable
+    tbody
+      tr
+        th {{_ 'subscriber'}}
+        th {{_ 'plan'}}
+        th {{_ 'user-group'}}
+        th {{_ 'subscribed-on'}}
+        th {{_ 'expires-on'}}
+        th {{_ 'billing-cycle'}}
+        th {{_ 'action'}}
+      if currentUser.isAdmin
+        each subscription in subscriptions
+          +subscriptionRow(subscriptionId=subscription._id)
+
+template(name="subscriptionRow")
+  tr(id=subscription._id)
+    td {{ subscription.subscriberUsername }}
+    td {{ subscription.planTitle }}
+    td {{ subscription.userGroupTitle }}
+    td {{ moment subscription.subscribedOn 'LL' }}
+    td {{ moment subscription.expiresOn 'LL' }}
+    td {{_ subscription.billingCycle}}
+    td
+      a.renewSubscription(data-subscription-id=subscription._id)
+        | {{_ 'renew'}}
+      a.upgradeSubscription(data-subscription-id=subscription._id)
+        | {{_ 'upgrade'}}
+      a.archiveSubscription(data-subscription-id=subscription._id)
+        | {{_ 'cancel'}}
+
+template(name="addSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form
+      label
+        | {{_ 'plan'}}
+        .plan-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        .billing-cycle-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      // select user and have the usergroup dropdown options be only of the selected user's user groups 
+      label
+        | {{_ 'subscriber'}}
+        #subscriber-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-subscriber-not-selected'}}
+        select#select-subscriber
+          option(value='', selected='selected') Select One
+          each user in users
+            option(value='{{user._id}}') {{user.username}}
+      label
+        | {{_ 'user-group'}}
+        #already-assigned-user-group-to-subscription.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupAlreadyAssignedToSubscription'}}
+        #already-assigned-user-groups-to-subscriptions.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupsAlreadyAssignedToSubscriptions'}}
+        #user-group-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-user-not-part-of-any-usergroups'}}
+        #user-group-not-selected.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-userGroupNotSelected'}}
+        select#select-a-user-group(disabled)
+      hr
+      div.buttonsContainer
+        input#saveNewSubscription.primary.wide(disabled type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="upgradeSubscriptionPopup")
+  if loading.get
+    +spinner
+  else
+    form#upgradeSubscriptionForm
+      input#upgradeSubscriptionHiddenInput
+      p.center.bold 
+        | {{_ 'subscriber'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.subscriberUsername}}
+      p.center.bold 
+        | {{_ 'user-group'}}
+        | :
+        span.upgradeSubscriptionFormTitle
+          | {{subscription.userGroupTitle}}
+      hr
+      label
+        | {{_ 'plan'}}
+        .plan-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-plan-not-selected'}}
+        select.select-a-plan
+          option(value='', selected='selected') Select One
+          each plan in plans
+            option(value='{{plan._id}}') {{plan.title}}
+      label
+        | {{_ 'billing-cycle'}}
+        .billing-cycle-error-msg.upgradeSubscriptionErrorMsg.error-msg.hide {{_ 'error-billing-cycle-not-selected'}}
+        select.select-billing-cycle
+          option(value='', selected='selected') Select One
+          option(value='monthly') {{_ 'monthly'}}
+          option(value='yearly') {{_ 'yearly'}}
+      hr
+      div.buttonsContainer
+        input#upgradeSubscription.primary.wide(type="submit" value="{{_ 'save'}}")
+        div
+        input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+

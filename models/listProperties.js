@@ -21,11 +21,34 @@ ListProperties.attachSchema(new SimpleSchema({
     type: Boolean,
     defaultValue: false
   },
+  useTime: {
+    type: Boolean,
+    defaultValue: true
+  },
   color: {
     type: String,
     optional: true
   }
 }));
+
+ListProperties.helpers({
+  copy(boardId, listId, alias, i18nKey) {
+  	var hasListProperty = ListProperties.findOne({
+  		boardId: boardId,
+  		listId: listId,
+      alias: alias,
+      i18nKey: i18nKey
+  	});
+  	if (!hasListProperty) {
+      ListProperties.insert({
+      	boardId: boardId,
+      	listId: listId,
+        alias: alias,
+        i18nKey: i18nKey
+      });
+  	}
+  },
+});
 
 ListProperties.allow({
   insert(userId, doc) {

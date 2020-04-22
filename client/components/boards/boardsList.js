@@ -4,6 +4,38 @@ Template.boardListHeaderBar.events({
   'click .js-open-archived-board'() {
     Modal.open('archivedBoards');
   },
+
+  'click #js-enable-search-board'(e) {
+  	$('#js-search-board').prop('disabled', false);
+  	$('#js-search-board').focus();
+  },
+
+  'keypress #js-search-board'(e) {
+  	const param = $('#js-search-board').val();
+  	Session.set('searchingBoardTitle', param);
+  	var keycode = (event.keyCode ? event.keyCode : event.which);
+  	if(keycode == '13'){
+    	const boards = Boards.findOne();
+    	// call method to search for the board
+    	boards.searchBoard();
+  	}
+  },
+
+  'click #search-board-icon'(e) {
+  	const param = $('#js-search-board').val();
+  	Session.set('searchingBoardTitle', param);
+  	const boards = Boards.findOne();
+  	// call method to search for the board
+  	boards.searchBoard();
+  },
+
+  'click a#reset-search-board-input'() {
+  	$('#js-search-board').val('');
+  },
+
+  'focusout #js-search-board'() {
+  	$('#js-search-board').prop('disabled', true);
+  },
 });
 
 Template.boardListHeaderBar.helpers({
@@ -19,38 +51,311 @@ BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
     Meteor.subscribe('folders');
+    Meteor.subscribe('templateBoards');
+    Meteor.subscribe('cards');
   },
 
   onRendered() {
-  	$('ul.board-list.clearfix').sortable();
+  	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
-  	$('li.uncategorised_boards').draggable({
-  	  revert: 'invalid',
-  	  start: function(event) {
-          $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-          $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
-  	  },
-  	  drag: function() {},
-  	  stop: function() {
-  	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
-        $('p#actionTitle', this).remove();
-  	  }
+  	const folder = Session.get('folder');
+
+  	if (folder == 'uncategorised') {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+  	} else if (folder == 'templates') {
+      $('a#templatesFolder').trigger('click');
+  	} else {
+  		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		} else {
+  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click()
+    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+  		}
+  	}
+
+  	// Add member to its template-container, case the template-container 
+  	// member is null but the user has the template-container's id
+  	var templatesBoardId = Meteor.user().profile.templatesBoardId;
+  	var container = Boards.findOne({_id: templatesBoardId});
+  	if (container && container.members && container.members.length < 1) {
+	    Boards.update({
+	    	_id: templatesBoardId,
+	      type: 'template-container'
+	    }, {
+	    	$push: {
+		      members: {
+	          userId: Meteor.user()._id,
+	          isAdmin: true,
+	          isActive: true,
+	          isNoComments: false,
+	          isCommentOnly: false,
+	        },
+	    	}
+	    });
+  	}
+
+  	/******************/
+
+    Meteor.subscribe('mailServerInfo', {
+      onReady() {
+        const mailSettings = Settings.findOne();
+        if (mailSettings && mailSettings.mailServer.host && mailSettings.mailServer.port && mailSettings.mailServer.username && 
+        		mailSettings.mailServer.password && mailSettings.mailServer.enableTLS && mailSettings.mailServer.from 
+        ) {
+          Settings.update(mailSettings._id, {
+            $set: {
+              'mailServer.host': mailSettings.mailServer.host, 'mailServer.port': mailSettings.mailServer.port, 'mailServer.username': mailSettings.mailServer.username,
+              'mailServer.password': mailSettings.mailServer.password, 'mailServer.enableTLS': mailSettings.mailServer.enableTLS, 'mailServer.from': mailSettings.mailServer.from,
+            },
+          });
+        }
+        return this.stop();
+      },
+    });
+
+  	/******************/
+  	/**********/
+
+  	Cards.find({
+  		$or: [
+  			{ userId: Meteor.user()._id }, 
+  			{ 'members.userId': Meteor.user()._id }
+			]
+  	}).forEach((card) => {
+  		const startScores = CardScores.find({
+  			cardId: card._id,
+  			type: 'current',
+  			userId: Meteor.user()._id,
+  		}, {
+  			sort: {date: -1}
+  		}).fetch();
+  		// For all current CardScores without initial score/date, pairing them with initial score date
+  		// and also updating the  Card's startAt and currentScore if null
+  		if (startScores.length > 0) {
+  			// If startScores in CardScores && receivedAt in Cards is null
+  			if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						receivedAt: startScores[0].date
+  					} }
+  				);
+  			}
+  			// If startScores in CardScores && initialScore in Cards is null
+  			if (!card.initialScore || card.initialScore == '' || card.initialScore == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						initialScore: startScores[0].score
+  					} }
+  				);
+  			}
+  			// If startScores && startAt in Cards is null
+  			if (!card.startAt || card.startAt == '' || card.startAt == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						startAt: startScores[0].date
+  					} }
+  				);
+  			}
+  			// If startScores && currentScore in Cards is null
+  			if (!card.currentScore || card.currentScore == '' || card.currentScore == null) {
+  				Cards.update(
+  					{ _id: card._id },
+  					{ $set: {
+  						currentScore: startScores[0].score
+  					} }
+  				);
+  			}
+  		}
+
+  		// If Cards has receivedAt and no startAt
+  		if (card.receivedAt && card.receivedAt != '' && card.receivedAt != null && 
+  				!card.startAt || card.startAt == '' || card.startAt == null
+  		) {
+  			Cards.update(
+  				{ _id: card._id },
+  				{ $set: {
+  					startAt: card.receivedAt
+  				} }
+  			);
+  		}
+  		// If Cards has initialScore and no currentScore
+  		if (card.initialScore && card.initialScore != '' && card.initialScore != null && 
+  				!card.currentScore || card.currentScore == '' || card.currentScore == null
+  		) {
+  			Cards.update(
+  				{ _id: card._id },
+  				{ $set: {
+  					currentScore: card.initialScore
+  				} }
+  			);
+  			// If no CardScores
+  			if (startScores.length < 1) {
+  				// If Cards do not have receivedAt
+  				if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
+  					Cards.update(
+  						{ _id: card._id }, 
+  						{ $set: {
+  							receivedAt: new Date(),
+  						} }
+  					);
+
+  					// If Cards do not have startAt
+  					if (!card.startAt || card.startAt == '' || card.startAt == null) {
+  						Cards.update(
+  							{ _id: card._id }, 
+  							{ $set: {
+  								startAt: new Date(),
+  							} }
+  						);
+  					}
+  				}
+  			}
+  		}
   	});
 
-  	// part of the codes for the functionality of dragging boards onto boards
-/*  	$('li.board-color-belize').droppable({
-      accept: 'li.board-color-belize', 
-      tolerance: 'pointer',
-      drop: function( event, ui ) {
-    		var draggedBoardId = $(ui.draggable).data('id');
-    		var droppedOnBoardId = $(this).data('id');
+  	/**********/
 
-  	    Modal.open('createNewFolder');
+    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
+    // out of its own members make one of them an admin of the board, preferably the member with the highest role,
+    // only if there is no other boardadmin for that specific board
+    const adminBoardIds = new Array();
+    Boards.find({
+    	'members.isAdmin': true
+    }).forEach((board) => {
+    	adminBoardIds.push(board._id);
+    });
+    const nonAdminBoards = Boards.find({
+    	_id: {$nin: adminBoardIds}
+  	});
+    nonAdminBoards.forEach((nonAdminBoard) => {
+    	const memberIds = new Array();
+			var hasOtherBoardAdmin = false;
+    	nonAdminBoard.members.forEach((member) => {
+    		memberIds.push(member.userId);
+				if (member.isAdmin === true) {
+					hasOtherBoardAdmin = true;
+				}
+    	});
+    	if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
+    		const adminRoleMember = Users.findOne({
+      		_id: {$in: memberIds},
+      		isAdmin: true
+      	});
+      	if (!adminRoleMember) {
+      		const managerRole = Roles.findOne({name: 'Manager'});
+      		if (managerRole && managerRole._id) {
+      			const managerRoleMember = Users.findOne({
+          		_id: {$in: memberIds},
+          		roleId: managerRole._id
+          	});
+          	if (!managerRoleMember) {
+          		const coachRole = Roles.findOne({name: 'Coach'});
+          		if (coachRole && coachRole._id) {
+          			const coachRoleMember = Users.findOne({
+              		_id: {$in: memberIds},
+              		roleId: coachRole._id
+              	});
+              	if (!coachRoleMember) {
+              		const randomMemberId = memberIds[0].userId;
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: randomMemberId,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          userId: randomMemberId,
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                        },
+                      },
+                    }
+          				);
+              	} else {
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $pull: {
+                        members: {
+                          userId: coachRoleMember._id,
+                        },
+                      },
+                    }
+          				);
+              		Boards.update(
+            				{ _id: nonAdminBoard._id }, 
+                    { $push: {
+                        members: {
+                          userId: coachRoleMember._id,
+                          isAdmin: true,
+                          isActive: true,
+                          isCommentOnly: false,
+                        },
+                      },
+                    }
+          				);
+              	}
+          		}
+          	} else {
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $pull: {
+                    members: {
+                      userId: managerRoleMember._id,
+                    },
+                  },
+                }
+      				);
+          		Boards.update(
+        				{ _id: nonAdminBoard._id }, 
+                { $push: {
+                    members: {
+                      userId: managerRoleMember._id,
+                      isAdmin: true,
+                      isActive: true,
+                      isCommentOnly: false,
+                    },
+                  },
+                }
+      				);
+          	}
+      		}
+      	} else {
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $pull: {
+                members: {
+                  userId: adminRoleMember._id,
+                },
+              },
+            }
+  				);
+      		Boards.update(
+    				{ _id: nonAdminBoard._id }, 
+            { $push: {
+                members: {
+                  userId: adminRoleMember._id,
+                  isAdmin: true,
+                  isActive: true,
+                  isCommentOnly: false,
+                },
+              },
+            }
+  				);
+      	}
+    	}
+    });
+    //____________________________________
 
-  	    sessionStorage.setItem('draggedBoardId',  draggedBoardId);
-  	    sessionStorage.setItem('droppedOnBoardId',  droppedOnBoardId);
-  	  }
-  	});*/
   },
 
   boards() {
@@ -60,12 +365,49 @@ BlazeComponent.extendComponent({
       type: 'board',
     }, { sort: ['title'] });
   },
+
   folders() {
   	return Folders.find({
   	  userId: Meteor.userId()
 	  }, {
 	    sort: ['name']
 	  });
+  },
+
+  everyBoardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      archived: false, 
+    });
+  },
+
+  assignedBoardTemplates() {
+    return Boards.find({
+      type: 'template-board',
+      'members.userId': Meteor.userId(),
+      archived: false, 
+    });
+  },
+
+  isBoardTemplateAdmin() {
+  	var currentBoard = Boards.findOne({_id: this.currentData()._id});
+  	// returns true or false
+  	return currentBoard && currentBoard.members[0].isAdmin == true && currentBoard.members[0].userId == Meteor.userId();
+  },
+
+  searchedBoards() {
+  	const typedTitle = Session.get('searchingBoardTitle');
+  	if (typeof typedTitle === 'string') {
+      return Boards.find({
+      	title: {$regex: typedTitle, $options: 'i'},
+        archived: false,
+        'members.userId': Meteor.userId(),
+      }, { 
+      	sort: ['title'] 
+      });
+  	} else {
+  		return null;
+  	}
   },
 
   folderBoards() {
@@ -98,7 +440,9 @@ BlazeComponent.extendComponent({
   },
 
   uncategorisedBoards() {
-    $('a#uncategorisedBoardsFolder').trigger('click');
+    if (!$('li.myFolder').children('a.folderOpener').hasClass('selected') && !$('a#templatesFolder').hasClass('selected')) {
+      $('a#uncategorisedBoardsFolder').trigger('click');
+    }
     var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
     var categorisedBoardIds = new Array;
 
@@ -113,8 +457,14 @@ BlazeComponent.extendComponent({
       }
     }
 
-    var uncategorisedBoardsDetails = Boards.find(
-      { _id: { $nin: categorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+    var uncategorisedBoardsDetails = Boards.find({ 
+        _id: { $nin: categorisedBoardIds }, 
+        archived: false, 
+        'members.userId': Meteor.userId(), 
+        type: { 
+        	$nin: [ 'template-board', 'template-container' ]
+        },
+      }, 
       {fields: {'_id': 1}}
     ).fetch();
     var uncategorisedBoardIds = new Array();
@@ -151,7 +501,31 @@ BlazeComponent.extendComponent({
 
   events() {
     return [{
-      'click .js-add-board': Popup.open('createBoard'),
+      'click .js-add-board, click .js-add-board-template'(evt) {
+      	// First, archive any card of type "cardType-linkedBoard" whose 
+      	// Board has been archived but the card by any chance was not archived 
+      	// Then we open the targetted popup
+      	Boards.find({ 
+      		type: 'template-board',
+      		archived: true,
+      		'members.userId': Meteor.user()._id
+    		}).forEach((archivedBoard) => {
+      		var cardLinkedBoard = Cards.findOne({linkedId: archivedBoard._id});
+      		if (cardLinkedBoard && !cardLinkedBoard.archived) {
+      			Cards.update(
+    					{ _id: cardLinkedBoard._id }, 
+    					{ $set: {
+    						archived: true,
+    					} }
+    				);
+      		}
+      	});
+
+      	Popup.open('createBoard')(evt);
+      	if ($(evt.target).closest('li').hasClass('js-add-board-template')) {
+      		$('.js-new-board-title').addClass('createBoardTemplate');
+      	}
+      },
       'click .js-star-board'(evt) {
         const boardId = this.currentData()._id;
         Meteor.user().toggleBoardStar(boardId);
@@ -190,6 +564,20 @@ BlazeComponent.extendComponent({
             FlowRouter.go('home');
           }
         });
+      },
+      'click .sidebar-folder-tongue': function(e) {
+        var selector = $('.sidebar-folder-tongue').children();
+        if (selector.hasClass('fa-angle-left')) {
+          // close sidebar
+          $('.board-widget-folders').hide();
+          $('.sidebar-folder-tongue').css('left', '7px');
+        } else if (selector.hasClass('fa-angle-right')) {
+          // open sidebar
+          $('.board-widget-folders').show();
+          $('.sidebar-folder-tongue').css('left', '-8px');
+        }
+        selector.toggleClass('fa-angle-right fa-angle-left');
+        $('.board-list.clearfix').toggleClass('col-md-8 col-md-11');
       },
     }];
   },

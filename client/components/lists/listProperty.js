@@ -17,12 +17,20 @@
     super._storeDateWarnings('card-received', useDateWarnings);
   }
   
+  _storeTime(useTime) {
+    super._storeTime('card-received', useTime);
+  }
+  
   _storeColor(color) {
     super._storeColor('card-received', color);
   }
   
   hasDateWarnings() {
     return super.hasDateWarnings('card-received');
+  }
+  
+  hasTime() {
+    return super.hasTime('card-received');
   }
 }).register('editPropertyCardReceivedPopup');
 
@@ -45,12 +53,20 @@
     super._storeDateWarnings('card-start', useDateWarnings);
   }
   
+  _storeTime(useTime) {
+    super._storeTime('card-start', useTime);
+  }
+  
   _storeColor(color) {
     super._storeColor('card-start', color);
   }
   
   hasDateWarnings() {
     return super.hasDateWarnings('card-start');
+  }
+  
+  hasTime() {
+    return super.hasTime('card-start');
   }
 }).register('editPropertyCardStartPopup');
 
@@ -73,12 +89,20 @@
     super._storeDateWarnings('card-due', useDateWarnings);
   }
   
+  _storeTime(useTime) {
+    super._storeTime('card-due', useTime);
+  }
+  
   _storeColor(color) {
     super._storeColor('card-due', color);
   }
   
   hasDateWarnings() {
     return super.hasDateWarnings('card-due');
+  }
+  
+  hasTime() {
+    return super.hasTime('card-due');
   }
 }).register('editPropertyCardDuePopup');
 
@@ -101,12 +125,20 @@
     super._storeDateWarnings('card-end', useDateWarnings);
   }
   
+  _storeTime(useTime) {
+    super._storeTime('card-end', useTime);
+  }
+  
   _storeColor(color) {
     super._storeColor('card-end', color);
   }
   
   hasDateWarnings() {
     return super.hasDateWarnings('card-end');
+  }
+  
+  hasTime() {
+    return super.hasTime('card-end');
   }
 }).register('editPropertyCardEndPopup');
 
@@ -118,7 +150,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -129,12 +164,34 @@
 (class extends ListProperty {
   onCreated() {
     super.onCreated();
+    this.data().getPropertyAlias('team') && this.property.set(this.data().getPropertyAlias('team'));
+  }
+
+  onRendered() {
+    super.onRendered();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
+  }
+
+  _storePropertyAlias(alias) {
+    super._storePropertyAlias(alias, 'team');
+  }
+}).register('editPropertyCardTeamMembersPopup');
+
+(class extends ListProperty {
+  onCreated() {
+    super.onCreated();
     this.data().getPropertyAlias('labels') && this.property.set(this.data().getPropertyAlias('labels'));
   }
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -150,7 +207,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -166,7 +226,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -182,7 +245,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -198,7 +264,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -209,12 +278,34 @@
 (class extends ListProperty {
   onCreated() {
     super.onCreated();
+    this.data().getPropertyAlias('aspectsList') && this.property.set(this.data().getPropertyAlias('aspectsList'));
+  }
+
+  onRendered() {
+    super.onRendered();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
+  }
+
+  _storePropertyAlias(alias) {
+    super._storePropertyAlias(alias, 'aspectsList');
+  }
+}).register('editPropertyCardAspectsListsPopup');
+
+(class extends ListProperty {
+  onCreated() {
+    super.onCreated();
     this.data().getPropertyAlias('checklists') && this.property.set(this.data().getPropertyAlias('checklists'));
   }
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -230,7 +321,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -246,7 +340,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -262,7 +359,10 @@
 
   onRendered() {
     super.onRendered();
-    $('.color, .date-warnings').hide();
+    const selector = $('.color, .date-warnings, .use-time');
+    const breakLines = selector.siblings('br');
+    breakLines.remove();
+    selector.remove();
   }
 
   _storePropertyAlias(alias) {
@@ -418,6 +518,22 @@ Template.propertyAlias.helpers({
     super.onCreated();
     const self = this;
     self.autorun(() => {
+      self.property.set(self.data().getPropertyAlias('team'));
+    });
+  }
+    
+  events() {
+    return super.events().concat({
+      'click .js-edit-property-alias': Popup.open('editPropertyCardTeamMembers'),
+    });
+  }
+}).register('propertyCardTeamMembers');
+
+(class extends PropertyAliasForm {
+  onCreated() {
+    super.onCreated();
+    const self = this;
+    self.autorun(() => {
       self.property.set(self.data().getPropertyAlias('labels'));
     });
   }
@@ -492,6 +608,22 @@ Template.propertyAlias.helpers({
     });
   }
 }).register('propertyCardAssignedBy');
+
+(class extends PropertyAliasForm {
+  onCreated() {
+    super.onCreated();
+    const self = this;
+    self.autorun(() => {
+      self.property.set(self.data().getPropertyAlias('aspectsList'));
+    });
+  }
+      
+  events() {
+    return super.events().concat({
+      'click .js-edit-property-alias': Popup.open('editPropertyCardAspectsList'),
+    });
+  }
+}).register('propertyCardAspectsList');
 
 (class extends PropertyAliasForm {
   onCreated() {

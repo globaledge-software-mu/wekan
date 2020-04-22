@@ -1,6 +1,7 @@
 *~
 *.swp
-.meteor-spk
+!/.meteor/
+/.meteor/local/**
 *.sublime-workspace
 tmp/
 node_modules/
@@ -33,3 +34,4 @@ versions.json
 .Trashes
 Thumbs.db
 ehthumbs.db
+dump

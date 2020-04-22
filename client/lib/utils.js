@@ -145,6 +145,54 @@ Utils = {
     });
   },
 
+	// Method to help in re-initialising the draggables for the Labels
+  turnLabelsToDraggables() {
+    $('div.minicard-label').draggable({
+      helper: 'clone',
+      appendTo: 'body',
+      start: function(event, ui) {
+      	ui.helper.css('width', '11px');
+      	ui.helper.css('height', '11px');
+      	ui.helper.addClass('dragging-clone');
+      },
+      drag: function(event, ui) {},
+      stop: function(event, ui) {
+      	// Call method to re-initialise the draggables for the Labels
+        Utils.turnLabelsToDraggables();
+
+      	// Initialise outside of minicard-wrapper to be droppable for 
+      	// minicard-label so that we can remove the minicard-label
+      	Utils.turnAllToDroppableExceptMinicardWrapperElements();
+      }
+    });
+  },
+
+	// Initialise outside of minicard-wrapper to be droppable for 
+	// minicard-label so that we can remove the minicard-label when
+	// it is dropped ouside of a minicard
+  turnAllToDroppableExceptMinicardWrapperElements() {
+    $('.list, .minicards, .placeholder, .js-card-composer, .list-header, .sidebar-content').droppable({
+      accept: '.minicard-label',
+      drop(event, ui) {
+        const labelId = Blaze.getData(ui.draggable.get(0))._id;
+    		const sourceCardId = ui.draggable.closest('.minicard-wrapper').find('.minicard-title').data('card-id');
+    		if ( $(this).hasClass('minicard-wrapper') || $(this).parents('minicard-wrapper').hasClass('minicard-wrapper') ) { 
+    			// have to return false since the color-label was dropped onto a minicard
+    			return false; 
+  			} else {
+          // Remove color-label from minicard
+        	Cards.update({
+    				_id: sourceCardId
+    			}, {
+    				$pull: {
+    					labelIds: labelId, 
+  					} 
+    			});
+  			}
+      },
+    });
+  },
+
   manageCustomUI(){
     Meteor.call('getCustomUI', (err, data) => {
       if (err && err.error[0] === 'var-not-exist'){

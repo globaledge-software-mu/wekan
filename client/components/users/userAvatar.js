@@ -1,3 +1,25 @@
+Template.userAvatar.onCreated(() => {
+  // This is part 1 of 2 of the subscription to the collections
+  // It important to have both parts as otherwise we will not
+  // be able to fetch the collections correctly in the model Cards
+  // of its method unassignTeamMember
+  Meteor.subscribe('team_members_scores');
+  Meteor.subscribe('team_members_aspects');
+});
+
+Template.userAvatar.onRendered(() => {
+  // This is part 2 of 2 of the subscription to the collections
+  // It important to have both parts as otherwise we will not
+  // be able to fetch the collections correctly in the model Cards
+  // of its method unassignTeamMember
+  Meteor.subscribe('team_members_scores');
+  Meteor.subscribe('team_members_aspects');
+
+  const selector = $('.card-details-item-teamMembers').find('.member.js-member');
+  selector.addClass('team-member');
+  selector.css('cursor', 'default');
+});
+
 Template.userAvatar.helpers({
   userData() {
     // We need to handle a special case for the search results provided by the
@@ -8,6 +30,7 @@ Template.userAvatar.helpers({
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId, {
       fields: {
+      	_id: 1,
         profile: 1,
         username: 1,
       },
@@ -38,9 +61,68 @@ Template.userAvatar.events({
 });
 
 Template.userAvatarInitials.helpers({
+	currentUserId() {
+		return this.userId;
+	},
+
   initials() {
     const user = Users.findOne(this.userId);
-    return user && user.getInitials();
+    if (user) {
+      var userInitials = user.getInitials();
+      if (userInitials.length > 3) {
+      	userInitials = userInitials.substring(0,3);
+      }
+      return user && userInitials;
+    }
+    return null;
+  },
+
+  oneInitial() {
+    const user = Users.findOne(this.userId);
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 1) {
+	    	return true;
+	    }
+	  	return false;
+    }
+    return null;
+  },
+
+  twoInitials() {
+    const user = Users.findOne(this.userId);
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 2) {
+	    	return true;
+	    }
+	  	return false;
+    }
+    return null;
+  },
+
+  threeInitials() {
+    const user = Users.findOne(this.userId);
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length == 3) {
+	    	return true;
+	    }
+	  	return false;
+    }
+    return null;
+  },
+
+  moreThanThreeInitials() {
+    const user = Users.findOne(this.userId);
+    if (user) {
+	    var userInitials = user.getInitials();
+	    if (userInitials.length > 3) {
+	    	return true;
+	    }
+	  	return false;
+    }
+    return null;
   },
 
   viewPortWidth() {
@@ -150,6 +232,47 @@ Template.cardMembersPopup.events({
     const card = Cards.findOne(Session.get('currentCard'));
     const memberId = this.userId;
     card.toggleMember(memberId);
+    evt.preventDefault();
+  },
+});
+
+Template.cardTeamMembersPopup.helpers({
+  isCardTeamMember() {
+    const card = Template.parentData();
+    const cardTeamMembers = card.getTeamMembers();
+
+    return _.contains(cardTeamMembers, this._id);
+  },
+
+  hasEligibleFutureTeamUsers() {
+  	const card = Cards.findOne(this._id);
+    if (card && card._id) {
+    	const teamUsers = card.getTeamUsers();
+      if (teamUsers.count() > 0) {
+      	return true;
+      } else {
+      	return false;
+      }
+    } else {
+    	return false;
+    }
+  },
+
+  teamUsers() {
+  	const card = Cards.findOne(this._id);
+    return card.getTeamUsers();
+  },
+
+  user() {
+    return Users.findOne(this._id);
+  },
+});
+
+Template.cardTeamMembersPopup.events({
+  'click .js-select-teamMember'(evt) {
+    const card = Cards.findOne(Session.get('currentCard'));
+    const teamMemberId = this._id;
+    card.toggleTeamMember(teamMemberId);
     evt.preventDefault();
   },
 });

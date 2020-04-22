@@ -518,6 +518,7 @@ export class WekanCreator {
         listId: this.lists[property.listId],
         alias: property.alias,
         useDateWarnings: property.useDateWarnings,
+        useTime: property.useTime,
         color: property.color,
       };
       // dateLastActivity will be set from activity insert, no need to

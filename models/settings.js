@@ -73,9 +73,8 @@ Settings.helpers({
   },
 });
 Settings.allow({
-  update(userId) {
-    const user = Users.findOne(userId);
-    return user && user.isAdmin;
+  update() {
+    return true;
   },
 });
 
@@ -167,6 +166,7 @@ if (Meteor.isServer) {
   }
 
   Meteor.methods({
+    // Invite User(s) to Board(s). Currently since we are NOT allowing self-registration we are not using this method
     sendInvitation(emails, boards) {
       check(emails, [String]);
       check(boards, [String]);

@@ -44,9 +44,17 @@ template(name="membersWidget")
         if currentUser.isBoardMember
           a.member.add-member.sandstorm-powerbox-request-identity
             i.fa.fa-plus
-      else if currentUser.isBoardAdmin
-        a.member.add-member.js-manage-board-members
-          i.fa.fa-plus
+      else 
+        if currentUser.adminOrManagerCanAssignTemplate
+          a.member.add-member.js-manage-board-members
+            i.fa.fa-plus
+        else 
+          if currentUser.isBoardAdmin
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
+          else if currentUser.isBoardMemberAndCoach
+            a.member.add-member.js-manage-board-members
+              i.fa.fa-plus
       .clearfix
   if isInvited
     hr
@@ -147,7 +155,7 @@ template(name="outgoingWebhooksPopup")
 
 template(name="boardMenuPopup")
   ul.pop-over-list
-    if currentUser.hasPermission 'customization' 'update'
+    if currentUser.canCustomiseFields
       li: a.js-custom-fields {{_ 'custom-fields'}}
     li: a.js-open-archives {{_ 'archived-items'}}
     if currentUser.isBoardAdmin
@@ -222,10 +230,16 @@ template(name="memberPopup")
             | {{_ 'change-permissions'}}
             span.quiet (#{memberType})
       li
-        if $eq currentUser._id userId
-          a.js-leave-member {{_ 'leave-board'}}
-        else if currentUser.isBoardAdmin
-          a.js-remove-member {{_ 'remove-from-board'}}
+        if currentUser.isBoardTemplate
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isAdminOrManager
+            a.js-remove-member {{_ 'remove-from-board'}}
+        else
+          if $eq currentUser._id userId
+            a.js-leave-member {{_ 'leave-board'}}
+          else if currentUser.isBoardAdmin
+            a.js-remove-member {{_ 'remove-from-board'}}
 
 
 template(name="removeMemberPopup")
@@ -238,6 +252,10 @@ template(name="leaveBoardPopup")
 
 template(name="addMemberPopup")
   .js-search-member
+    p.error.hide.valid-email-not-entered.invite-not-sent
+      | {{_ 'error-valid-email-not-entered'}}
+    p.error.hide.email-taken.invite-not-sent
+      | {{_ 'error-email-taken'}}
     +esInput(index="users")
 
   if loading.get
@@ -262,7 +280,25 @@ template(name="addMemberPopup")
       +ifEsHasNoResults(index="users")
         .manage-member-section
           p.quiet {{_ 'no-results'}}
-    button.js-email-invite.primary.full {{_ 'email-invite'}}
+        hr
+        unless currentUser.isCoachee
+          .js-set-role
+            label
+              | {{_ 'role'}}
+              span.error.hide.role-not-selected.invite-not-sent
+                | {{_ 'error-role-not-selected'}}
+              +roleOptions
+        if currentUser.hasMultipleUsableUserQuotaGroups
+          label
+            | {{_ 'choose-specific-quota-to-use'}}
+            select.choose-specific-quota-to-use
+              option(value='', selected='selected') Select One
+              each usableBoardsQuotaGroup in currentUser.usableUsersQuotaGroups
+                option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
+          if loadingAfterSelectedRole.get
+            +spinner
+          // Invite directly from board's sidebar
+          button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

@@ -213,6 +213,10 @@ Users.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+  roleName: {
+    type: String,
+    optional: true,
+  },
   createdThroughApi: {
     /**
      * was the user created through the API?
@@ -235,12 +239,26 @@ Users.attachSchema(new SimpleSchema({
     optional: false,
     defaultValue: 'password',
   },
+  quotaGroupId: {
+	  type: String,
+	  optional: true,
+  },
+	createdBy: {
+	  type: String,
+	  optional: true,
+    autoValue() {
+      if (this.isInsert) {
+        return Meteor.user()._id;
+      } else {
+        this.unset();
+      }
+    },
+	},
 }));
 
 Users.allow({
-  update(userId) {
-    const user = Users.findOne(userId);
-    return user && Meteor.user().isAdmin;
+  update() {
+    return true;
   },
   remove(userId, doc) {
     const adminsNumber = Users.find({ isAdmin: true }).count();
@@ -272,6 +290,41 @@ if (Meteor.isClient) {
       return board && board.hasMember(this._id);
     },
 
+    isBoardTemplate() {
+      const board = Boards.findOne({
+      	_id: Session.get('currentBoard'),
+      	type: 'template-board'
+      });
+      if (board) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    getRoleColor(user_id) {
+    	var handler1 = Meteor.subscribe('users');
+    	var handler2 = Meteor.subscribe('role_colors');
+
+    	if (handler1.ready() && handler2.ready()) {
+        var boardUser = Users.findOne({_id: user_id});
+        if (boardUser && boardUser.isAdmin && boardUser.isAdmin == true) {
+        	var roleColor = RoleColors.findOne({ userType: {$exists: true, $eq: 'admin'} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        } else if (boardUser && boardUser.roleId) {
+        	var roleColor = RoleColors.findOne({ roleId: {$exists: true, $eq: boardUser.roleId} });
+        	if (roleColor && roleColor.color) {
+            return roleColor.color;
+        	}
+        	return 'darkkhaki';
+        }
+        return 'darkkhaki';
+    	}
+    },
+
     isNotNoComments() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasMember(this._id) && !board.hasNoComments(this._id);
@@ -292,9 +345,234 @@ if (Meteor.isClient) {
       return board && board.hasCommentOnly(this._id);
     },
 
+    hasMultipleUsableUserQuotaGroups() {
+    	var handler1 = Meteor.subscribe('assigned_user_groups');
+    	var handler2 = Meteor.subscribe('user_groups');
+    	if (handler1.ready() && handler2.ready()) {
+      	var usableUserQuotaGroups = 0;
+        AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+        	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+        	if (userGroup && userGroup._id) {
+        		const unusedQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+        		if (unusedQuota > 0) {
+        			usableUserQuotaGroups++;
+        		}
+        	}
+        });
+        if (usableUserQuotaGroups > 1) {
+          return true;
+        }
+        return false;
+    	}
+      return false;
+    },
+
+    hasMultipleUsableBoardQuotaGroups() {
+    	var handler1 = Meteor.subscribe('assigned_user_groups');
+    	var handler2 = Meteor.subscribe('user_groups');
+    	if (handler1.ready() && handler2.ready()) {
+      	var usableBoardQuotaGroups = 0;
+        AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+        	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+        	if (userGroup && userGroup._id) {
+        		const unusedQuota = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+        		if (unusedQuota > 0) {
+        			usableBoardQuotaGroups++;
+        		}
+        	}
+        });
+        if (usableBoardQuotaGroups > 1) {
+          return true;
+        }
+        return false;
+    	}
+      return false;
+    },
+
+    usableUsersQuotaGroups() {
+      const usableUsersQuotaUserGroupsIds = new Array();
+      AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {
+      	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+      	if (userGroup && userGroup._id) {
+      		var unusedUsersQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+      		if (unusedUsersQuota > 0) {
+      			usableUsersQuotaUserGroupsIds.push(userGroup._id);
+      		}
+      	}
+      });
+      return UserGroups.find({_id: {$in: usableUsersQuotaUserGroupsIds}});
+    },
+
+    usableBoardsQuotaGroups() {
+      const usableBoardsQuotaUserGroupsIds = new Array();
+      AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {
+      	const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+      	if (userGroup && userGroup._id) {
+      		var unusedBoardsQuota = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+      		if (unusedBoardsQuota > 0) {
+      			usableBoardsQuotaUserGroupsIds.push(userGroup._id);
+      		}
+      	}
+      });
+      return UserGroups.find({_id: {$in: usableBoardsQuotaUserGroupsIds}});
+    },
+
     isBoardAdmin() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasAdmin(this._id);
+    },
+
+    isCoach() {
+      var coachRole = Roles.findOne({name: 'Coach'});
+      if (coachRole && coachRole._id) {
+        var coach = Users.find({_id: this._id, roleId: coachRole._id});
+        if (coach.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isCoachee() {
+      var coacheeRole = Roles.findOne({name: 'Coachee'});
+      if (coacheeRole && coacheeRole._id) {
+        var coachee = Users.find({_id: this._id, roleId: coacheeRole._id});
+        if (coachee.count() == 1) {
+        	return true;
+        }
+        return false;
+      }
+      return false;
+    },
+
+    isBoardMemberAndCoach() {
+      const board = Boards.findOne(Session.get('currentBoard'));
+      return board && board.hasMember(this._id) && this.isCoach();
+    },
+
+    // is Admin, Manager or Coach
+    isAuthorised() {
+      var isAllowed = false;
+      var roles = Roles.find({ 
+        $or: [
+          { name: 'Manager' }, 
+          { name: 'Coach' }
+        ] 
+      }).fetch();
+      const LoggedUserRoleId = Meteor.user().roleId;
+      if (roles && roles.length) {
+        for (var i = 0; i < roles.length; i++) {
+          if (LoggedUserRoleId === roles[i]._id) {
+            isAllowed = true;
+          }
+        }
+      }
+      if (Meteor.user().isAdmin || isAllowed) {
+        return true;
+      }
+      return false;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+    },
+
+    isAdminOrManager() {
+    	var allow = false;
+      if ( Meteor.user().isAdmin ) {
+      	allow = true;
+		  }
+      var manager = Roles.findOne({name: 'Manager'});
+      if (manager && manager._id) {
+      	var managerId = manager._id;
+        if ( Meteor.user().isAdmin || (manager && Meteor.user().roleId == manager._id) ) {
+        	allow = true;
+  		  }
+      }
+      return allow;
+    },
+
+    isCoachOrCoachee() {
+      var coachOrCoachee = Roles.find( { name: { $in: [ 'Coach', 'Coachee' ] } } ).fetch();
+      if (coachOrCoachee && 
+      		coachOrCoachee[0] && 
+      		coachOrCoachee[0]._id && 
+      		( coachOrCoachee[0]._id == this.roleId || coachOrCoachee[1]._id == this.roleId	)
+  		) {
+		    return true;
+		  } else {
+	      return false;
+		  }
+    },
+
+    isManagerAndNotAdmin() {
+      const manager = Roles.findOne({ name: 'Manager' });
+      const managerAndNotAdmin = Users.findOne({ _id: Meteor.user()._id, roleId: manager._id, isAdmin: false });
+      if (managerAndNotAdmin) {
+        return true;
+      }
+      return false;
+    },
+
+    isCoachAndNotAdmin() {
+      const coach = Roles.findOne({ name: 'Coach' });
+      const coachAndNotAdmin = Users.find({ 
+      	_id: Meteor.user()._id, 
+      	roleId: coach._id, 
+      	$or: [ 
+      		{ isAdmin: { $exists: false } }, 
+      		{ isAdmin: false } 
+  			]
+    	});
+      if (coachAndNotAdmin && coachAndNotAdmin.count() > 0) {
+        return true;
+      }
+      return false;
+    },
+
+    regularBoard() {
+    	return this.isBoardMember() && !this.isCommentOnly() && !this.isBoardTemplate();
+    },
+
+    isBoardTemplateAdmin() {
+    	return this.isBoardTemplate() && this.isBoardAdmin();
+    },
+
+    canAlterCard() {
+      if ( this.regularBoard() || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    adminOrManagerCanAssignTemplate() {
+      if ( this.isAdminOrManager() && this.isBoardTemplate() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canAddList() {
+    	if ( ( this.hasPermission('lists', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
+    },
+
+    canSeeAddCard() {
+      if ( ( this.hasPermission('cards', 'insert') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
+    canCustomiseFields() {
+    	if ( ( this.hasPermission('customization', 'update') && this.regularBoard() ) || this.isBoardTemplateAdmin() ) {
+        return true;
+    	} else {
+        return false;
+    	}
     },
 
     hasPermission(group, access) {
@@ -306,7 +584,91 @@ if (Meteor.isClient) {
         return false;
       }
       return role.hasPermission(group, access);
-    }
+    },
+
+  	removeBoardFromFolder(boardIdentifier, targetFolder, targetFolderId) {
+      var boardIds = new Array;
+      var folderContents = targetFolder.contents;
+  		if (folderContents) {
+    		for (var t = 0; t < _.keys(folderContents).length; t++) {
+        	if (folderContents[t].boardId !== boardIdentifier) {
+    	      boardIds.push(folderContents[t].boardId);
+    	    }
+    		}
+  		}
+      
+      Folders.update(
+        { _id : targetFolderId }, 
+        { $unset: { contents : '' } }
+      );
+      for (var z = 0; z < boardIds.length; z++) {
+        var keyName = 'contents.' + z + '.boardId';
+        Folders.update(
+          { _id: targetFolderId },
+          { $set: { [keyName] : boardIds[z] } }
+        );
+      }
+    },
+
+    changeBoardToRegular(boardIdentifier) {
+      Boards.update(
+        { _id: boardIdentifier },
+        { $set: { 
+        		type : 'board' 
+        	},
+        }
+      );
+
+      // removing the board template linked card and swimlane docs, since the 
+      // board that it represented has been changed to a regular one
+      var linkedCard = Cards.findOne({
+      	linkedId: boardIdentifier,
+      	type: 'cardType-linkedBoard',
+    	});
+      if (linkedCard && linkedCard._id) {
+        Cards.remove(linkedCard._id);
+      }
+    },
+
+    addEveryAdminAndManagerToBoard(boardIdentifier) {
+      // make every admin and manager of the system a member of the template
+      var managerRole = Roles.findOne({name: 'Manager'});
+      var managerRoleId = null;
+      if (managerRole && managerRole._id) {
+      	managerRoleId = managerRole._id;
+      }
+      var adminsOrManagers = Users.find({
+      	$or: [ 
+      		{ isAdmin: true }, 
+      		{ roleId: managerRoleId } 
+    		]
+      });
+  		var boardTemplateMembers = (Boards.findOne({_id: boardIdentifier})).members;
+    	adminsOrManagers.forEach((adminOrManager) => {
+    		var adminOrManagerId = adminOrManager._id; 
+  			isMember = false;
+    		boardTemplateMembers.forEach((boardTemplateMember) => {
+      		if (boardTemplateMember.userId == adminOrManagerId) {
+      			isMember = true;
+      		}
+        });
+    		if (isMember === false) {
+          Boards.update(
+            { _id: boardIdentifier },
+            { $push: {
+	              members: {
+	                userId: adminOrManagerId,
+	                isAdmin: false,
+	                isActive: true,
+	                isCommentOnly: false,
+	              },
+	            },
+            }
+          );
+    		}
+      });
+    },
+
   });
 }
 
@@ -396,6 +758,7 @@ Users.helpers({
   remove() {
     User.remove({ _id: this._id});
   },
+
 });
 
 Users.mutations({
@@ -507,6 +870,7 @@ Users.mutations({
 Meteor.methods({
   setUsername(username, userId) {
     check(username, String);
+    check(userId, String);
     const nUsersWithUsername = Users.find({username}).count();
     if (nUsersWithUsername > 0) {
       throw new Meteor.Error('username-already-taken');
@@ -524,6 +888,7 @@ Meteor.methods({
   },
   setEmail(email, userId) {
     check(email, String);
+    check(userId, String);
     const existingUser = Users.findOne({'emails.address': email}, {fields: {_id: 1}});
     if (existingUser) {
       throw new Meteor.Error('email-already-taken');
@@ -556,22 +921,151 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+
+  	mailNewSubscriptionSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
+  	mailSubscriptionRenewalSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
+  	mailSubscriptionUpgradeSuccess(subscriberEmail, lang, params) {
+      check(subscriberEmail, String);
+      check(lang, String);
+      check(params, Object);
+
+	    try {
+	      Email.send({
+	        to: subscriberEmail,
+	        from: Accounts.emailTemplates.from,
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-subject', params, lang), 
+	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-text', params, lang),
+	      });
+	      return {output: 'success'};
+	    } catch (e) {
+	      return {output: new Meteor.Error('email-fail', e.message)};
+	    }
+  	},
+
+  	createNewUser(params) {
+      check(params, Object);
+
+      const username = params.username;
+      const email = params.email;
+
+      // create new user 
+      const newUserId = Accounts.createUser({username, email});
+
+      // update new user's details
+    	Users.update(
+  			{ _id: newUserId },
+  			{ $set: {
+          'profile.fullname': params.fullname,
+          'isAdmin': params.isAdmin === 'true',
+          'roleId': params.roleId,
+          'roleName': params.roleName,
+          'loginDisabled': false,
+          'authenticationMethod': 'password',
+  			} }
+			);
+      // Check if the user had selected any specific user group's quota to use or not!
+  		const userGroup = UserGroups.findOne({_id: params.quotaGroupId});
+  		if (userGroup && userGroup._id) {
+  			var usedQuota = userGroup.usedUsersQuota  + 1;
+  			// Update usedUsersQuota in UserGroups
+  			UserGroups.update(
+					{ _id: userGroup._id }, 
+					{ $set: { usedUsersQuota: usedQuota } }
+				);
+  			// Update quotaGroupId in Users
+  			Users.update(
+					{ _id: newUserId }, 
+					{ $set: { quotaGroupId: userGroup._id } }
+				);
+  		} else {
+      	const userAssignedUserGroups = AssignedUserGroups.find({ userId: Meteor.userId }, {$sort: {groupOrder: 1}} ).fetch();
+      	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+      		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+      		if (userGroup && userGroup._id) {
+        		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+        		if (quotaDifference > 0) {
+        			var usedQuota = userGroup.usedUsersQuota  + 1;
+        			// Update usedUsersQuota in UserGroups
+        			UserGroups.update(
+      					{ _id: userGroup._id }, 
+      					{ $set: { usedUsersQuota: usedQuota } }
+      				);
+        			// Update quotaGroupId in Users
+        			Users.update(
+      					{ _id: userAssignedUserGroups[i].userId }, 
+      					{ $set: { quotaGroupId: userGroup._id } }
+      				);
+        			break;
+        		}
+      		}
+      	};
+      }
+
+      // Send new user invite to complete registration by adding his password
+      Accounts.sendEnrollmentEmail(newUserId);
+
+      return newUserId;
+  	},
+
     // we accept userId, username, email
-    inviteUserToBoard(username, boardId) {
+    inviteUserToBoard(username, boardId, roleId, selectedUserGroupId) {
       check(username, String);
       check(boardId, String);
+      check(roleId, String);
+      check(selectedUserGroupId, String);
 
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
-      const allowInvite = inviter &&
-        board &&
-        board.members &&
-        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
-        _.where(board.members, {userId: inviter._id})[0].isActive &&
-        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      var allowInvite;
+      if (board.type = 'template-board') {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive;
+      } else {
+	      allowInvite = inviter &&
+	        board &&
+	        board.members &&
+	        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+	        _.where(board.members, {userId: inviter._id})[0].isActive &&
+	        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+      }
       if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
-
-      this.unblock();
 
       const posAt = username.indexOf('@');
       let user = null;
@@ -580,16 +1074,62 @@ if (Meteor.isServer) {
       } else {
         user = Users.findOne(username) || Users.findOne({username});
       }
+
+      var continueExecution = true;
+      var removedUnconfirmedUser = false;
       if (user) {
-        if (user._id === inviter._id) throw new Meteor.Error('error-user-notAllowSelf');
-      } else {
+        continueExecution = false;
+
+        if (user._id !== inviter._id) {
+          board.addMember(user._id);
+          user.addInvite(boardId);
+          
+          // If its a user that was already invited and has already set its own password, 
+          // we just send the invite to join the board
+          if (user && user.services && user.services.password && user.services.password.bcrypt) {
+
+            // Send Invite 'Login To Accept Invite To Board'
+            try {
+              const params = {
+                user: user.username,
+                inviter: inviter.username,
+                board: board.title,
+                url: board.absoluteUrl(),
+              };
+              const lang = user.getLanguage();
+              Email.send({
+                to: user.emails[0].address.toLowerCase(),
+                from: Accounts.emailTemplates.from,
+                subject: TAPi18n.__('email-invite-subject', params, lang),
+                text: TAPi18n.__('email-invite-text', params, lang),
+              });
+            } catch (e) {
+              throw new Meteor.Error('email-fail', e.message);
+            }
+            
+          } else {
+            Users.remove(user._id);
+            removedUnconfirmedUser = true;
+            continueExecution = true;
+          }
+
+        } else {
+        	throw new Meteor.Error('error-user-notAllowSelf');
+        }
+      } 
+
+      if (continueExecution) {
         if (posAt <= 0) throw new Meteor.Error('error-user-doesNotExist');
         if (Settings.findOne().disableRegistration) throw new Meteor.Error('error-user-notCreated');
         // Set in lowercase email before creating account
         const email = username.toLowerCase();
         username = email.substring(0, posAt);
+        // Create user doc
         const newUserId = Accounts.createUser({username, email});
-        if (!newUserId) throw new Meteor.Error('error-user-notCreated');
+        if (!newUserId) {
+        	throw new Meteor.Error('error-user-notCreated');
+        }
+
         // assume new user speak same language with inviter
         if (inviter.profile && inviter.profile.language) {
           Users.update(newUserId, {
@@ -598,33 +1138,120 @@ if (Meteor.isServer) {
             },
           });
         }
+
+        if (!removedUnconfirmedUser) {
+          // Have the document UserGroup, which's field usersQuota was used for this addition, gets its field usedUsersQuota updated
+          // And update the user's field quotaGroupId with the _id of the UserGroup which's quota was used.
+          var updateUsingDefaultGroupOrder = false;
+          // Check if the user had selected any specific user group's quota to use or not!
+          var quotaGroupId = null;
+          if (selectedUserGroupId.length > 0) {
+            quotaGroupId = selectedUserGroupId;
+            const userGroup = UserGroups.findOne({_id: quotaGroupId});
+            if (userGroup && userGroup._id) {
+              const usableQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+              if (usableQuota > 0) {
+                var usedQuota = userGroup.usedUsersQuota  + 1;
+                // Update usedUsersQuota in UserGroups
+                UserGroups.update(
+                  { _id: userGroup._id }, 
+                  { $set: { usedUsersQuota: usedQuota } }
+                );
+
+                // Update quotaGroupId in Users
+                Users.update(
+                  { _id: newUserId }, 
+                  { $set: { quotaGroupId: userGroup._id } }
+                );
+
+                // Assigned the newly created user to the same user group which's quota was used to create him/her
+                AssignedUserGroups.insert({
+                  userId: newUserId,
+                  userGroupId: userGroup._id,
+                  groupOrder: 1,
+                });
+              } 
+              // Have to add this else here as the settings tab of the admin panel also use this method to create users
+              // and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
+              // and let's say the selected usergroup has only 2 usable usersQuota and the user had input 4 e-mails to create 4 users
+              // so then the system would create the first two users using the selected user group and the rest of the users shall be 
+              // created using the default system check for the order of the user's userGroups based on its usable usersQuota
+              else {
+                updateUsingDefaultGroupOrder = true;
+              }
+            }
+          } else {
+            updateUsingDefaultGroupOrder = true;
+          }
+          if (updateUsingDefaultGroupOrder) {
+            const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
+            var hadUsableQuota = false;
+            for (var i = 0; i < userAssignedUserGroups.length; i++) {
+              const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+              if (userGroup && userGroup._id) {
+                var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
+                if (quotaDifference > 0) {
+                  var usedQuota = userGroup.usedUsersQuota  + 1;
+                  // Update usedUsersQuota in UserGroups
+                  UserGroups.update(
+                    { _id: userGroup._id }, 
+                    { $set: { usedUsersQuota: usedQuota } }
+                  );
+
+                  // Update quotaGroupId in Users
+                  Users.update(
+                    { _id: newUserId }, 
+                    { $set: { quotaGroupId: userGroup._id } }
+                  );
+
+                  // Assigned the newly created user to the same user group which's quota was used to create him/her
+                  AssignedUserGroups.insert({
+                    userId: newUserId,
+                    userGroupId: userGroup._id,
+                    groupOrder: 1,
+                  });
+
+                  hadUsableQuota = true;
+                  break;
+                }
+              }
+            };
+          }
+        }
+        
+        if (!hadUsableQuota) {
+          Users.remove(newUserId);
+          throw new Meteor.Error('Email not sent as could not create user due to lack of quota');
+        }
+
+        // Send Enrollment Email
         Accounts.sendEnrollmentEmail(newUserId);
         user = Users.findOne(newUserId);
+
+        board.addMember(user._id);
+        user.addInvite(boardId);
+
+        // If roleId is not null, update the newly created user's role
+        if (roleId) {
+          const role = Roles.findOne({_id: roleId});
+        	var roleName = null;
+          if (user && role && role.name) {
+          	roleName = role.name;
+            Users.update(
+          		{ _id: newUserId }, 
+          		{ $set: 
+          			{ roleId: roleId, roleName: roleName } 
+          		}
+        		);
+          }
+        }
       }
 
-      board.addMember(user._id);
-      user.addInvite(boardId);
-
-      try {
-        const params = {
-          user: user.username,
-          inviter: inviter.username,
-          board: board.title,
-          url: board.absoluteUrl(),
-        };
-        const lang = user.getLanguage();
-        Email.send({
-          to: user.emails[0].address.toLowerCase(),
-          from: Accounts.emailTemplates.from,
-          subject: TAPi18n.__('email-invite-subject', params, lang),
-          text: TAPi18n.__('email-invite-text', params, lang),
-        });
-      } catch (e) {
-        throw new Meteor.Error('email-fail', e.message);
-      }
-      return {username: user.username, email: user.emails[0].address};
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
+
   });
+
   Accounts.onCreateUser((options, user) => {
     const userCount = Users.find().count();
     if (userCount === 0) {
@@ -698,11 +1325,88 @@ if (Meteor.isServer) {
 }
 
 if (Meteor.isServer) {
-  // Let mongoDB ensure username unicity
   Meteor.startup(() => {
+  	
+  	// Find any duplicate board members in a board and cleanup the duplicate
+  	Boards.find().forEach((board) => {
+    	const memberIds = new Array();
+  		board.members.forEach((member) => {
+  			memberIds.push(member.userId);
+  		});
+      if (memberIds.length > 1) {
+    		for (var i = 0; i < memberIds.length; i++) {
+      	  var AA = {};
+      		AA[i] = memberIds.slice();
+      		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
+    			const elementToBeRemovedUserId = memberIds[i]; 
+      	  if (AA[i].includes(elementToBeRemovedUserId)) {
+      	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
+      	  	const elementToBeRemovedIsActive = board.members[i].isActive;
+      	  	const elementToBeRemovedIsNoComments = board.members[i].isNoComments;
+      	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
+      	  	Boards.update(
+    	  			{ _id: board._id },
+              { $pull: 
+              	{ members: 
+              		{ userId: elementToBeRemovedUserId, },
+              	},
+              }
+      	  	);
+      	  	Boards.update(
+    	  			{ _id: board._id }, {
+    	  				$push: {
+              		members: {
+              			userId: elementToBeRemovedUserId, 
+              			isAdmin: elementToBeRemovedIsAdmin, 
+              			isActive: elementToBeRemovedIsActive, 
+              			isNoComments: elementToBeRemovedIsNoComments, 
+              			isCommentOnly: elementToBeRemovedIsCommentOnly,
+              		},
+              	},
+              }
+      	  	);
+      	  }
+    		}
+      }
+  	});
+    //____________________________________
+  	
+  	
+    // Let mongoDB ensure username unicity
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
+    //____________________________________
+  	
+  	
+    // Let mongoDB ensure username unicity
+    UserGroups._collection._ensureIndex({
+      title: 1,
+    }, {unique: true});
+    //____________________________________
+
+
+    // Cleanup old boards of all the non-existing users as members
+    const allBoards = Boards.find({archived: false});
+    allBoards.forEach((board) => {
+    	if (board.members.length > 0) {
+    		board.members.forEach((member) => {
+    			const existingUser = Users.find({_id: member.userId});
+    			if (existingUser.count() < 1) {
+    				Boards.update(
+  						{ _id: board._id },
+  						{ $pull: {
+  							members: {
+  								userId: member.userId
+  							}
+  						} }
+						);
+    			}
+    		});
+    	}
+    });
+    //____________________________________
+  	
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,
@@ -722,12 +1426,102 @@ if (Meteor.isServer) {
   //    });
   //});
 
+  Users.before.insert((insertorId) => {
+
+  	function defaultTrialUsersQuota() {
+      return 5;
+    }
+
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	and whether he has exhausted his default trial quota
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
+  	// If user has any AssignedUserGroup
+  	if (userAssignedUserGroups.count() > 0) {
+  		var usersQuotaLeft = 0;
+  		userAssignedUserGroups.forEach((assignedUserGroup) => {
+  			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+  			if (userGroup && userGroup.usersQuota) {
+  				usersQuotaLeft += userGroup.usersQuota - userGroup.usedUsersQuota
+  			}
+  		});
+  		if (usersQuotaLeft > 0) {
+  			return true;
+  		} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+  		}
+  	} 
+  	// Else we check with the Default Trial 'Users Quota'
+  	else {
+    	const usersCreatedByCurrentUserCount = Users.find({createdBy: insertorId}).count();
+			if (usersCreatedByCurrentUserCount < defaultTrialUsersQuota()) {
+				return true;
+			} else {
+	      throw new Meteor.Error('error-exhausted-users-quota');
+			}
+  	}
+
+  });
+
+  Users.before.remove((userId, doc) => {
+  	var assignedUGIds = new Array();
+    AssignedUserGroups.find({userId: doc._id}).forEach((assignedUG) => {
+    	assignedUGIds.push(assignedUG._id);
+    });
+    for (var i = 0; i < assignedUGIds.length;  i++) {
+    	AssignedUserGroups.remove({_id: assignedUGIds[i]._id});
+    }
+  });
+
   // Each board document contains the de-normalized number of users that have
   // starred it. If the user star or unstar a board, we need to update this
   // counter.
   // We need to run this code on the server only, otherwise the incrementation
   // will be done twice.
   Users.after.update(function (userId, user, fieldNames) {
+
+  	// When a user doc is updated, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = user.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	var userIsManager = false;
+    	if (user.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		var isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === user._id) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    userId: user._id,
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
+
+
     // The `starredBoards` list is hosted on the `profile` field. If this
     // field hasn't been modificated we don't need to run this hook.
     if (!_.contains(fieldNames, 'profile'))
@@ -838,6 +1632,46 @@ if (Meteor.isServer) {
   }
 
   Users.after.insert((userId, doc) => {
+
+  	// When a new user is created, if his role is Admin or manager, 
+  	// make him a member of all the template boards of which he was not a member before
+  	const templateBoards = Boards.find({
+      type: 'template-board',
+      archived: false, 
+  	});
+  	const userIsAdmin = doc.isAdmin;
+  	const managerRole = Roles.findOne({name: 'Manager'});
+  	if (managerRole && managerRole._id) {
+    	const userIsManager = false;
+    	if (doc.roleId === managerRole._id) {
+    		userIsManager = true;
+    	}
+    	if (userIsAdmin || userIsManager) {
+      	templateBoards.forEach((templateBoard) => {
+      		const isMemberAlready = false;
+      		templateBoard.members.forEach((member) => {
+      			if (member.userId === doc._id) {
+      				isMemberAlready = true;
+      			}
+      		});
+      		if (isMemberAlready === false) {
+            Boards.update(
+              { _id: templateBoard._id },
+              { $push: {
+                  members: {
+                    isAdmin: false,
+                    isActive: true,
+                    isCommentOnly: false,
+                    userId: doc._id,
+                  },
+                },
+              }
+            );
+      		}
+      	});
+    	}
+  	}
+  	//_______________________//
 
     if (doc.createdThroughApi) {
       // The admin user should be able to create a user despite disabling registration because

@@ -312,15 +312,31 @@ Boards.attachSchema(new SimpleSchema({
     type: String,
     defaultValue: 'board',
   },
+  quotaGroupId: {
+	  type: String,
+	  optional: true,
+  },
+	createdBy: {
+	  type: String,
+	  optional: true,
+    autoValue() {
+      if (this.isInsert) {
+        return Meteor.user()._id;
+      } else {
+        this.unset();
+      }
+    },
+	},
 }));
 
 
 Boards.helpers({
-  copy() {
-    const oldId = this._id;
+	getNewBoardId() {
     delete this._id;
-    const _id = Boards.insert(this);
+    return Boards.insert(this);
+	},
 
+  copy(_id, oldId) {
     // Copy all swimlanes in board
     Swimlanes.find({
       boardId: oldId,
@@ -330,6 +346,20 @@ Boards.helpers({
       swimlane.copy(_id);
     });
   },
+
+  searchBoard() {
+    $('a.folderOpener, a#templatesFolder, a#uncategorisedBoardsFolder').removeClass('selected');
+    $('li.js-add-board, li.js-add-board-template, li.uncategorised_boards, li.categorised_boards, li.board_templates').hide();
+    $('.emptyFolderMessage').remove();
+    $('li.searched_boards').show();
+    $('.searchedBoardsResultsHeader').remove();
+    $('.board-list.clearfix.ui-sortable').prepend(
+      '<h1 class="searchedBoardsResultsHeader" style="margin-left: 8px;">' + 
+      TAPi18n.__('search-results-for')  + ' " ' + Session.get('searchingBoardTitle') + 
+      ' "</h1>'
+    );
+  },
+
   /**
    * Is supplied user authorized to view this board?
    */
@@ -476,27 +506,6 @@ Boards.helpers({
     const _id = Random.id(6);
     Boards.direct.update(this._id, { $push: { labels: { _id, name, color } } });
     return _id;
-  },
-
-  searchBoards(term) {
-    check(term, Match.OneOf(String, null, undefined));
-
-    const query = { boardId: this._id };
-    query.type = 'cardType-linkedBoard';
-    query.archived = false;
-
-    const projection = { limit: 10, sort: { createdAt: -1 } };
-
-    if (term) {
-      const regex = new RegExp(term, 'i');
-
-      query.$or = [
-        { title: regex },
-        { description: regex },
-      ];
-    }
-
-    return Cards.find(query, projection);
   },
 
   searchSwimlanes(term) {
@@ -761,14 +770,15 @@ Boards.mutations({
           [`members.${memberIndex}.isActive`]: true,
         },
       };
+    } else {
+      return {
+        $pull: {
+        	members: {
+	  				'userId': memberId
+	  			}
+        },
+      };
     }
-
-    return {
-      $set: {
-        [`members.${memberIndex}.isActive`]: false,
-        [`members.${memberIndex}.isAdmin`]: false,
-      },
-    };
   },
 
   setMemberPermission(memberId, isAdmin, isNoComments, isCommentOnly, currentUserId = Meteor.userId()) {
@@ -867,9 +877,7 @@ if (Meteor.isServer) {
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
-  });
 
-  Meteor.methods({
     archiveBoard(boardId) {
       check(boardId, String);
       const board = Boards.findOne(boardId);
@@ -877,18 +885,66 @@ if (Meteor.isServer) {
         const userId = Meteor.userId();
         const index = board.memberIndex(userId);
         if (index >= 0) {
+          if (board.type && board.type == 'template-board') {
+          	Cards.update(
+        			{ linkedId: board._id }, 
+        			{ $set: { archived: true } }
+      			);
+          }
           board.archive();
           return true;
         } else throw new Meteor.Error('error-board-notAMember');
       } else throw new Meteor.Error('error-board-doesNotExist');
     },
   });
-
 }
 
 if (Meteor.isServer) {
-  // Let MongoDB ensure that a member is not included twice in the same board
   Meteor.startup(() => {
+    var boardTemplates = Boards.find({
+      type: 'template-board',
+      archived: false, 
+    });
+    var managerRole = Roles.findOne({name: 'Manager'});
+    var managerRoleId = null;
+    if (managerRole && managerRole._id) {
+    	managerRoleId = managerRole._id;
+    }
+    var adminsOrManagers = Users.find({
+    	$or: [ 
+    		{ isAdmin: true }, 
+    		{ roleId: managerRoleId } 
+  		]
+    });
+    boardTemplates.forEach((boardTemplate) => {
+    	adminsOrManagers.forEach((adminOrManager) => {
+    		var boardTemplateId = boardTemplate._id;
+    		var boardTemplateMembers = boardTemplate.members;
+    		var adminOrManagerId = adminOrManager._id; 
+  			isMember = false;
+    		boardTemplateMembers.forEach((boardTemplateMember) => {
+      		if (boardTemplateMember.userId == adminOrManagerId) {
+      			isMember = true;
+      		}
+        });
+    		if (isMember === false) {
+          Boards.update(
+            { _id: boardTemplateId },
+            { $push: {
+	              members: {
+	                isAdmin: false,
+	                isActive: true,
+	                isCommentOnly: false,
+	                userId: adminOrManagerId,
+	              },
+	            },
+            }
+          );
+    		}
+      });
+    });
+
+    // Let MongoDB ensure that a member is not included twice in the same board
     Boards._collection._ensureIndex({
       _id: 1,
       'members.userId': 1,
@@ -896,8 +952,9 @@ if (Meteor.isServer) {
     Boards._collection._ensureIndex({ 'members.userId': 1 });
   });
 
-  // Genesis: the first activity of the newly created board
   Boards.after.insert((userId, doc) => {
+
+    // Genesis: the first activity of the newly created board
     Activities.insert({
       userId,
       type: 'board',
@@ -905,6 +962,51 @@ if (Meteor.isServer) {
       activityType: 'createBoard',
       boardId: doc._id,
     });
+  	//_______________________//
+
+
+    // Have the document UserGroup, which's field boardsQuota was used for this addition, gets its field usedBoardsQuota updated
+  	// And update the board's field quotaGroupId with the _id of the UserGroup which's quota was used.
+    const insertedBoard = Boards.findOne({ _id: doc._id });
+    if (insertedBoard && insertedBoard._id) {
+      const specificQuotaGroupId = insertedBoard.quotaGroupId;
+      // Check if the user had selected any specifc user group's quota to use or not!
+      if (specificQuotaGroupId && specificQuotaGroupId.length > 0) {
+    		const userGroup = UserGroups.findOne({_id: specificQuotaGroupId});
+    		if (userGroup && userGroup._id) {
+    			var usedQuota = userGroup.usedBoardsQuota  + 1;
+    			// Update usedUsersQuota in UserGroups
+    			UserGroups.update(
+  					{ _id: userGroup._id }, 
+  					{ $set: { usedBoardsQuota: usedQuota } }
+  				);
+    		}
+      } else {
+      	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {$sort: {groupOrder: 1}} ).fetch();
+      	for (var i = 0; i < userAssignedUserGroups.length; i++) {
+      		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
+      		if (userGroup && userGroup._id) {
+        		var quotaDifference = userGroup.boardsQuota - userGroup.usedBoardsQuota;
+        		if (quotaDifference > 0) {
+        			var usedQuota = userGroup.usedBoardsQuota  + 1;
+        			// Update usedUsersQuota in UserGroups
+        			UserGroups.update(
+      					{ _id: userGroup._id }, 
+      					{ $set: { usedBoardsQuota: usedQuota } }
+      				);
+        			// Update quotaGroupId in Boards
+        			Boards.update(
+      					{ _id: doc._id }, 
+      					{ $set: { quotaGroupId: userGroup._id } }
+      				);
+        			break;
+        		}
+      		}
+      	};
+      }
+    }
+  	//_______________________//
+
   });
 
   // If the user remove one label from a board, we cant to remove reference of
@@ -941,6 +1043,44 @@ if (Meteor.isServer) {
       }
     });
   };
+
+  Boards.before.insert((insertorId) => {
+
+  	function defaultTrialBoardsQuota() {
+      return 10;
+    }
+
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	and whether he has exhausted his default trial quota
+  	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
+  	// If user has any AssignedUserGroup
+  	if (userAssignedUserGroups.count() > 0) {
+  		var boardsQuotaLeft = 0;
+  		userAssignedUserGroups.forEach((assignedUserGroup) => {
+  			const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+  			if (userGroup && userGroup.boardsQuota) {
+  				boardsQuotaLeft += userGroup.boardsQuota - userGroup.usedBoardsQuota
+  			}
+  		});
+  		if (boardsQuotaLeft > 0) {
+  			return true;
+  		} else {
+	      throw new Meteor.Error('error-exhausted-boards-quota');
+  		}
+  	} 
+  	// Else we check with the Default Trial 'Boards Quota'
+  	else {
+    	const boardsCreatedByCurrentUserCount = Boards.find({createdBy: insertorId}).count();
+			if (boardsCreatedByCurrentUserCount < defaultTrialBoardsQuota()) {
+				return true;
+			} else {
+	      throw new Meteor.Error('error-exhausted-boards-quota');
+			}
+  	}
+
+  });
 
   // Remove a member from all objects of the board before leaving the board
   Boards.before.update((userId, doc, fieldNames, modifier) => {
@@ -1004,34 +1144,57 @@ if (Meteor.isServer) {
 
   // Add a new activity if we add or remove a member to the board
   Boards.after.update((userId, doc, fieldNames, modifier) => {
-    if (!_.contains(fieldNames, 'members')) {
-      return;
-    }
 
-    // Say hello to the new member
-    if (modifier.$push && modifier.$push.members) {
-      const memberId = modifier.$push.members.userId;
-      Activities.insert({
-        userId,
-        memberId,
-        type: 'member',
-        activityType: 'addBoardMember',
-        boardId: doc._id,
-      });
-    }
-
-    // Say goodbye to the former member
-    if (modifier.$set) {
-      foreachRemovedMember(doc, modifier.$set, (memberId) => {
+  	// When member is added or removed
+    if (_.contains(fieldNames, 'members')) {
+      // Say hello to the new member
+      if (modifier.$push && modifier.$push.members) {
+        const memberId = modifier.$push.members.userId;
         Activities.insert({
           userId,
           memberId,
           type: 'member',
-          activityType: 'removeBoardMember',
+          activityType: 'addBoardMember',
           boardId: doc._id,
         });
-      });
+      }
+
+      // Say goodbye to the former member
+      if (modifier.$set) {
+        foreachRemovedMember(doc, modifier.$set, (memberId) => {
+          Activities.insert({
+            userId,
+            memberId,
+            type: 'member',
+            activityType: 'removeBoardMember',
+            boardId: doc._id,
+          });
+        });
+      }
     }
+
+  	// When a board is archived or restored
+    if (_.contains(fieldNames, 'archived')) {
+      // record the activity of archiving the board
+      if (modifier.$set && modifier.$set.archived && modifier.$set.archived === true) {
+        Activities.insert({
+          userId,
+          type: 'board',
+          activityTypeId: doc._id,
+          activityType: 'archivedBoard',
+          boardId: doc._id,
+        });
+      } else {  // record the activity of restoring the board
+        Activities.insert({
+          userId,
+          type: 'board',
+          activityTypeId: doc._id,
+          activityType: 'restoredBoard',
+          boardId: doc._id,
+        });
+      }
+    }
+
   });
 
   // Method executed before deleting a board from the database
@@ -1056,6 +1219,18 @@ if (Meteor.isServer) {
     Integrations.remove({
       boardId: doc._id
     });
+
+    // If it is a template board, then we have to also remove the linked-card
+    // otherwise, if the upstream button 'Templates' on the header is clicked the templates
+    // page keeps on loading, never displaying the data
+    // For our Human Resources Application we have removed this button, since we won't be using it
+    // but still, I've added this fix to allow a smooth transition whenever in the future when
+    // we update to the latest updates of upstream
+    if (doc.type === 'template-board') {
+      Cards.remove({
+        linkedId: doc._id
+      });
+    }
 
     // If the board was a categorised one, we remove its trace from the folder to which it belonged
     var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();

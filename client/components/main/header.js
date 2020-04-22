@@ -1,5 +1,5 @@
 Meteor.subscribe('user-admin');
-Meteor.subscribe('role');
+Meteor.subscribe('roles');
 Meteor.subscribe('boards');
 Meteor.subscribe('setting');
 
@@ -46,9 +46,5 @@ Template.header.events({
 
   'click .closeStatus': function() {
 	  $('.closeStatus').parent('div').remove();
-  },
-
-  'click a.goToAllBoards': function(e) {
-    $('a#uncategorisedBoardsFolder').trigger('click');
   },
 });

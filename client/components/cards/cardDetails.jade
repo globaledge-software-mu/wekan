@@ -79,9 +79,10 @@ template(name="cardDetails")
       if isPropertyVisible 'members'
         .card-details-item.card-details-item-members
           h3.card-details-item-title {{getPropertyAlias 'members'}}
-          each getMembers
-            +userAvatar(userId=this cardId=../_id)
-            | {{! XXX Hack to hide syntaxic coloration /// }}
+          if hasMembers
+            each getCardMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
           if canModifyCard
             a.member.add-member.card-details-item-add-button.js-add-members(title="{{_ 'card-members-title'}}")
               i.fa.fa-plus
@@ -97,11 +98,23 @@ template(name="cardDetails")
           if canModifyCard
             a.card-label.add-label.js-add-labels(title="{{_ 'card-labels-title'}}")
               i.fa.fa-plus
+
+      if isPropertyVisible 'teamMembers'
+        .card-details-item.card-details-item-teamMembers
+          h3.card-details-item-title {{getPropertyAlias 'teamMembers'}}
+          if hasTeamMembers
+            each getTeamMembers
+              +userAvatar(userId=this cardId=../_id)
+              | {{! XXX Hack to hide syntaxic coloration /// }}
+          if canModifyCard
+            a.teamMember.addTeamMember.card-details-item-add-button.js-addTeamMembers(title="{{_ 'card-teamMembers-title'}}")
+              i.fa.fa-plus
+
     #historicScores
         canvas.card-details-item.score-line
     if reloadHistoricScoreChart
       span
-    
+
     .card-details-items
       each customFieldsWD
         .card-details-item.card-details-item-customfield
@@ -120,28 +133,32 @@ template(name="cardDetails")
               h3.card-details-item-title {{getPropertyAlias 'spent-time-hours'}}
             +cardSpentTime
 
-    //- XXX We should use "editable" to avoid repetiting ourselves
     if isPropertyVisible 'description' and canModifyCard
       h3.card-details-item-title {{getPropertyAlias 'description'}}
-      +inlinedCardDescription(classNames="card-description js-card-description")
-        +editor(autofocus=true)
-          | {{getUnsavedValue 'cardDescription' _id getDescription}}
-        .edit-controls.clearfix
-          button.primary(type="submit") {{_ 'save'}}
-          a.fa.fa-times-thin.js-close-inlined-form
-      else
-        a.js-open-inlined-form
-          if getDescription
-            +viewer
-              = getDescription
-          else
-            | {{_ 'edit'}}
-        if (hasUnsavedValue 'cardDescription' _id)
-          p.quiet
-            | {{_ 'unsaved-description'}}
-            a.js-open-inlined-form {{_ 'view-it'}}
-            = ' - '
-            a.js-close-inlined-form {{_ 'discard'}}
+      if canModifyCard
+        +inlinedCardDescription(classNames="card-description js-card-description")
+          +editor(autofocus=true)
+            | {{getUnsavedValue 'cardDescription' _id getDescription}}
+          .edit-controls.clearfix
+            button.primary(type="submit") {{_ 'save'}}
+            a.fa.fa-times-thin.js-close-inlined-form
+        else
+          a.js-open-inlined-form
+            if getDescription and canModifyCard
+              +viewer
+                = getDescription
+            else
+              | {{_ 'edit'}}
+          if (hasUnsavedValue 'cardDescription' _id)
+            p.quiet
+              | {{_ 'unsaved-description'}}
+              a.js-open-inlined-form {{_ 'view-it'}}
+              = ' - '
+              a.js-close-inlined-form {{_ 'discard'}}
+      else if getDescription
+        +viewer
+          = getDescription
+
     else if isPropertyVisible 'description' and getDescription
       h3.card-details-item-title {{getPropertyAlias 'description'}}
       +viewer
@@ -182,12 +199,30 @@ template(name="cardDetails")
             +viewer
               = getAssignedBy
 
+    if isPropertyVisible 'aspectsList'
+      hr
+      .card-details-item.card-details-item-name
+        h3.card-details-item-title {{getPropertyAlias 'aspectsList'}}
+        .aspects-list-items
+          each aspectsListItems
+            .aspectItem
+              p.generalFont(data-aspect-id="{{_id}}" data-title="{{title}}") {{title}}
+                span.fa.fa-trash.pull-right.removeAspect(title="Remove {{title}}")
+        form.inlined-form.js-inlined-form#add-aspects-list-item-form
+          textarea#js-add-aspects-list-item(rows='1')
+          #add-aspects-list-item-controls.edit-controls.clearfix
+            button#js-submit-aspects-list-item-form.primary(type="button") {{_ 'save'}}
+            a#js-close-aspects-list-item-form.fa.fa-times-thin
+        if canModifyCard
+          a#addAspect(title="{{_ 'add-an-aspect'}}")
+            i.fa.fa-plus
+            | {{_ 'add-an-aspect'}}
+
     if isPropertyVisible 'checklists'
       hr
       +checklists(cardId = _id)
 
     if currentBoard.allowsSubtasks
-      hr
       if isPropertyVisible 'subtasks'
         +subtasks(cardId = _id)
     if isPropertyVisible 'attachments'
@@ -197,7 +232,7 @@ template(name="cardDetails")
         | {{getPropertyAlias 'attachments'}}
 
       +attachmentsGalery
-    
+
     if isPropertyVisible 'activity'
       hr
       unless currentUser.isNoComments
@@ -241,7 +276,7 @@ template(name="editCardAssignerForm")
   .edit-controls.clearfix
     button.primary.confirm.js-submit-edit-card-assigner-form(type="submit") {{_ 'save'}}
     a.fa.fa-times-thin.js-close-inlined-form
-    
+
 template(name="cardDetailsActionsPopup")
   ul.pop-over-list
     li: a.js-toggle-watch-card {{#if isWatching}}{{_ 'unwatch'}}{{else}}{{_ 'watch'}}{{/if}}
@@ -322,12 +357,27 @@ template(name="cardMembersPopup")
     each board.activeMembers
       li.item(class="{{#if isCardMember}}active{{/if}}")
         a.name.js-select-member(href="#")
+
           +userAvatar(userId=user._id)
           span.full-name
             = user.profile.fullname
             | (<span class="username">{{ user.username }}</span>)
           if isCardMember
             i.fa.fa-check
+
+template(name="cardTeamMembersPopup")
+  ul.pop-over-list.js-card-member-list
+    if hasEligibleFutureTeamUsers
+      each teamUsers
+        li.item(class="{{#if isCardTeamMember}}active{{/if}}")
+          a.name.js-select-teamMember(href="#")
+
+            +userAvatar(userId=user._id)
+            span.full-name
+              = user.profile.fullname
+              | (<span class="username">{{ user.username }}</span>)
+            if isCardTeamMember
+              i.fa.fa-check
 
 template(name="cardMorePopup")
   p.quiet

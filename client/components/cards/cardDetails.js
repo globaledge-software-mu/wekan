@@ -38,6 +38,8 @@ BlazeComponent.extendComponent({
     this.calculateNextPeak();
 
     Meteor.subscribe('unsaved-edits');
+    Meteor.subscribe('aspects_lists');
+    Meteor.subscribe('aspects_list_items');
   },
 
   isWatching() {
@@ -50,7 +52,11 @@ BlazeComponent.extendComponent({
   },
 
   canModifyCard() {
-    return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
+    if ( Meteor.user().regularBoard() || Meteor.user().isBoardTemplateAdmin() ) {
+    	return true;
+    } else {
+    	return false;
+    }
   },
 
   scrollParentContainer() {
@@ -97,6 +103,80 @@ BlazeComponent.extendComponent({
       result = 'no-parent';
     }
     return result;
+  },
+
+  hasMembers() {
+  	const cardId = this.currentData()._id;
+    const card = Cards.findOne({_id: cardId});
+
+    if (card && card.members && card.members.length > 0) {
+    	const cardMembers = card.members;
+    	var membersCount = 0;
+    	var nonExistinUsersCount = 0;
+    	var needsToUpdateCardMembers = false;
+    	var idsToBeRemoved = [];
+
+    	cardMembers.forEach((cardMember) => {
+    		const user = Users.findOne({_id: cardMember});
+    		if (!user) {
+    			needsToUpdateCardMembers = true;
+    			idsToBeRemoved.push(cardMember);
+    			nonExistinUsersCount++;
+    		} else {
+    			membersCount++;
+    		}
+    	});
+
+    	var filteredMembers = [];
+    	if (needsToUpdateCardMembers) {
+    		cardMembers.forEach((cardMember) => {
+    			if (!idsToBeRemoved.includes(cardMember)) {
+    				filteredMembers.push(cardMember);
+    			}
+    		});
+    		Cards.update(
+  				{ _id: cardId }, {
+  					$unset: {
+  						members: ''
+  					}
+  				}
+    		);
+    		Cards.update(
+  				{ _id: cardId }, {
+  					$set: {
+  						members: filteredMembers
+  					}
+  				}
+    		);
+    	}
+
+    	const realMembersCount = membersCount - nonExistinUsersCount;
+    	if (realMembersCount > 0) {
+      	return true;
+    	} else {
+      	return false;
+    	}
+    } else {
+    	return false;
+    }
+  },
+
+  hasTeamMembers() {
+  	const cardId = this.currentData()._id;
+    const card = Cards.findOne({_id: cardId});
+
+    if (card && card.team_members && card.team_members.length > 0) {
+    	return true;
+    } else {
+    	return false;
+    }
+  },
+
+  getCardMembers() {
+    const card = Cards.findOne({_id: this.currentData()._id});
+    if (card && card._id) {
+    	return card.members;
+    }
   },
 
   linkForCard() {
@@ -211,21 +291,113 @@ BlazeComponent.extendComponent({
         $subtasksDom.sortable('option', 'disabled', !userIsMember());
       }
     });
+
+    /**************/
+
+    var idsToPull = new Array();
+    CardScores.find({
+    	cardId: this.currentData()._id
+  	}).forEach((cardScore) => {
+    	if (cardScore && !cardScore.score || cardScore.score === '' || cardScore.score === null) {
+    		idsToPull.push(cardScore._id);
+    	}
+    });
+    for (var i = 0; i < idsToPull.length; i++) {
+      CardScores.remove({_id: idsToPull[i]});
+    }
+
+    /**************/
+
+    /*********/
+
+		const startScores = CardScores.find({
+			cardId: this.currentData()._id,
+			type: 'current',
+		}, {
+			sort: {date: -1}
+		}).fetch();
+		// If no CardScores and If Cards has initialScore and no currentScore
+		if (startScores.length < 1 &&
+				this.currentData() && this.currentData().initialScore && this.currentData().initialScore != '' && this.currentData().initialScore != null &&
+				!this.currentData().currentScore || this.currentData().currentScore == '' || this.currentData().currentScore == null &&
+				this.currentData().startAt
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id,
+        score: this.currentData().initialScore,
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		}
+		// else if no CardScores and If Cards has currentScore and no initialScore
+		else if (startScores.length < 1 &&
+				this.currentData() && this.currentData().currentScore && this.currentData().currentScore != '' && this.currentData().currentScore != null &&
+				this.currentData().startAt
+		) {
+			CardScores.insert({
+				boardId: this.currentData().boardId,
+        cardId: this.currentData()._id,
+        score: this.currentData().currentScore,
+        type: 'current',
+        date: this.currentData().startAt,
+        userId: this.currentData().userId
+			});
+		}
+
+    /*********/
+
     const cardScores = this.currentData().scores();
     let labels = []
     let scores = {'current': [], 'target': []};
     cardScores.forEach((cardScore) => {
-      labels.push(cardScore.date);
-      var score = cardScore.score;
-      if (typeof score === 'number') {
-        score = score.toString();
-      }
-      scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id})
+    	if (cardScore && cardScore.score && cardScore.date) {
+        labels.push(cardScore.date);
+        var score = cardScore.score;
+        if (typeof score === 'number') {
+          score = score.toString();
+        }
+        scores[cardScore.type].push({x: cardScore.date, y: score.replace('%', '').trim(), pointId: cardScore._id});
+    	}
     });
-    
+
     $('#historicScores').hide();
     if (labels.length > 0) {
       $('#historicScores').show();
+    } else {
+    	if (this.currentData().currentScore && this.currentData().currentScore.length > 0
+    			&& this.currentData().startAt && this.currentData().startAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().currentScore,
+          type: 'current',
+          date: this.currentData().startAt
+        });
+        $('#historicScores').show();
+    	}
+    	if (this.currentData().targetScore && this.currentData().targetScore.length > 0
+    			&& this.currentData().dueAt && this.currentData().dueAt.toString().length > 0
+    	) {
+    		CardScores.insert({
+          boardId: this.currentData().boardId,
+          cardId: this.currentData()._id,
+          score: this.currentData().targetScore,
+          type: 'target',
+          date: this.currentData().dueAt
+        });
+        $('#historicScores').show();
+    	}
+    	var hasCardScores = CardScores.findOne({
+    		cardId: this.currentData()._id
+    	});
+    	if (hasCardScores && hasCardScores._id && hasCardScores.score && hasCardScores.date) {
+        $('#historicScores').show();
+    	} else {
+        $('#historicScores').hide();
+    	}
     }
     let list = this.currentData().list();
     let cardStart = list.getProperty('card-start');
@@ -238,8 +410,53 @@ BlazeComponent.extendComponent({
     if (cardDue !== null) {
       cardDueColor = cardDue.color;
     }
-    
+
     let chartCtx = $('.score-line');
+
+    let receivedScore = '';
+    let currentScore = '';
+    let targetScore = '';
+    let endScore = '';
+
+    if (this.currentData() && this.currentData().initialScore && this.currentData().initialScore.length > 0) {
+    	receivedScore = this.currentData().initialScore;
+    }
+    if (this.currentData() && this.currentData().currentScore && this.currentData().currentScore.length > 0) {
+    	currentScore = this.currentData().currentScore;
+    }
+    if (this.currentData() && this.currentData().targetScore && this.currentData().targetScore.length > 0) {
+    	targetScore = this.currentData().targetScore;
+    }
+    if (this.currentData() && this.currentData().endScore && this.currentData().endScore.length > 0) {
+    	endScore = this.currentData().endScore;
+    }
+
+    let fourScores = new Array(receivedScore, currentScore, targetScore, endScore)
+    let scoreBearers = new Array();
+    for (var i = 0; i < fourScores.length; i++) {
+    	if (fourScores[i] != '') {
+    		scoreBearers.push(fourScores[i]);
+    	}
+    }
+
+    // … (three dots) in front of an array will convert array to distinct variables e.g: from [1,2,3] to (1,2,3)
+    let minScore = Math.min(...scoreBearers);
+    let maxScore = Math.max(...scoreBearers);
+    let yAxesMinNum;
+    let yAxesMaxNum;
+    let range = maxScore - minScore;
+    if (range === 0) {
+      yAxesMinNum = minScore - 1;
+      yAxesMaxNum = maxScore + 1;
+    } else {
+      let rangeLogTen = Math.log10(maxScore - minScore);
+      let flooredRangeLogTen = Math.floor(rangeLogTen);
+      let bottomMargin = Math.round(minScore * flooredRangeLogTen) / minScore;
+      let topMargin = Math.round(maxScore * flooredRangeLogTen) / maxScore;
+      yAxesMinNum = minScore - bottomMargin;
+      yAxesMaxNum = maxScore + topMargin;
+    }
+
     scoreChart = new Chart(chartCtx, {
       type: 'line',
       data: {
@@ -284,8 +501,7 @@ BlazeComponent.extendComponent({
               labelString: 'Date'
             },
             ticks: {
-              autoSkip: false,
-              stepSize: 1,
+              autoSkip: true,
               minRotation: 45
             }
           }],
@@ -294,13 +510,14 @@ BlazeComponent.extendComponent({
             scaleLabel: {
               display: true,
               labelString: 'Score'
-          },
-          ticks: {
-            beginAtZero: true
-          }
-        }]
+		        },
+		        ticks: {
+		        	suggestedMin: yAxesMinNum,
+		        	suggestedMax: yAxesMaxNum
+		        }
+          }]
+        }
       }
-    }
     });
     scoreChart.scales["x-axis-0"].options.ticks.autoSkip = false;
     scoreChart.scales["x-axis-0"].options.ticks.stepSize = 1;
@@ -311,6 +528,13 @@ BlazeComponent.extendComponent({
     //on mobile view parent is Board, not board body.
     if (parentComponent === null) return;
     parentComponent.showOverlay.set(false);
+  },
+
+  aspectsListItems() {
+    return AspectsListItems.find({
+    	aspectsListId: this.currentData().aspectsListId,
+    	cardId: this.currentData()._id
+  	});
   },
 
   events() {
@@ -355,8 +579,9 @@ BlazeComponent.extendComponent({
           this.data().setRequestedBy(requester);
         }
       },
-      'click .js-member': Popup.open('cardMember'),
+      'click .js-member:not(.team-member)': Popup.open('cardMember'),
       'click .js-add-members': Popup.open('cardMembers'),
+      'click .js-addTeamMembers': Popup.open('cardTeamMembers'),
       'click .js-add-labels': Popup.open('cardLabels'),
       'click .js-received-date': Popup.open('editCardReceivedDate'),
       'click .js-start-date': Popup.open('editCardStartDate'),
@@ -373,31 +598,236 @@ BlazeComponent.extendComponent({
         Meteor.call('toggleSystemMessages');
       },
 
+      'click #addAspect' (evt) {
+        evt.preventDefault();
+        $('#addAspect').css('display', 'none');
+        $('#add-aspects-list-item-form').css('display', 'block');
+        const inputSelector = $('textarea#js-add-aspects-list-item');
+        inputSelector.val('');
+        inputSelector.focus();
+      },
+
+      'click .removeAspect' (evt) {
+
+        const aspectId = $(evt.target).closest('p').data('aspect-id');
+        const aspectTitle = $(evt.target).closest('p').data('title');
+        var cardId = '';
+        const teamMemberAspect = TeamMembersAspects.findOne({ aspectsId: aspectId});
+        if (teamMemberAspect && teamMemberAspect._id) {
+          cardId = teamMemberAspect.cardId;
+        }
+
+        swal({
+          title: 'Confirm remove aspect "'+aspectTitle+'"!',
+          text: 'Are you sure?',
+          icon: "warning",
+          buttons: [true, 'Remove'],
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            AspectsListItems.remove({ _id: aspectId }, (err, res) => {
+              if (err) {
+                swal(err, {
+                  icon: "success",
+                });
+              } else if (res) {
+                const idsToRemove = new Array();
+                TeamMembersAspects.find({ aspectsId: aspectId}).forEach((teamMemberAspect) => {
+                  idsToRemove.push(teamMemberAspect._id);
+                });
+
+                for (var i = 0; i < idsToRemove.length; i++) {
+                  TeamMembersAspects.remove({_id: idsToRemove[i]});
+                }
+
+                // Recalculate the card's composed initial/current scores by first checking if
+                // (i)  card has only aspect(s) remaining or
+                // (ii) card has both aspect(s) and team member(s) remaining
+                // If case (i) is present, recalculate the card's composed initial/current scores
+                // by simply adding the initial/current scores of the aspects
+                // If case (ii) is present, recalculate the card's composed initial/current scores
+                // by first recalculating the TeamMembersScores with the total of their remaining TeamMembersAspects scores
+                // and then by adding the card's TeamMembersScores
+                const card = Cards.findOne(cardId);
+                if (card && card._id) {
+                  var hasAspectsonly = false;
+                  var hasbothAspectsAndTeamMembers = false;
+
+                  const aspects = AspectsListItems.find({ cardId: card._id });
+                  if (aspects.count() > 0 && card.team_members.length < 1) {
+                    hasAspectsonly = true;
+                  }
+
+                  if (card.team_members.length > 0 && aspects.count() > 0) {
+                    hasbothAspectsAndTeamMembers = true;
+                  }
+
+                  if (hasAspectsonly) {
+                    var totalAspectsInitialScore = 0;
+                    var totalAspectsCurrentScore = 0;
+                    aspects.forEach((aspect) => {
+                      if (aspect.initialScore) {
+                        var initialScore = parseFloat(aspect.initialScore);
+                        if (initialScore > 0) {
+                          totalAspectsInitialScore += initialScore;
+                        }
+                      }
+                      if (aspect.currentScore) {
+                        var currentScore = parseFloat(aspect.currentScore);
+                        if (currentScore > 0) {
+                          totalAspectsCurrentScore += currentScore;
+                        }
+                      }
+                    });
+
+                    card.setInitialScore(totalAspectsInitialScore.toFixed(2).toString());
+                    card.setCurrentScore(totalAspectsCurrentScore.toFixed(2).toString());
+                  } else if (hasbothAspectsAndTeamMembers) {
+                    const teamMembers = card.team_members;
+                    teamMembers.forEach((teamMember) => {
+                      var teamMemberInitialScore = 0;
+                      var teamMemberCurrentScore = 0;
+                      const teamMembersAspects = TeamMembersAspects.find({ userId: teamMember, cardId });
+                      if (teamMembersAspects.count() > 0) {
+                        teamMembersAspects.forEach((teamMemberAspect) => {
+                          var initialScore = parseFloat(teamMemberAspect.initialScore);
+                          if (initialScore > 0) {
+                            teamMemberInitialScore += initialScore;
+                          }
+                          var currentScore = parseFloat(teamMemberAspect.currentScore);
+                          if (currentScore > 0) {
+                            teamMemberCurrentScore += currentScore;
+                          }
+                        });
+                        const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
+                        if (teamMemberScore && teamMemberScore._id) {
+                          TeamMembersScores.update(
+                            { _id: teamMemberScore._id },
+                            { $set: {
+                              initialScore: teamMemberInitialScore.toFixed(2).toString(),
+                              currentScore: teamMemberCurrentScore.toFixed(2).toString()
+                            } }
+                          );
+                        }
+                      }
+                    });
+
+                    const teamMembersScores = TeamMembersScores.find({ cardId });
+                    if (teamMembersScores.count() > 0) {
+                      var totalTeamMembersInitialScores = 0;
+                      var totalTeamMembersCurrentScores = 0;
+                      teamMembersScores.forEach((teamMemberScore) => {
+                        var teamMemberInitialScore = parseFloat(teamMemberScore.initialScore);
+                        if (teamMemberInitialScore > 0) {
+                          totalTeamMembersInitialScores += teamMemberInitialScore;
+                        }
+                        var teamMemberCurrentScore = parseFloat(teamMemberScore.currentScore);
+                        if (teamMemberCurrentScore > 0) {
+                          totalTeamMembersCurrentScores += teamMemberCurrentScore;
+                        }
+                      });
+
+                      card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
+                      card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
+                    }
+                  }
+                }
+
+                message = TAPi18n.__('Successfully removed aspect');
+                swal(message, {
+                  icon: "success",
+                });
+              }
+            });
+          } else {
+            return false;
+          }
+        });
+      },
+
+      'click #js-close-aspects-list-item-form' (evt) {
+        $('#add-aspects-list-item-form').css('display', 'none');
+        $('#addAspect').css('display', 'block');
+      },
+
+      // Pressing Enter should click the submit button
+      'keydown textarea#js-add-aspects-list-item'(evt) {
+        if (evt.keyCode === 13) {
+          $('#js-submit-aspects-list-item-form').click();
+          $('#js-close-aspects-list-item-form').click();
+        }
+      },
+
+      'click #js-submit-aspects-list-item-form'(evt) {
+        evt.preventDefault();
+        const title = $(evt.target).closest('#add-aspects-list-item-controls').siblings('#js-add-aspects-list-item').val();
+        if (title.length > 0) {
+        	const cardId = this.currentData()._id;
+        	const aspectsListId = '';
+        	const aspectsList = AspectsLists.findOne({ cardId });
+        	if (!aspectsList) {
+          	aspectsListId = AspectsLists.insert({ cardId });
+          	Cards.update(
+        			{ _id: cardId }, {
+        				$set: {
+        					aspectsListId
+        				}
+        			}
+          	);
+        	} else {
+          	aspectsListId = aspectsList._id;
+          }
+
+        	const aspectId = AspectsListItems.insert({
+        		aspectsListId,
+        		cardId,
+        	  title
+          });
+
+          const actualCard = Cards.findOne({_id: cardId});
+          if (actualCard && actualCard._id) {
+            const teamMembers = actualCard.team_members;
+            for (var i = 0; i < teamMembers.length; i++) {
+              TeamMembersAspects.insert({
+                userId: teamMembers[i],
+                cardId,
+                aspectsId: aspectId,
+              });
+            }
+          }
+        }
+        $('#js-close-aspects-list-item-form').click();
+      },
+
       // chart's data-points click event
       'click canvas.card-details-item.score-line.chartjs-render-monitor': function(evt) {
         evt.preventDefault();
         evt.stopImmediatePropagation();
-        var activePoints = scoreChart.getElementAtEvent(evt);
-        if (activePoints.length > 0) {
-          var theElement = scoreChart.config.data.datasets[activePoints[0]._datasetIndex].data[activePoints[0]._index];
-          var cardScoreDoc = CardScores.findOne({_id: theElement.pointId})
-          var date = cardScoreDoc.date;
-          var score = cardScoreDoc.score;
-          var type = cardScoreDoc.type;
-          this.currentData()['dataPointDate'] = date;
-          this.currentData()['dataPointScore'] = score;
-          var selector = null;
-          if (type == 'current') {
-            selector = $('.card-details-item-start a.js-edit-date.card-date.start-date').not('.card-score');
-            addNewDate = $('.js-start-date');
-          } else if (type == 'target') {
-            selector = $('.card-details-item-due a.js-edit-date.card-date.due-date').not('.card-score');
-            addNewDate = $('.js-due-date');
-          }
-          if (selector[0]) {
-            selector[0].click();
-          } else {
-            addNewDate.click();
+
+        if (Meteor.user().canAlterCard()) {
+          var activePoints = scoreChart.getElementAtEvent(evt);
+          if (activePoints.length > 0) {
+            var theElement = scoreChart.config.data.datasets[activePoints[0]._datasetIndex].data[activePoints[0]._index];
+            var cardScoreDoc = CardScores.findOne({_id: theElement.pointId})
+            var date = cardScoreDoc.date;
+            var score = cardScoreDoc.score;
+            var type = cardScoreDoc.type;
+            this.currentData()['dataPointDate'] = date;
+            this.currentData()['dataPointScore'] = score;
+            var selector = null;
+            if (type == 'current') {
+              selector = $('.card-details-item-start a.js-edit-date.card-date.start-date').not('.card-score');
+              addNewDate = $('.js-start-date');
+            } else if (type == 'target') {
+              selector = $('.card-details-item-due a.js-edit-date.card-date.due-date').not('.card-score');
+              addNewDate = $('.js-due-date');
+            }
+            if (selector[0]) {
+              selector[0].click();
+            } else {
+              addNewDate.click();
+            }
           }
         }
       },
@@ -449,7 +879,11 @@ Template.cardDetailsActionsPopup.helpers({
   },
 
   canModifyCard() {
-    return Meteor.user() && Meteor.user().isBoardMember() && !Meteor.user().isCommentOnly();
+    if ( Meteor.user().regularBoard() || Meteor.user().isBoardTemplateAdmin() ) {
+    	return true;
+    } else {
+    	return false;
+    }
   },
 });
 

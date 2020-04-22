@@ -1,3 +1,23 @@
+// Publishing all the template boards to be displayed to the admin or the manager
+Meteor.publish('templateBoards', function() {
+  return Boards.find({
+    type: 'template-board',
+  });
+});
+
+//Publishing the user's TemplateContainerBoard
+Meteor.publish('userTemplateContainerBoard', function() {
+	if (Meteor.user() && Meteor.user().profile && Meteor.user().profile.templatesBoardId) {
+		const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
+	  return Boards.find({
+	  	_id: userTemplateContainerId,
+	    archived: false, 
+	  });
+	} else {
+		return null; 
+	}
+});
+
 // This is the publication used to display the board list. We publish all the
 // non-archived boards:
 // 1. that the user is a member of

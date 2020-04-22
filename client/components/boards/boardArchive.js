@@ -20,6 +20,15 @@ BlazeComponent.extendComponent({
           currentBoard.archive();
         }
         const board = this.currentData();
+        if (board.type && board.type == 'template-board') {
+        	const card = Cards.findOne({
+        		linkedId: board._id
+        	});
+        	Cards.update(
+      			{ _id: card._id }, 
+      			{ $set: { archived: false } }
+      		);
+        }
         board.restore();
         Utils.goBoardId(board._id);
       },
