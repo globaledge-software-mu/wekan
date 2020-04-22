@@ -49,28 +49,13 @@ UserGroups.helpers({
 
 UserGroups.allow({
   insert() {
-    const user = Users.findOne(Meteor.user()._id);
-    if (user && user.isAdmin) {
-    	return true;
-    } else {
-    	return false;
-    }
+    return true;
   },
   update() {
-    const user = Users.findOne(Meteor.user()._id);
-    if (user && user.isAdmin) {
-    	return true;
-    } else {
-    	return false;
-    }
+    return true;
   },
-  remove(userId, doc) {
-    const user = Users.findOne(Meteor.user()._id);
-    if (user && user.isAdmin) {
-    	return true;
-    } else {
-    	return false;
-    }
+  remove() {
+    return true;
   },
   fetch: [],
 })

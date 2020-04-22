@@ -57,6 +57,10 @@ BlazeComponent.extendComponent({
     });
   },
 
+  coacheeRole() {
+    return Roles.findOne({ name: 'Coachee' });
+  },
+
   toggleRegistration() {
     this.setLoading(true);
     const registrationClosed = this.currentSetting().disableRegistration;

@@ -408,7 +408,10 @@ BlazeComponent.extendComponent({
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
         const password = this.find('.js-profile-password').value;
-        const isAdmin = this.find('.js-profile-isadmin').value.trim();
+        var isAdmin = false;
+        if (this.find('.js-profile-isadmin') && this.find('.js-profile-isadmin').value) {
+          isAdmin = this.find('.js-profile-isadmin').value.trim();
+        }
         const roleId = this.find('.js-profile-role').value;
       	const roleName = null;
         const role = Roles.findOne({_id: roleId});
