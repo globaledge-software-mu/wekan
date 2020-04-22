@@ -61,11 +61,10 @@ template(name="general")
           li(style="margin-bottom: 8px")
             .title {{_ 'to-boards'}}
             .select-board-msg.hide {{_ 'error-boardNotSelected'}}
-            .bg-white
+            .scrollableBoardsList
               each boards
                 a.option.flex.js-toggle-board-choose(id= _id)
                   .materialCheckBox(data-id= _id)
-
                   span= title
 
           if currentUser.hasMultipleUsableUserQuotaGroups

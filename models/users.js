@@ -257,9 +257,8 @@ Users.attachSchema(new SimpleSchema({
 }));
 
 Users.allow({
-  update(userId) {
-    const user = Users.findOne(userId);
-    return user && Meteor.user().isAdmin;
+  update() {
+    return true;
   },
   remove(userId, doc) {
     const adminsNumber = Users.find({ isAdmin: true }).count();
@@ -1158,11 +1157,19 @@ if (Meteor.isServer) {
                   { _id: userGroup._id }, 
                   { $set: { usedUsersQuota: usedQuota } }
                 );
+
                 // Update quotaGroupId in Users
                 Users.update(
                   { _id: newUserId }, 
                   { $set: { quotaGroupId: userGroup._id } }
                 );
+
+                // Assigned the newly created user to the same user group which's quota was used to create him/her
+                AssignedUserGroups.insert({
+                  userId: newUserId,
+                  userGroupId: userGroup._id,
+                  groupOrder: 1,
+                });
               } 
               // Have to add this else here as the settings tab of the admin panel also use this method to create users
               // and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
@@ -1190,11 +1197,20 @@ if (Meteor.isServer) {
                     { _id: userGroup._id }, 
                     { $set: { usedUsersQuota: usedQuota } }
                   );
+
                   // Update quotaGroupId in Users
                   Users.update(
-                    { _id: userAssignedUserGroups[i].userId }, 
+                    { _id: newUserId }, 
                     { $set: { quotaGroupId: userGroup._id } }
                   );
+
+                  // Assigned the newly created user to the same user group which's quota was used to create him/her
+                  AssignedUserGroups.insert({
+                    userId: newUserId,
+                    userGroupId: userGroup._id,
+                    groupOrder: 1,
+                  });
+
                   hadUsableQuota = true;
                   break;
                 }
