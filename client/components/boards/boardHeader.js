@@ -192,7 +192,10 @@ const CreateBoard = BlazeComponent.extendComponent({
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;
-    const selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+    var selectedUserGroupId = '';
+    if (this.find('.choose-specific-quota-to-use option:selected')) {
+      selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+    }
 
     // Creating regular board
     if (!$('.js-new-board-title').hasClass('createBoardTemplate')) {
