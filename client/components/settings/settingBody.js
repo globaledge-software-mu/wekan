@@ -107,7 +107,10 @@ BlazeComponent.extendComponent({
 
   inviteThroughEmail() {
     const emails = $('#email-to-invite').val().toLowerCase().trim().split('\n').join(',').split(',');
-    const selectedUserGroupId = $('.choose-specific-quota-to-use option:selected').val();
+    var selectedUserGroupId = '';
+    if ($('.choose-specific-quota-to-use').length > 0 && $('.choose-specific-quota-to-use option:selected').length > 0) {
+      selectedUserGroupId = $('.choose-specific-quota-to-use option:selected').val();
+    }
     const boardsToInvite = [];
     $('.js-toggle-board-choose .materialCheckBox.is-checked').each(function () {
       boardsToInvite.push($(this).data('id'));

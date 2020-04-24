@@ -297,8 +297,8 @@ template(name="addMemberPopup")
                 option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
           if loadingAfterSelectedRole.get
             +spinner
-          // Invite directly from board's sidebar
-          button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
+        // Invite directly from board's sidebar
+        button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

@@ -1001,34 +1001,53 @@ if (Meteor.isServer) {
   		const userGroup = UserGroups.findOne({_id: params.quotaGroupId});
   		if (userGroup && userGroup._id) {
   			var usedQuota = userGroup.usedUsersQuota  + 1;
+
   			// Update usedUsersQuota in UserGroups
   			UserGroups.update(
 					{ _id: userGroup._id }, 
 					{ $set: { usedUsersQuota: usedQuota } }
 				);
+
   			// Update quotaGroupId in Users
   			Users.update(
 					{ _id: newUserId }, 
 					{ $set: { quotaGroupId: userGroup._id } }
 				);
+
+        // Assigned the newly created user to the same user group which's quota was used to create him/her
+        AssignedUserGroups.insert({
+          userId: newUserId,
+          userGroupId: userGroup._id,
+          groupOrder: 1,
+        });
   		} else {
-      	const userAssignedUserGroups = AssignedUserGroups.find({ userId: Meteor.userId }, {$sort: {groupOrder: 1}} ).fetch();
+      	const userAssignedUserGroups = AssignedUserGroups.find({ userId: Meteor.user()._id }, {$sort: {groupOrder: 1}} ).fetch();
       	for (var i = 0; i < userAssignedUserGroups.length; i++) {
       		const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
       		if (userGroup && userGroup._id) {
         		var quotaDifference = userGroup.usersQuota - userGroup.usedUsersQuota;
         		if (quotaDifference > 0) {
         			var usedQuota = userGroup.usedUsersQuota  + 1;
+
         			// Update usedUsersQuota in UserGroups
         			UserGroups.update(
       					{ _id: userGroup._id }, 
       					{ $set: { usedUsersQuota: usedQuota } }
       				);
+
         			// Update quotaGroupId in Users
         			Users.update(
-      					{ _id: userAssignedUserGroups[i].userId }, 
+      					{ _id: newUserId }, 
       					{ $set: { quotaGroupId: userGroup._id } }
       				);
+
+              // Assigned the newly created user to the same user group which's quota was used to create him/her
+              AssignedUserGroups.insert({
+                userId: newUserId,
+                userGroupId: userGroup._id,
+                groupOrder: 1,
+              });
+
         			break;
         		}
       		}

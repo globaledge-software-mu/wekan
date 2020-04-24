@@ -54,6 +54,27 @@ Template.userAvatar.helpers({
     else
       return 'idle';
   },
+
+  viewPortWidth() {
+    const user = Users.findOne(this.userId);
+    return (user && user.getInitials().length || 1) * 12;
+  },
+
+  isForActivitiesList() {
+    if (Template.parentData() && Template.parentData().activityType) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  isForUnopenedCard() {
+    if (Template.parentData() && typeof Template.parentData() === 'string') {
+      return true;
+    } else {
+      return false;
+    }
+  },
 });
 
 Template.userAvatar.events({

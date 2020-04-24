@@ -241,8 +241,11 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
-        const quotaGroupId = this.find('.choose-specific-quota-to-use option:selected').value.trim();
-        const isAdmin = false;
+        var quotaGroupId = '';
+        if (this.find('.choose-specific-quota-to-use option:selected')) {
+          quotaGroupId = this.find('.choose-specific-quota-to-use option:selected').value.trim();
+        }
+        var isAdmin = false;
         if (this.find('.js-profile-isadmin')) {
           isAdmin = this.find('.js-profile-isadmin').value.trim();
         }
