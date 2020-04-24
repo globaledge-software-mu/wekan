@@ -980,6 +980,11 @@ if (Meteor.isServer) {
   					{ _id: userGroup._id }, 
   					{ $set: { usedBoardsQuota: usedQuota } }
   				);
+          // Update quotaGroupId in Boards
+          Boards.update(
+            { _id: doc._id }, 
+            { $set: { quotaGroupId: userGroup._id } }
+          );
     		}
       } else {
       	const userAssignedUserGroups = AssignedUserGroups.find({ userId }, {$sort: {groupOrder: 1}} ).fetch();

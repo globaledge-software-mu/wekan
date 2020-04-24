@@ -596,7 +596,10 @@ BlazeComponent.extendComponent({
 
         const idNameEmail = $('.js-search-member input').val();
         if (idNameEmail.indexOf('@')<0 || this.isValidEmail(idNameEmail)) {
-          const selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+          var selectedUserGroupId = '';
+          if (this.find('.choose-specific-quota-to-use option:selected')) {
+            selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+          }
 	    		this.inviteUser(idNameEmail, roleId, selectedUserGroupId);
         } else {
         	this.setError('email-invalid');
