@@ -12,6 +12,7 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('mailServer');
     Meteor.subscribe('accountSettings');
     Meteor.subscribe('announcements');
+    Meteor.subscribe('folders');
   },
 
   setError(error) {
@@ -36,7 +37,8 @@ BlazeComponent.extendComponent({
     return Settings.findOne();
   },
 
-  boards() {
+  // return user's every owned (is admin of) and active (not archived) boards
+  ownBoards() {
     return Boards.find({
       archived: false,
       'members.userId': Meteor.userId(),
@@ -45,6 +47,16 @@ BlazeComponent.extendComponent({
     }, {
       sort: ['title'],
     });
+  },
+  
+  folders() {
+    return Folders.find({ 
+      userId: Meteor.user()._id, 
+      contents: { $exists: true }
+    }, { 
+      sort: ['name'] 
+    }
+    );
   },
 
   roles() {
@@ -264,6 +276,116 @@ BlazeComponent.extendComponent({
       'click a.js-toggle-tls': this.toggleTLS,
       'click a.js-setting-menu': this.switchMenu,
       'click a.js-toggle-board-choose': this.checkBoard,
+      'change select#generateSpecificList'(evt) {
+        const optionSelected = $(evt.target).val();
+
+        if (optionSelected.length > 0) {
+          if (optionSelected === 'own') {
+            // List user's every owned (is admin of) and active (not archived) boards
+            $('.scrollableBoardsList').empty();
+            Boards.find({
+              archived: false,
+              'members.userId': Meteor.userId(),
+              'members.isAdmin': true,
+              type: {$ne: 'template-container'}
+            }, {
+              sort: ['title'],
+            }).forEach((board) => {
+              $('.scrollableBoardsList').append(
+                '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
+                '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
+                '<span>'+board.title+'</span>'+
+                '</a>'     
+              );
+            });
+          } else if (optionSelected === 'templates') {
+            // List template boards of which the user is a member of
+            $('.scrollableBoardsList').empty();
+            Boards.find({
+              archived: false,
+              'members.userId': Meteor.userId(),
+              type: 'template-board',
+            }, {
+              sort: ['title'],
+            }).forEach((board) => {
+              $('.scrollableBoardsList').append(
+                '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
+                '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
+                '<span>'+board.title+'</span>'+
+                '</a>'     
+              );
+            });
+          } else if (optionSelected === 'uncategorised') {
+            // List user's uncategorised boards
+            $('.scrollableBoardsList').empty();
+
+            var userFolders = Folders.find({ userId: Meteor.userId() }).fetch();
+            var categorisedBoardIds = new Array;
+
+            if (userFolders.length > 0) {
+              for (var i=0; i < userFolders.length; i++) {
+                var folderContents = userFolders[i].contents;
+                if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+                  for (var j=0; j < _.keys(folderContents).length; j++) {
+                      categorisedBoardIds.push(folderContents[j].boardId);
+                  }
+                }
+              }
+            }
+
+            Boards.find({
+              _id: { $nin: categorisedBoardIds }, 
+              archived: false, 
+              'members.userId': Meteor.userId(), 
+              type: { 
+                $nin: [ 'template-board', 'template-container' ]
+              },
+            }, { 
+              sort: ['title'], 
+            }).forEach((board) => {
+            $('.scrollableBoardsList').append(
+                '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
+                '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
+                '<span>'+board.title+'</span>'+
+                '</a>'     
+              );
+            });
+          } else {
+            // get the user's categorised boards, more specifically, the ones from the user's folder which was selected
+            $('.scrollableBoardsList').empty();
+            const folderId = optionSelected;
+            const folder = Folders.findOne({ _id: folderId });
+            if (folder && folder._id) {
+              var boardIds = new Array;
+
+              var folderContents = folder.contents;
+              if (typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
+                for (var j=0; j < _.keys(folderContents).length; j++) {
+                  boardIds.push(folderContents[j].boardId);
+                }
+              }
+
+              Boards.find({
+                _id: { $in: boardIds }, 
+                archived: false, 
+                'members.userId': Meteor.userId(), 
+                type: { 
+                  $nin: [ 'template-board', 'template-container' ]
+                },
+              }, { 
+                sort: ['title'], 
+              }).forEach((board) => {
+              $('.scrollableBoardsList').append(
+                  '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
+                  '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
+                  '<span>'+board.title+'</span>'+
+                  '</a>'     
+                );
+              });
+            }
+          }
+        }
+      },
       'click button.js-email-invite'(evt) {
         evt.preventDefault();
       	$('.successStatus.inviteSent').remove();

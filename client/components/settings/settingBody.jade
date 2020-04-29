@@ -60,9 +60,15 @@ template(name="general")
                     option(value='{{role._id}}') {{role.name}}
           li(style="margin-bottom: 8px")
             .title {{_ 'to-boards'}}
+            select#generateSpecificList
+              option(value='own' selected) {{_ 'Own Boards'}}
+              option(value='templates') {{_ 'Templates'}}
+              option(value='uncategorised') {{_ 'Uncategorised'}}
+              each folder in folders
+                option(value='{{folder._id}}') {{folder.name}}
             .select-board-msg.hide {{_ 'error-boardNotSelected'}}
             .scrollableBoardsList
-              each boards
+              each ownBoards
                 a.option.flex.js-toggle-board-choose(id= _id)
                   .materialCheckBox(data-id= _id)
                   span= title
