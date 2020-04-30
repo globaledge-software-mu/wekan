@@ -362,6 +362,19 @@ Template.peopleRow.helpers({
     }
     let role = Roles.findOne(user.roleId);
     return role.name;
+  },
+  assignedUserGroups() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    const user = userCollection.findOne(this.userId);
+    if (user && user._id) {
+      var userGroupsIds = new Array();
+      AssignedUserGroups.find({ 
+        userId: user._id 
+      }).forEach((assignedUserGroup) => {
+        userGroupsIds.push(assignedUserGroup.userGroupId);
+      });
+      return UserGroups.find({ _id: { $in: userGroupsIds } });
+    }
   }
 });
 
