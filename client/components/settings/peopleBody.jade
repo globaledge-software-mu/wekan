@@ -99,6 +99,7 @@ template(name="peopleGeneral")
         th {{_ 'verified'}}
         th {{_ 'createdAt'}}
         th {{_ 'active'}}
+        th {{_ 'user-groups'}}
         th {{_ 'authentication-method'}}
         th
       // If isAdmin
@@ -141,6 +142,10 @@ template(name="peopleRow")
         | {{_ 'no'}}
       else
         | {{_ 'yes'}}
+    td 
+      ul
+        each userGroup in assignedUserGroups
+          li {{ userGroup.title }}
     td {{_ userData.authenticationMethod }}
     td
       a.edit-user
