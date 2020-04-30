@@ -68,8 +68,21 @@ Template.userAvatar.helpers({
     }
   },
 
-  isForUnopenedCard() {
+  isForUnopenedAndOpenedCardMembersAvatars() {
     if (Template.parentData() && typeof Template.parentData() === 'string') {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  isForNavBar() {
+    if (Template.parentData() && 
+        typeof Template.parentData() === 'object' && 
+        !Template.parentData().type && 
+        !Template.parentData().activityType && 
+        !Template.parentData().userId
+    ) {
       return true;
     } else {
       return false;
