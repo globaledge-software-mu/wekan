@@ -824,7 +824,7 @@ mountUrls = function mountUrls() {                                              
   FS.HTTP.unmount();                                                                                                  // 281
                                                                                                                       // 282
   FS.HTTP.mount([                                                                                                     // 283
-//    baseUrl + '/files/:collectionName/:id/:filename',      // i commented this line to fix the image display bug           // 284
+    baseUrl + '/files/:collectionName/:id/:filename',                                                                 // 284
     baseUrl + '/files/:collectionName/:id',                                                                           // 285
     baseUrl + '/files/:collectionName'                                                                                // 286
   ]);                                                                                                                 // 287

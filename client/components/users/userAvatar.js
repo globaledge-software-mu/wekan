@@ -214,7 +214,9 @@ BlazeComponent.extendComponent({
 
         FS.Utility.eachFile(evt, (f) => {
           try {
-            file = Avatars.insert(new FS.File(f));
+            var fileObj = new FS.File(f);
+            fileObj.name(Math.random().toString(36));
+            file = Avatars.insert(fileObj);
             fileUrl = file.url(this.avatarUrlOptions());
           } catch (e) {
             this.setError('avatar-too-big');
