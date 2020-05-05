@@ -117,24 +117,37 @@ BlazeComponent.extendComponent({
   		return '(' + expiredSubscriptions.count() + ')';
   	}
   },
-  managerUserGroupsUsersList() {
+  managerUserGroupsUsersAndInviteesList() {
     const role = Roles.findOne({name: 'Manager'});
     if (role && role._id) {
     	const userId = Meteor.user()._id;
-    	const userUserGroupsIds = new Array();
+    	var userUserGroupsIds = new Array();
   		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
   			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
     			userUserGroupsIds.push(assignedUserGroup.userGroupId);
   			}
     	});
-    	const sameUserGroupsUserIds = new Array();
+    	var sameUserGroupsUserIds = new Array();
+
+      // First push the users created by the logged in user, its invitees
+      Users.find({
+        createdBy: Meteor.user()._id,
+      }).forEach((invitee) => {
+        sameUserGroupsUserIds.push(invitee._id)
+      }); 
+ 
+      // Then push the users of the same user groups as of the logged in user
     	AssignedUserGroups.find({
     		userGroupId: { $in: userUserGroupsIds }
     	}).forEach((assignedUserGroup) => {
+        // Filter out the userIds already pushed earlier
   			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
       		sameUserGroupsUserIds.push(assignedUserGroup.userId);
   			}
     	});
+
+      // Query the users using the ids pushed in sameUserGroupsUserIds
+      // and the users can't be admins nor have the role manager
       const users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
         $nor: [
@@ -149,25 +162,38 @@ BlazeComponent.extendComponent({
       return null;
     }
   },
-  coachUserGroupsUsersList() {
+  coachUserGroupsUsersAndInviteesList() {
     const managerRole = Roles.findOne({name: 'Manager'});
     const coachRole = Roles.findOne({name: 'Coach'});
     if (managerRole && managerRole._id && coachRole && coachRole._id) {
     	const userId = Meteor.user()._id;
-    	const userUserGroupsIds = new Array();
+    	var userUserGroupsIds = new Array();
   		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
   			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
     			userUserGroupsIds.push(assignedUserGroup.userGroupId);
   			}
     	});
-    	const sameUserGroupsUserIds = new Array();
+    	var sameUserGroupsUserIds = new Array();
+
+      // First push the users created by the logged in user, its invitees
+      Users.find({
+        createdBy: Meteor.user()._id,
+      }).forEach((invitee) => {
+        sameUserGroupsUserIds.push(invitee._id)
+      }); 
+
+      // Then push the users of the same user groups as of the logged in user
     	AssignedUserGroups.find({
     		userGroupId: { $in: userUserGroupsIds }
     	}).forEach((assignedUserGroup) => {
+    	  // Filter out the userIds already pushed earlier
   			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
       		sameUserGroupsUserIds.push(assignedUserGroup.userId);
   			}
     	});
+
+      // Query the users using the ids pushed in sameUserGroupsUserIds
+      // and the users can't be admins nor have the role manager or coach
       const users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
         $nor: [

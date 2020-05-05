@@ -1013,13 +1013,6 @@ if (Meteor.isServer) {
 					{ _id: newUserId }, 
 					{ $set: { quotaGroupId: userGroup._id } }
 				);
-
-        // Assigned the newly created user to the same user group which's quota was used to create him/her
-        AssignedUserGroups.insert({
-          userId: newUserId,
-          userGroupId: userGroup._id,
-          groupOrder: 1,
-        });
   		} else {
       	const userAssignedUserGroups = AssignedUserGroups.find({ userId: Meteor.user()._id }, {$sort: {groupOrder: 1}} ).fetch();
       	for (var i = 0; i < userAssignedUserGroups.length; i++) {
@@ -1040,13 +1033,6 @@ if (Meteor.isServer) {
       					{ _id: newUserId }, 
       					{ $set: { quotaGroupId: userGroup._id } }
       				);
-
-              // Assigned the newly created user to the same user group which's quota was used to create him/her
-              AssignedUserGroups.insert({
-                userId: newUserId,
-                userGroupId: userGroup._id,
-                groupOrder: 1,
-              });
 
         			break;
         		}
@@ -1182,13 +1168,6 @@ if (Meteor.isServer) {
                   { _id: newUserId }, 
                   { $set: { quotaGroupId: userGroup._id } }
                 );
-
-                // Assigned the newly created user to the same user group which's quota was used to create him/her
-                AssignedUserGroups.insert({
-                  userId: newUserId,
-                  userGroupId: userGroup._id,
-                  groupOrder: 1,
-                });
               } 
               // Have to add this else here as the settings tab of the admin panel also use this method to create users
               // and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
@@ -1222,13 +1201,6 @@ if (Meteor.isServer) {
                     { _id: newUserId }, 
                     { $set: { quotaGroupId: userGroup._id } }
                   );
-
-                  // Assigned the newly created user to the same user group which's quota was used to create him/her
-                  AssignedUserGroups.insert({
-                    userId: newUserId,
-                    userGroupId: userGroup._id,
-                    groupOrder: 1,
-                  });
 
                   hadUsableQuota = true;
                   break;
