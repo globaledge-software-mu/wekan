@@ -134,7 +134,7 @@ Template.dateBadge.helpers({
     this.card.setReceived(null);
   }
 
-  _deleteScore() {
+  _deleteScore(clickedDatapoint, datapointParams) {
     this.card.setInitialScore(null);
   }
 
@@ -225,24 +225,21 @@ Template.dateBadge.helpers({
     this.card.setStart(null);
   }
 
-  _deleteScore() {
-    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+  _deleteScore(clickedDatapoint, datapointParams) {
+    if (!clickedDatapoint) {
       this.card.setCurrentScore(null);
     } else {
       // from chart datapoint
-      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'current', cardId: this.card._id });
+      cardScoreDoc = CardScores.findOne({ 
+      	date: datapointParams.dataPointDate, 
+      	score: datapointParams.dataPointScore, 
+      	type: 'current', 
+      	cardId: this.card._id 
+    	});
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
       }
-      lastPastDoc = CardScores.find({ date: {$lte: new Date()}, type: 'current', cardId: this.card._id }, { sort: { date: -1 } }).fetch();
-      if (lastPastDoc.length > 0) {
-        lastPastStart = lastPastDoc[0].date;
-        lastPastCurrentScore = lastPastDoc[0].score;
-        this.card.setStart(lastPastStart);
-        this.card.setCurrentScore(lastPastCurrentScore);
-      } else {
-        this.card.setCurrentScore(null);
-      }
+      this.card.setCurrentScore(null);
     }
   }
 
@@ -306,24 +303,20 @@ Template.dateBadge.helpers({
     this.card.setDue(null);
   }
 
-  _deleteScore() {
-    if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) {
+  _deleteScore(clickedDatapoint, datapointParams) {
+    if (!clickedDatapoint) { // from badge
       this.card.setTargetScore(null);
-    } else {
-      // from chart datapoint
-      cardScoreDoc = CardScores.findOne({ date: this.card.dataPointDate, score: this.card.dataPointScore, type: 'target', cardId: this.card._id });
+    } else { // from chart datapoint
+      cardScoreDoc = CardScores.findOne({ 
+      	date: datapointParams.dataPointDate, 
+      	score: datapointParams.dataPointScore, 
+      	type: 'target', 
+      	cardId: this.card._id 
+    	});
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
       }
-      firstFutureDoc = CardScores.find({ date: {$gte: new Date(new Date().getDate()-1)}, type: 'target', cardId: this.card._id }, { sort: { date: 1 } }).fetch();
-      if (firstFutureDoc.length > 0) {
-        firstFutureDue = firstFutureDoc[0].date;
-        firstFutureTargetScore = firstFutureDoc[0].score;
-        this.card.setDue(firstFutureDue);
-        this.card.setTargetScore(firstFutureTargetScore);
-      } else {
-        this.card.setTargetScore(null);
-      }
+      this.card.setTargetScore(null);
     }
   }
 }).register('editCardDueDatePopup');
@@ -363,7 +356,7 @@ Template.dateBadge.helpers({
     this.card.setEnd(null);
   }
 
-  _deleteScore() {
+  _deleteScore(clickedDatapoint, datapointParams) {
     this.card.setEndScore(null);
   }
 }).register('editCardEndDatePopup');
@@ -634,6 +627,10 @@ BlazeComponent.extendComponent({
     return [{
     	'click #submitDetailedInitialScores'(e) {
         e.preventDefault();
+
+        const dateString = Session.get('dateString');
+        date = moment(dateString, 'L LT', true).toDate();
+
         var hasOnlyAspects = false;
         var hasOnlyTeamMembers = false;
         var hasBothTeamMembersAndAspects = false;
@@ -686,7 +683,9 @@ BlazeComponent.extendComponent({
               if (!currentScore || currentScore.length < 1 || currentScore == '') {
                 card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
               }
+          		card.setReceived(date);
               card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
+            	card.reloadHistoricScoreChart();
               Modal.close('editCardReceivedComposedScoreModal');
             }
           }
@@ -726,7 +725,9 @@ BlazeComponent.extendComponent({
               if (!currentScore || currentScore.length < 1 || currentScore == '') {
                 card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
               }
+          		card.setReceived(date);
               card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
+            	card.reloadHistoricScoreChart();
               Modal.close('editCardReceivedComposedScoreModal');
             }
           }
@@ -784,7 +785,9 @@ BlazeComponent.extendComponent({
                     if (!currentScore || currentScore.length < 1 || currentScore == '') {
                       card.setCurrentScore(teamMembersTotalScore);
                     }
+                		card.setReceived(date);
                     card.setInitialScore(teamMembersTotalScore);
+                  	card.reloadHistoricScoreChart();
                     Modal.close('editCardReceivedComposedScoreModal');
                   }
                 }
@@ -916,6 +919,10 @@ BlazeComponent.extendComponent({
     return [{
     	'click #submitDetailedCurrentScores'(e) {
         e.preventDefault();
+
+        const dateString = Session.get('dateString');
+        date = moment(dateString, 'L LT', true).toDate();
+
         var hasOnlyAspects = false;
         var hasOnlyTeamMembers = false;
         var hasBothTeamMembersAndAspects = false;
@@ -966,9 +973,11 @@ BlazeComponent.extendComponent({
               // If initial is not set yet, set it too
               const initialScore = card.getInitialScore();
               if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                this.card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
+                card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
               }
+              card.setStart(date);
               card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
+            	card.reloadHistoricScoreChart();
               Modal.close('editCardStartComposedScoreModal');
             }
           }
@@ -1006,9 +1015,11 @@ BlazeComponent.extendComponent({
               // If initial is not set yet, set it too
               const initialScore = card.getInitialScore();
               if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                this.card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
+                card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
               }
+              card.setStart(date);
               card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
+            	card.reloadHistoricScoreChart();
               Modal.close('editCardStartComposedScoreModal');
             }
           }
@@ -1064,9 +1075,11 @@ BlazeComponent.extendComponent({
                     // If initial is not set yet, set it too
                     const initialScore = card.getInitialScore();
                     if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                      this.card.setInitialScore(teamMembersTotalScore);
+                      card.setInitialScore(teamMembersTotalScore);
                     }
+                    card.setStart(date);
                     card.setCurrentScore(teamMembersTotalScore);
+                  	card.reloadHistoricScoreChart();
                     Modal.close('editCardStartComposedScoreModal');
                   }
                 }
