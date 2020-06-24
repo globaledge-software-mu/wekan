@@ -193,12 +193,6 @@ Template.dateBadge.helpers({
     }
     this.card.setStart(date);
 
-  	// If received is not set yet, set it too
-  	const receivedDate = this.data().getStart();
-  	if (!receivedDate || receivedDate.length < 1 || receivedDate == '') {
-  		this.card.setReceived(date);
-  	}
-
     var oldDate = this.data().dataPointDate;
     var oldScore = this.data().dataPointScore;
     // if clicked from chart && date changed
@@ -683,7 +677,6 @@ BlazeComponent.extendComponent({
               if (!currentScore || currentScore.length < 1 || currentScore == '') {
                 card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
               }
-          		card.setReceived(date);
               card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
             	card.reloadHistoricScoreChart();
               Modal.close('editCardReceivedComposedScoreModal');
@@ -725,7 +718,6 @@ BlazeComponent.extendComponent({
               if (!currentScore || currentScore.length < 1 || currentScore == '') {
                 card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
               }
-          		card.setReceived(date);
               card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
             	card.reloadHistoricScoreChart();
               Modal.close('editCardReceivedComposedScoreModal');
@@ -785,7 +777,6 @@ BlazeComponent.extendComponent({
                     if (!currentScore || currentScore.length < 1 || currentScore == '') {
                       card.setCurrentScore(teamMembersTotalScore);
                     }
-                		card.setReceived(date);
                     card.setInitialScore(teamMembersTotalScore);
                   	card.reloadHistoricScoreChart();
                     Modal.close('editCardReceivedComposedScoreModal');
