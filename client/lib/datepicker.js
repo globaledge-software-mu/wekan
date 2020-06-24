@@ -98,41 +98,38 @@ DatePicker = BlazeComponent.extendComponent({
             hasTeamMembers = true;
           }
 
-          var openModal = false;
-          if (hasAspects || hasTeamMembers) {
-          	openModal = true;
-          }
+          if ($('#date').val() !== "") {
+          	if (hasAspects || hasTeamMembers) {
+              var newDate = '';
+              var dateString = '';
+              if ($('#time').length > 0) {
+                // if no time was given, init with 23:59
+                const time = $('#time').val() || moment(new Date().setHours(23, 59, 0)).format('LT');
+                dateString = $('#date').val() + ' ' + time;
+                newDate = moment(dateString, 'L LT', true);
+              } else if ($('#time').length < 1) {
+                // Time is disabled, init with 23:59
+                const time = moment(new Date().setHours(23, 59, 0)).format('LT');
+                dateString = $('#date').val() + ' ' + time;
+                newDate = moment(dateString, 'L LT', true);
+              }
+              if (!newDate.isValid()) {
+                this.error.set('invalid-date');
+                $('#date').focus();
+                return false;
+              }
 
-          if ($('#date').val() !== "" && openModal) {
-            var newDate = '';
-            var dateString = '';
-            if ($('#time').length > 0) {
-              // if no time was given, init with 23:59
-              const time = $('#time').val() || moment(new Date().setHours(23, 59, 0)).format('LT');
-              dateString = $('#date').val() + ' ' + time;
-              newDate = moment(dateString, 'L LT', true);
-            } else if ($('#time').length < 1) {
-              // Time is disabled, init with 23:59
-              const time = moment(new Date().setHours(23, 59, 0)).format('LT');
-              dateString = $('#date').val() + ' ' + time;
-              newDate = moment(dateString, 'L LT', true);
-            }
-            if (!newDate.isValid()) {
-              this.error.set('invalid-date');
-              $('#date').focus();
-              return false;
-            }
+              Session.set('dateString', dateString);
+              Popup.close();
 
-            Session.set('dateString', dateString);
-            Popup.close();
-
-            if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title')) {
-              Modal.open('editCardReceivedComposedScoreModal');
-              Session.set('composedReceivedScoreCardId', cardId);
-            } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
-              Modal.open('editCardStartComposedScoreModal');
-              Session.set('composedStartScoreCardId', cardId);
-            }
+              if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title')) {
+                Modal.open('editCardReceivedComposedScoreModal');
+                Session.set('composedReceivedScoreCardId', cardId);
+              } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
+                Modal.open('editCardStartComposedScoreModal');
+                Session.set('composedStartScoreCardId', cardId);
+              }
+          	}
           } else {
             this.error.set('invalid-date');
             $('#date').focus();
