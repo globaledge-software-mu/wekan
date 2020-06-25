@@ -97,10 +97,7 @@ Template.userFormsLayout.events({
   'click #at-btn'(event, instance) {
     if (FlowRouter.getRouteName() === 'atSignIn') {
       instance.isLoading.set(true);
-      authentication(event, instance)
-        .then(() => {
-          instance.isLoading.set(false);
-        });
+      authentication(event, instance);
     }
   },
 });
