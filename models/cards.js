@@ -699,10 +699,6 @@ Cards.helpers({
         for (var i = 0; i < card.members.length; i++) {
           const users = Users.find({ _id: card.members[i] });
           if (users.count() < 1) {
-
-        /////
-        console.log('cc');
-
             Cards.update(
               { _id: card._id },
               { $pull: { members: card.members[i] }}

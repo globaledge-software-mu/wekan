@@ -216,7 +216,7 @@ BlazeComponent.extendComponent({
     	this.subscribe('folders');
     	this.subscribe('boards');
       this.subscribe('lists');
-      this.subscribe('cards');
+      this.subscribe('linkedBoardCards');
       this.subscribe('users');
     });
   },
