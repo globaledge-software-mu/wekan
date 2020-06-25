@@ -98,16 +98,42 @@ DatePicker = BlazeComponent.extendComponent({
             hasTeamMembers = true;
           }
 
-          if (hasAspects || hasTeamMembers) {
-            evt.preventDefault();
-            Popup.close();
-            if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title')) {
-              Modal.open('editCardReceivedComposedScoreModal');
-              Session.set('composedReceivedScoreCardId', cardId);
-            } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
-              Modal.open('editCardStartComposedScoreModal');
-              Session.set('composedStartScoreCardId', cardId);
-            }
+          if ($('#date').val() !== "") {
+          	if (hasAspects || hasTeamMembers) {
+              var newDate = '';
+              var dateString = '';
+              if ($('#time').length > 0) {
+                // if no time was given, init with 23:59
+                const time = $('#time').val() || moment(new Date().setHours(23, 59, 0)).format('LT');
+                dateString = $('#date').val() + ' ' + time;
+                newDate = moment(dateString, 'L LT', true);
+              } else if ($('#time').length < 1) {
+                // Time is disabled, init with 23:59
+                const time = moment(new Date().setHours(23, 59, 0)).format('LT');
+                dateString = $('#date').val() + ' ' + time;
+                newDate = moment(dateString, 'L LT', true);
+              }
+              if (!newDate.isValid()) {
+                this.error.set('invalid-date');
+                $('#date').focus();
+                return false;
+              }
+
+              Session.set('dateString', dateString);
+              Popup.close();
+
+              if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title')) {
+                Modal.open('editCardReceivedComposedScoreModal');
+                Session.set('composedReceivedScoreCardId', cardId);
+              } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
+                Modal.open('editCardStartComposedScoreModal');
+                Session.set('composedStartScoreCardId', cardId);
+              }
+          	}
+          } else {
+            this.error.set('invalid-date');
+            $('#date').focus();
+            return false;
           }
         } else {
           return false;
@@ -158,12 +184,45 @@ DatePicker = BlazeComponent.extendComponent({
         }
         Popup.close();
       },
+
       'click .js-delete-date'(evt) {
         evt.preventDefault();
-        this._deleteDate();
-        this._deleteScore();
+        let textMessage = '';
+        let clickedDatapoint = false;
+        var datapointParams = {};
+        const formTitle = $('.js-delete-date').closest('.content-wrapper').siblings('.header').find('.header-title').text();
+        if (formTitle === TAPi18n.__('editCardStartDatePopup-title') || formTitle === TAPi18n.__('editCardDueDatePopup-title')) {
+          if (typeof this.card.dataPointDate === 'undefined' || this.card.dataPointDate === null) { // from the date/score badge
+          	textMessage = 'This will delete only the date & score in the badge!';
+          } else { // from one of the chart datapoints
+          	textMessage = 'This will delete the clicked date & score in the history chart and if the same date & score are on the badge, that too shall get deleted!';
+          	clickedDatapoint = true;
+          	datapointParams['dataPointDate'] = this.card.dataPointDate;
+          	datapointParams['dataPointScore'] = this.card.dataPointScore;
+          }
+        } else {
+        	textMessage = 'This will delete the date & score!';
+        }
+
         Popup.close();
+
+        swal({
+          title: 'Confirm deletion?',
+          text: textMessage,
+          icon: 'warning',
+          buttons: [true, 'Yes'],
+          dangerMode: true,
+        })
+        .then((okDelete) => {
+          if (okDelete) {
+            this._deleteDate();
+            this._deleteScore(clickedDatapoint, datapointParams);
+          } else {
+            return false;
+          }
+        });
       },
+
     }];
   },
 });

@@ -1368,6 +1368,10 @@ Cards.helpers({
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
     }
+    
+    if (!card.startAt) {
+      return false;
+    }
 
     return CardScores.insert({
       boardId: card.boardId,
