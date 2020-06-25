@@ -3,28 +3,48 @@ Template.headerUserBar.events({
   'click .js-change-avatar': Popup.open('changeAvatar'),
 });
 
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+
+  onRendered() {
+    this.setLoading(false);
+  },
+
+  setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+
+  events() {
+    return [{
+      'click .js-edit-profile': Popup.open('editProfile'),
+      'click .js-change-settings': Popup.open('changeSettings'),
+      'click .js-change-avatar': Popup.open('changeAvatar'),
+      'click .js-change-password': Popup.open('changePassword'),
+      'click .js-change-language': Popup.open('changeLanguage'),
+      'click .js-logout'(evt) {
+        evt.preventDefault();
+        this.setLoading(true);
+        AccountsTemplates.logout();
+      },
+      'click .js-go-setting'() {
+        Popup.close();
+      },
+    }];
+  },
+}).register('memberMenuPopup');
+
 Template.memberMenuPopup.helpers({
   templatesBoardId() {
     return Meteor.user().getTemplatesBoardId();
   },
   templatesBoardSlug() {
     return Meteor.user().getTemplatesBoardSlug();
-  },
-});
-
-Template.memberMenuPopup.events({
-  'click .js-edit-profile': Popup.open('editProfile'),
-  'click .js-change-settings': Popup.open('changeSettings'),
-  'click .js-change-avatar': Popup.open('changeAvatar'),
-  'click .js-change-password': Popup.open('changePassword'),
-  'click .js-change-language': Popup.open('changeLanguage'),
-  'click .js-logout'(evt) {
-    evt.preventDefault();
-
-    AccountsTemplates.logout();
-  },
-  'click .js-go-setting'() {
-    Popup.close();
   },
 });
 
