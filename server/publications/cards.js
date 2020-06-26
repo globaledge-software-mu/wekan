@@ -9,7 +9,7 @@ Meteor.publish('cards', function() {
 
 Meteor.publish('userCards', function() {
   return Cards.find({
-  	userId: Meteor.user()._id
+  	userId: Meteor.userId()
   });
 });
 
