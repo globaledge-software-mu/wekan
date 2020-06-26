@@ -586,6 +586,18 @@ if (Meteor.isClient) {
       return role.hasPermission(group, access);
     },
 
+    hasBoardOrIsBoardMember() {
+      var boardsCount = Boards.find({
+      	'members.userId': this._id,
+      	archived: false
+      }).count();
+      if (boardsCount > 0) {
+      	return true;
+      } else {
+      	return false;
+      }
+    },
+
   	removeBoardFromFolder(boardIdentifier, targetFolder, targetFolderId) {
       var boardIds = new Array;
       var folderContents = targetFolder.contents;

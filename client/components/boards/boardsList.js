@@ -50,9 +50,17 @@ Template.boardListHeaderBar.helpers({
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
-    Meteor.subscribe('folders');
+    Meteor.subscribe('userFolders');
     Meteor.subscribe('templateBoards');
-    Meteor.subscribe('cards');
+    Meteor.subscribe('userCards');
+  },
+  
+  showBoards() {
+  	const selector = $('.board-list > .sk-spinner.sk-spinner-wave');
+  	if (selector.length > 0) {
+  		selector.remove();
+  		$('.addBoardContainer').show();
+	  }
   },
 
   onRendered() {
@@ -61,14 +69,18 @@ BlazeComponent.extendComponent({
   	const folder = Session.get('folder');
 
   	if (folder == 'uncategorised') {
+  		this.showBoards();
       $('a#uncategorisedBoardsFolder').trigger('click');
   	} else if (folder == 'templates') {
+  		this.showBoards();
       $('a#templatesFolder').trigger('click');
   	} else {
   		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    		this.showBoards();
     		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
   		} else {
-  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click()
+  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
+    		this.showBoards();
     		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
   		}
   	}
