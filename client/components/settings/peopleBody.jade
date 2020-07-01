@@ -503,7 +503,7 @@ template(name="subscriptionRow")
     td {{ moment subscription.subscribedOn 'LL' }}
     td {{ moment subscription.expiresOn 'LL' }}
     td {{_ subscription.billingCycle}}
-    td
+    td#subscriptionsActionCol
       a.renewSubscription(data-subscription-id=subscription._id)
         | {{_ 'renew'}}
       a.upgradeSubscription(data-subscription-id=subscription._id)

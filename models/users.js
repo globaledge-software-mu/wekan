@@ -454,11 +454,11 @@ if (Meteor.isClient) {
     // is Admin, Manager or Coach
     isAuthorised() {
       var isAllowed = false;
-      var roles = Roles.find({ 
+      var roles = Roles.find({
         $or: [
-          { name: 'Manager' }, 
+          { name: 'Manager' },
           { name: 'Coach' }
-        ] 
+        ]
       }).fetch();
       const LoggedUserRoleId = Meteor.user().roleId;
       if (roles && roles.length) {
@@ -471,7 +471,7 @@ if (Meteor.isClient) {
       if (Meteor.user().isAdmin || isAllowed) {
         return true;
       }
-      return false;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+      return false;
     },
 
     isAdminOrManager() {
@@ -491,9 +491,9 @@ if (Meteor.isClient) {
 
     isCoachOrCoachee() {
       var coachOrCoachee = Roles.find( { name: { $in: [ 'Coach', 'Coachee' ] } } ).fetch();
-      if (coachOrCoachee && 
-      		coachOrCoachee[0] && 
-      		coachOrCoachee[0]._id && 
+      if (coachOrCoachee &&
+      		coachOrCoachee[0] &&
+      		coachOrCoachee[0]._id &&
       		( coachOrCoachee[0]._id == this.roleId || coachOrCoachee[1]._id == this.roleId	)
   		) {
 		    return true;
@@ -513,12 +513,12 @@ if (Meteor.isClient) {
 
     isCoachAndNotAdmin() {
       const coach = Roles.findOne({ name: 'Coach' });
-      const coachAndNotAdmin = Users.find({ 
-      	_id: Meteor.user()._id, 
-      	roleId: coach._id, 
-      	$or: [ 
-      		{ isAdmin: { $exists: false } }, 
-      		{ isAdmin: false } 
+      const coachAndNotAdmin = Users.find({
+      	_id: Meteor.user()._id,
+      	roleId: coach._id,
+      	$or: [
+      		{ isAdmin: { $exists: false } },
+      		{ isAdmin: false }
   			]
     	});
       if (coachAndNotAdmin && coachAndNotAdmin.count() > 0) {
@@ -608,9 +608,9 @@ if (Meteor.isClient) {
     	    }
     		}
   		}
-      
+
       Folders.update(
-        { _id : targetFolderId }, 
+        { _id : targetFolderId },
         { $unset: { contents : '' } }
       );
       for (var z = 0; z < boardIds.length; z++) {
@@ -625,13 +625,13 @@ if (Meteor.isClient) {
     changeBoardToRegular(boardIdentifier) {
       Boards.update(
         { _id: boardIdentifier },
-        { $set: { 
-        		type : 'board' 
+        { $set: {
+        		type : 'board'
         	},
         }
       );
 
-      // removing the board template linked card and swimlane docs, since the 
+      // removing the board template linked card and swimlane docs, since the
       // board that it represented has been changed to a regular one
       var linkedCard = Cards.findOne({
       	linkedId: boardIdentifier,
@@ -650,14 +650,14 @@ if (Meteor.isClient) {
       	managerRoleId = managerRole._id;
       }
       var adminsOrManagers = Users.find({
-      	$or: [ 
-      		{ isAdmin: true }, 
-      		{ roleId: managerRoleId } 
+      	$or: [
+      		{ isAdmin: true },
+      		{ roleId: managerRoleId }
     		]
       });
   		var boardTemplateMembers = (Boards.findOne({_id: boardIdentifier})).members;
     	adminsOrManagers.forEach((adminOrManager) => {
-    		var adminOrManagerId = adminOrManager._id; 
+    		var adminOrManagerId = adminOrManager._id;
   			isMember = false;
     		boardTemplateMembers.forEach((boardTemplateMember) => {
       		if (boardTemplateMember.userId == adminOrManagerId) {
@@ -943,7 +943,7 @@ if (Meteor.isServer) {
 	      Email.send({
 	        to: subscriberEmail,
 	        from: Accounts.emailTemplates.from,
-	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-subject', params, lang), 
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-subject', params, lang),
 	        text: TAPi18n.__('email-notify-subscriber-his-subscription-was-successful-text', params, lang),
 	      });
 	      return {output: 'success'};
@@ -961,7 +961,7 @@ if (Meteor.isServer) {
 	      Email.send({
 	        to: subscriberEmail,
 	        from: Accounts.emailTemplates.from,
-	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang), 
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-subject', params, lang),
 	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-renewed-text', params, lang),
 	      });
 	      return {output: 'success'};
@@ -979,7 +979,7 @@ if (Meteor.isServer) {
 	      Email.send({
 	        to: subscriberEmail,
 	        from: Accounts.emailTemplates.from,
-	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-subject', params, lang), 
+	        subject: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-subject', params, lang),
 	        text: TAPi18n.__('email-notify-subscriber-his-subscription-is-upgraded-text', params, lang),
 	      });
 	      return {output: 'success'};
@@ -994,7 +994,7 @@ if (Meteor.isServer) {
       const username = params.username;
       const email = params.email;
 
-      // create new user 
+      // create new user
       const newUserId = Accounts.createUser({username, email});
 
       // update new user's details
@@ -1016,13 +1016,13 @@ if (Meteor.isServer) {
 
   			// Update usedUsersQuota in UserGroups
   			UserGroups.update(
-					{ _id: userGroup._id }, 
+					{ _id: userGroup._id },
 					{ $set: { usedUsersQuota: usedQuota } }
 				);
 
   			// Update quotaGroupId in Users
   			Users.update(
-					{ _id: newUserId }, 
+					{ _id: newUserId },
 					{ $set: { quotaGroupId: userGroup._id } }
 				);
   		} else {
@@ -1036,13 +1036,13 @@ if (Meteor.isServer) {
 
         			// Update usedUsersQuota in UserGroups
         			UserGroups.update(
-      					{ _id: userGroup._id }, 
+      					{ _id: userGroup._id },
       					{ $set: { usedUsersQuota: usedQuota } }
       				);
 
         			// Update quotaGroupId in Users
         			Users.update(
-      					{ _id: newUserId }, 
+      					{ _id: newUserId },
       					{ $set: { quotaGroupId: userGroup._id } }
       				);
 
@@ -1100,8 +1100,8 @@ if (Meteor.isServer) {
         if (user._id !== inviter._id) {
           board.addMember(user._id);
           user.addInvite(boardId);
-          
-          // If its a user that was already invited and has already set its own password, 
+
+          // If its a user that was already invited and has already set its own password,
           // we just send the invite to join the board
           if (user && user.services && user.services.password && user.services.password.bcrypt) {
 
@@ -1123,7 +1123,7 @@ if (Meteor.isServer) {
             } catch (e) {
               throw new Meteor.Error('email-fail', e.message);
             }
-            
+
           } else {
             Users.remove(user._id);
             removedUnconfirmedUser = true;
@@ -1133,7 +1133,7 @@ if (Meteor.isServer) {
         } else {
         	throw new Meteor.Error('error-user-notAllowSelf');
         }
-      } 
+      }
 
       if (continueExecution) {
         if (posAt <= 0) throw new Meteor.Error('error-user-doesNotExist');
@@ -1171,20 +1171,20 @@ if (Meteor.isServer) {
                 var usedQuota = userGroup.usedUsersQuota  + 1;
                 // Update usedUsersQuota in UserGroups
                 UserGroups.update(
-                  { _id: userGroup._id }, 
+                  { _id: userGroup._id },
                   { $set: { usedUsersQuota: usedQuota } }
                 );
 
                 // Update quotaGroupId in Users
                 Users.update(
-                  { _id: newUserId }, 
+                  { _id: newUserId },
                   { $set: { quotaGroupId: userGroup._id } }
                 );
-              } 
+              }
               // Have to add this else here as the settings tab of the admin panel also use this method to create users
-              // and since multiple users can be created at once using that form, let's say the user selected a usergroup, 
+              // and since multiple users can be created at once using that form, let's say the user selected a usergroup,
               // and let's say the selected usergroup has only 2 usable usersQuota and the user had input 4 e-mails to create 4 users
-              // so then the system would create the first two users using the selected user group and the rest of the users shall be 
+              // so then the system would create the first two users using the selected user group and the rest of the users shall be
               // created using the default system check for the order of the user's userGroups based on its usable usersQuota
               else {
                 updateUsingDefaultGroupOrder = true;
@@ -1204,13 +1204,13 @@ if (Meteor.isServer) {
                   var usedQuota = userGroup.usedUsersQuota  + 1;
                   // Update usedUsersQuota in UserGroups
                   UserGroups.update(
-                    { _id: userGroup._id }, 
+                    { _id: userGroup._id },
                     { $set: { usedUsersQuota: usedQuota } }
                   );
 
                   // Update quotaGroupId in Users
                   Users.update(
-                    { _id: newUserId }, 
+                    { _id: newUserId },
                     { $set: { quotaGroupId: userGroup._id } }
                   );
 
@@ -1219,12 +1219,12 @@ if (Meteor.isServer) {
                 }
               }
             };
+
+            if (!hadUsableQuota) {
+              Users.remove(newUserId);
+              throw new Meteor.Error('Email not sent as could not create user due to lack of quota');
+            }
           }
-        }
-        
-        if (!hadUsableQuota) {
-          Users.remove(newUserId);
-          throw new Meteor.Error('Email not sent as could not create user due to lack of quota');
         }
 
         // Send Enrollment Email
@@ -1241,9 +1241,9 @@ if (Meteor.isServer) {
           if (user && role && role.name) {
           	roleName = role.name;
             Users.update(
-          		{ _id: newUserId }, 
-          		{ $set: 
-          			{ roleId: roleId, roleName: roleName } 
+          		{ _id: newUserId },
+          		{ $set:
+          			{ roleId: roleId, roleName: roleName }
           		}
         		);
           }
@@ -1329,7 +1329,7 @@ if (Meteor.isServer) {
 
 if (Meteor.isServer) {
   Meteor.startup(() => {
-  	
+
   	// Find any duplicate board members in a board and cleanup the duplicate
   	Boards.find().forEach((board) => {
     	const memberIds = new Array();
@@ -1341,7 +1341,7 @@ if (Meteor.isServer) {
       	  var AA = {};
       		AA[i] = memberIds.slice();
       		AA[i].splice( AA[i].indexOf(memberIds[i]), 1 );
-    			const elementToBeRemovedUserId = memberIds[i]; 
+    			const elementToBeRemovedUserId = memberIds[i];
       	  if (AA[i].includes(elementToBeRemovedUserId)) {
       	  	const elementToBeRemovedIsAdmin = board.members[i].isAdmin;
       	  	const elementToBeRemovedIsActive = board.members[i].isActive;
@@ -1349,8 +1349,8 @@ if (Meteor.isServer) {
       	  	const elementToBeRemovedIsCommentOnly = board.members[i].isCommentOnly;
       	  	Boards.update(
     	  			{ _id: board._id },
-              { $pull: 
-              	{ members: 
+              { $pull:
+              	{ members:
               		{ userId: elementToBeRemovedUserId, },
               	},
               }
@@ -1359,10 +1359,10 @@ if (Meteor.isServer) {
     	  			{ _id: board._id }, {
     	  				$push: {
               		members: {
-              			userId: elementToBeRemovedUserId, 
-              			isAdmin: elementToBeRemovedIsAdmin, 
-              			isActive: elementToBeRemovedIsActive, 
-              			isNoComments: elementToBeRemovedIsNoComments, 
+              			userId: elementToBeRemovedUserId,
+              			isAdmin: elementToBeRemovedIsAdmin,
+              			isActive: elementToBeRemovedIsActive,
+              			isNoComments: elementToBeRemovedIsNoComments,
               			isCommentOnly: elementToBeRemovedIsCommentOnly,
               		},
               	},
@@ -1373,15 +1373,15 @@ if (Meteor.isServer) {
       }
   	});
     //____________________________________
-  	
-  	
+
+
     // Let mongoDB ensure username unicity
     Users._collection._ensureIndex({
       username: 1,
     }, {unique: true});
     //____________________________________
-  	
-  	
+
+
     // Let mongoDB ensure username unicity
     UserGroups._collection._ensureIndex({
       title: 1,
@@ -1409,7 +1409,7 @@ if (Meteor.isServer) {
     	}
     });
     //____________________________________
-  	
+
   });
 
   // OLD WAY THIS CODE DID WORK: When user is last admin of board,
@@ -1435,9 +1435,9 @@ if (Meteor.isServer) {
       return 5;
     }
 
-		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
-		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
-		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it,
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created
 		//	and whether he has exhausted his default trial quota
   	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
   	// If user has any AssignedUserGroup
@@ -1454,7 +1454,7 @@ if (Meteor.isServer) {
   		} else {
 	      throw new Meteor.Error('error-exhausted-users-quota');
   		}
-  	} 
+  	}
   	// Else we check with the Default Trial 'Users Quota'
   	else {
     	const usersCreatedByCurrentUserCount = Users.find({createdBy: insertorId}).count();
@@ -1484,11 +1484,11 @@ if (Meteor.isServer) {
   // will be done twice.
   Users.after.update(function (userId, user, fieldNames) {
 
-  	// When a user doc is updated, if his role is Admin or manager, 
+  	// When a user doc is updated, if his role is Admin or manager,
   	// make him a member of all the template boards of which he was not a member before
   	const templateBoards = Boards.find({
       type: 'template-board',
-      archived: false, 
+      archived: false,
   	});
   	const userIsAdmin = user.isAdmin;
   	const managerRole = Roles.findOne({name: 'Manager'});
@@ -1636,11 +1636,11 @@ if (Meteor.isServer) {
 
   Users.after.insert((userId, doc) => {
 
-  	// When a new user is created, if his role is Admin or manager, 
+  	// When a new user is created, if his role is Admin or manager,
   	// make him a member of all the template boards of which he was not a member before
   	const templateBoards = Boards.find({
       type: 'template-board',
-      archived: false, 
+      archived: false,
   	});
   	const userIsAdmin = doc.isAdmin;
   	const managerRole = Roles.findOne({name: 'Manager'});

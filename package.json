@@ -36,6 +36,7 @@
     "page": "^1.8.6",
     "qs": "^6.5.2",
     "source-map-support": "^0.5.9",
+    "stylint": "^2.0.0",
     "sweetalert": "2.1.2",
     "xss": "^1.0.3"
   }
