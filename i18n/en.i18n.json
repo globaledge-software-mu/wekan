@@ -312,6 +312,8 @@
     "email-invite": "Invite via Email",
     "email-invite-subject": "__inviter__ sent you an invitation",
     "email-invite-text": "Dear __user__,\n\n__inviter__ invites you to join board \"__board__\" for collaborations.\n\nPlease follow the link below:\n\n__url__\n\nThanks.",
+    "email-enroll-subject": "Welcome at OnlineCoachTool...!",
+    "email-enroll-text": "<p>Hello __user__,</p><br><p>You are invited to join a coachboard on the Online Coach Tool.</p><p>Simply click the link below to join.</p><p>\"__enrollUrl__\"</p><p>Please choose a safe password for your account.</p><p>We wish you lots of joy working on your board!</p><br><p>Kind regards,</p><p> The OnlineCoachTool team</p><p>my.onlinecoachtool.com</p><img src='__logoUrl__'>",
     "email-resetPassword-subject": "Reset your password on __siteName__",
     "email-resetPassword-text": "Hello __user__,\n\nTo reset your password, simply click the link below.\n\n__url__\n\nThanks.",
     "email-sent": "Email sent",

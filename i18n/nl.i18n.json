@@ -311,6 +311,8 @@
     "email-invite": "Nodig uit via e-mail",
     "email-invite-subject": "__inviter__ heeft je een uitnodiging gestuurd",
     "email-invite-text": "Beste __user__,\n\n__inviter__ heeft je uitgenodigd om voor een samenwerking deel te nemen aan het bord \"__board__\".\n\nKlik op de link hieronder:\n\n__url__\n\nBedankt.",
+    "email-enroll-subject": "Welkom bij OnlineCoachTool...!",
+    "email-enroll-text": "<p>Hallo __user__,</p><br><p>Je wordt uitgenodigd om lid te worden van een coachboard op de Online Coach Tool.</p><p>Klik gewoon op de onderstaande link om lid te worden.</p><p>\"__enrollUrl__\"</p><p>Kies een veilig wachtwoord voor uw account.</p><p>We wensen je veel plezier bij het werken aan je board!</p><br><p>Vriendelijke groeten,</p><p>Het OnlineCoachTool team</p><p>my.onlinecoachtool.com</p><img src='__logoUrl__'>",
     "email-resetPassword-subject": "Reset je wachtwoord op __siteName__",
     "email-resetPassword-text": "Hallo __user__,\n\nKlik op de link hier beneden om je wachtwoord te resetten.\n\n__url__\n\nBedankt.",
     "email-sent": "E-mail is verzonden",
