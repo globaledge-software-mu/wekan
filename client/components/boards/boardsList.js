@@ -50,9 +50,17 @@ Template.boardListHeaderBar.helpers({
 BlazeComponent.extendComponent({
   onCreated() {
     Meteor.subscribe('setting');
-    Meteor.subscribe('folders');
+    Meteor.subscribe('userFolders');
     Meteor.subscribe('templateBoards');
-    Meteor.subscribe('cards');
+    Meteor.subscribe('userCards');
+  },
+  
+  showBoards() {
+  	const selector = $('.board-list > .sk-spinner.sk-spinner-wave');
+  	if (selector.length > 0) {
+  		selector.remove();
+  		$('.addBoardContainer').show();
+	  }
   },
 
   onRendered() {
@@ -61,14 +69,18 @@ BlazeComponent.extendComponent({
   	const folder = Session.get('folder');
 
   	if (folder == 'uncategorised') {
+  		this.showBoards();
       $('a#uncategorisedBoardsFolder').trigger('click');
   	} else if (folder == 'templates') {
+  		this.showBoards();
       $('a#templatesFolder').trigger('click');
   	} else {
   		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    		this.showBoards();
     		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
   		} else {
-  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click()
+  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
+    		this.showBoards();
     		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
   		}
   	}
@@ -114,109 +126,6 @@ BlazeComponent.extendComponent({
     });
 
   	/******************/
-  	/**********/
-
-  	Cards.find({
-  		$or: [
-  			{ userId: Meteor.user()._id }, 
-  			{ 'members.userId': Meteor.user()._id }
-			]
-  	}).forEach((card) => {
-  		const startScores = CardScores.find({
-  			cardId: card._id,
-  			type: 'current',
-  			userId: Meteor.user()._id,
-  		}, {
-  			sort: {date: -1}
-  		}).fetch();
-  		// For all current CardScores without initial score/date, pairing them with initial score date
-  		// and also updating the  Card's startAt and currentScore if null
-  		if (startScores.length > 0) {
-  			// If startScores in CardScores && receivedAt in Cards is null
-  			if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
-  				Cards.update(
-  					{ _id: card._id },
-  					{ $set: {
-  						receivedAt: startScores[0].date
-  					} }
-  				);
-  			}
-  			// If startScores in CardScores && initialScore in Cards is null
-  			if (!card.initialScore || card.initialScore == '' || card.initialScore == null) {
-  				Cards.update(
-  					{ _id: card._id },
-  					{ $set: {
-  						initialScore: startScores[0].score
-  					} }
-  				);
-  			}
-  			// If startScores && startAt in Cards is null
-  			if (!card.startAt || card.startAt == '' || card.startAt == null) {
-  				Cards.update(
-  					{ _id: card._id },
-  					{ $set: {
-  						startAt: startScores[0].date
-  					} }
-  				);
-  			}
-  			// If startScores && currentScore in Cards is null
-  			if (!card.currentScore || card.currentScore == '' || card.currentScore == null) {
-  				Cards.update(
-  					{ _id: card._id },
-  					{ $set: {
-  						currentScore: startScores[0].score
-  					} }
-  				);
-  			}
-  		}
-
-  		// If Cards has receivedAt and no startAt
-  		if (card.receivedAt && card.receivedAt != '' && card.receivedAt != null && 
-  				!card.startAt || card.startAt == '' || card.startAt == null
-  		) {
-  			Cards.update(
-  				{ _id: card._id },
-  				{ $set: {
-  					startAt: card.receivedAt
-  				} }
-  			);
-  		}
-  		// If Cards has initialScore and no currentScore
-  		if (card.initialScore && card.initialScore != '' && card.initialScore != null && 
-  				!card.currentScore || card.currentScore == '' || card.currentScore == null
-  		) {
-  			Cards.update(
-  				{ _id: card._id },
-  				{ $set: {
-  					currentScore: card.initialScore
-  				} }
-  			);
-  			// If no CardScores
-  			if (startScores.length < 1) {
-  				// If Cards do not have receivedAt
-  				if (!card.receivedAt || card.receivedAt == '' || card.receivedAt == null) {
-  					Cards.update(
-  						{ _id: card._id }, 
-  						{ $set: {
-  							receivedAt: new Date(),
-  						} }
-  					);
-
-  					// If Cards do not have startAt
-  					if (!card.startAt || card.startAt == '' || card.startAt == null) {
-  						Cards.update(
-  							{ _id: card._id }, 
-  							{ $set: {
-  								startAt: new Date(),
-  							} }
-  						);
-  					}
-  				}
-  			}
-  		}
-  	});
-
-  	/**********/
 
     // Find all boards and any of the board that do not have an admin (the user who had created the board), 
     // out of its own members make one of them an admin of the board, preferably the member with the highest role,

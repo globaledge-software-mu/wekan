@@ -11,20 +11,23 @@ template(name="headerUserBar")
             = currentUser.username
 
 template(name="memberMenuPopup")
-  ul.pop-over-list
-    with currentUser
-      li: a.js-edit-profile {{_ 'edit-profile'}}
-      li: a.js-change-settings {{_ 'change-settings'}}
-      li: a.js-change-avatar {{_ 'edit-avatar'}}
-      unless isSandstorm
-        li: a.js-change-password {{_ 'changePasswordPopup-title'}}
-        li: a.js-change-language {{_ 'changeLanguagePopup-title'}}
-    if currentUser.isAuthorised
-      li: a.js-go-setting(href="{{pathFor 'setting'}}") {{_ 'admin-panel'}}
-  unless isSandstorm
-    hr
+  if isLoading
+    +loader
+  else
     ul.pop-over-list
-      li: a.js-logout {{_ 'log-out'}}
+      with currentUser
+        li: a.js-edit-profile {{_ 'edit-profile'}}
+        li: a.js-change-settings {{_ 'change-settings'}}
+        li: a.js-change-avatar {{_ 'edit-avatar'}}
+        unless isSandstorm
+          li: a.js-change-password {{_ 'changePasswordPopup-title'}}
+          li: a.js-change-language {{_ 'changeLanguagePopup-title'}}
+      if currentUser.isAuthorised
+        li: a.js-go-setting(href="{{pathFor 'setting'}}") {{_ 'admin-panel'}}
+    unless isSandstorm
+      hr
+      ul.pop-over-list
+        li: a.js-logout {{_ 'log-out'}}
 
 template(name="editProfilePopup")
   form
