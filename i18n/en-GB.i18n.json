@@ -298,7 +298,7 @@
     "email-invalid": "Invalid email",
     "email-invite": "Invite via email",
     "email-invite-subject": "__inviter__ sent you an invitation",
-    "email-invite-text": "Dear __user__,\n\n__inviter__ invites you to join board \"__board__\" for collaborations.\n\nPlease follow the link below:\n\n__url__\n\nThanks.",
+    "email-invite-text": "<p>Dear __user__,</p><br><p>__inviter__ invites you to join board \"__board__\" for collaborations.</p><p>You will find the board in your folder \"Uncategorized\" or in case of a template in the \"Templates\" folder.</p><p>There you can Accept or Decline this invitation.</p><p>You can also go directly to the board using the following link (but it does not mean that you have accepted the board.):</p><p>\"__url__\"</p><p>(login required).</p><br><p>Wishing you lots of good collaboration!</p><br><p>Kind regards,</p><p>The OnlineCoachTool team</p><img src='__logoUrl__'>",
     "email-enroll-subject": "Welcome at OnlineCoachTool...!",
     "email-enroll-text": "<p>Hello __user__,</p><br><p>You are invited to join a coachboard on the Online Coach Tool.</p><p>Simply click the link below to join.</p><p>\"__enrollUrl__\"</p><p>Please choose a safe password for your account.</p><p>We wish you lots of joy working on your board!</p><br><p>Kind regards,</p><p> The OnlineCoachTool team</p><p>my.onlinecoachtool.com</p><img src='__logoUrl__'>",
     "email-resetPassword-subject": "Reset your password on __siteName__",

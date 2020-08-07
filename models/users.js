@@ -1148,18 +1148,20 @@ if (Meteor.isServer) {
 
             // Send Invite 'Login To Accept Invite To Board'
             try {
+              const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
               const params = {
                 user: user.username,
                 inviter: inviter.username,
                 board: board.title,
                 url: board.absoluteUrl(),
+                logoUrl: logoUrl
               };
               const lang = user.getLanguage();
               Email.send({
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
                 subject: TAPi18n.__('email-invite-subject', params, lang),
-                text: TAPi18n.__('email-invite-text', params, lang),
+                html: TAPi18n.__('email-invite-text', params, lang),
               });
             } catch (e) {
               throw new Meteor.Error('email-fail', e.message);
