@@ -44,11 +44,11 @@ template(name="membersWidget")
         if currentUser.isBoardMember
           a.member.add-member.sandstorm-powerbox-request-identity
             i.fa.fa-plus
-      else 
+      else
         if currentUser.adminOrManagerCanAssignTemplate
           a.member.add-member.js-manage-board-members
             i.fa.fa-plus
-        else 
+        else
           if currentUser.isBoardAdmin
             a.member.add-member.js-manage-board-members
               i.fa.fa-plus
@@ -222,13 +222,6 @@ template(name="memberPopup")
             | {{_ 'not-accepted-yet'}}
 
     ul.pop-over-list
-      li
-        a.js-filter-member {{_ 'filter-cards'}}
-      if currentUser.isBoardAdmin
-        li
-          a.js-change-role
-            | {{_ 'change-permissions'}}
-            span.quiet (#{memberType})
       li
         if currentUser.isBoardTemplate
           if $eq currentUser._id userId
