@@ -1271,7 +1271,7 @@ if (Meteor.isServer) {
         }
 
         // Send Enrollment Email
-        const user = Users.findOne({_id: newUserId});
+        user = Users.findOne({_id: newUserId});
 
         var token = Random.secret();
         var newDate = new Date();
