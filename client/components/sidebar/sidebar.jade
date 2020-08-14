@@ -222,6 +222,9 @@ template(name="memberPopup")
             | {{_ 'not-accepted-yet'}}
 
     ul.pop-over-list
+      if memberIsBoardAdmin
+        li
+          p {{_ 'Board-Admin'}}
       li
         if currentUser.isBoardTemplate
           if $eq currentUser._id userId
