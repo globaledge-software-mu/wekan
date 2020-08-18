@@ -132,7 +132,11 @@ BlazeComponent.extendComponent({
     // only if there is no other boardadmin for that specific board
     const adminBoardIds = new Array();
     Boards.find({
-    	'members.isAdmin': true
+      members: {
+        $elemMatch: {
+          isAdmin: true
+        }
+      }
     }).forEach((board) => {
     	adminBoardIds.push(board._id);
     });
