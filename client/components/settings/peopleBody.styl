@@ -61,7 +61,7 @@ table#subscriptionsDataTable
          padding: 4px 10px 4px 10px;
          margin: 5px 5px 5px 10px;
          border-radius: 3px;
-       
+
        a.archiveSubscription
          color: white;
          background-color: #7d0c0c;
@@ -142,13 +142,13 @@ table#subscriptionsDataTable
 
   .displayContents
     display: contents;
-    
+
   .displayGrid
     display: grid;
 
 #userGroupTitle
-  text-align: center; 
-  font-size: 25px; 
+  text-align: center;
+  font-size: 25px;
   padding: 0px 20px 00px 20px;
   margin-bottom: 0px !important;
 
@@ -292,20 +292,52 @@ table
   div
     margin: auto
 
+.listHeader
+  color: black;
+  margin-left: 15px;
+  font-weight: bold;
+  font-size: 14px;
+
+
+.listItem
+  color: black;
+  list-style-type: circle;
+  margin-left: 50px;
+  font-weight: normal;
+
 .roleList
   .badge
-    background-color: cornflowerblue;
-    padding: 2px 0 2px 5px;
+    padding: 10px;
     margin: 0 2px;
-    border-radius: 8px;
     color: white;
-    
+    vertical-align: middle;
+    background-color: #2980b9;
+
+  .resourceCell
+    vertical-align: middle;
+
+  .permissionCell
+    vertical-align: middle;
+
+  .permissionDetailsCell
+    vertical-align: middle;
+
+  .permissionDetailsCell > p:nth-child(1)
+    margin-top: 8px;
+
     .access
       background-color: antiquewhite;
       padding: 2px 5px;
       border-bottom-right-radius: 8px;
       border-top-right-radius: 8px;
       color: black;
+
+  tbody
+    tr
+      th#roleHeader, th#resourceHeader, th#permissionHeader
+        min-width: 120px;
+      th#permissionDetailsHeader
+        min-width 500px;
 
 .checked-palette-color
   padding-left: 5px
