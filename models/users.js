@@ -1271,8 +1271,44 @@ if (Meteor.isServer) {
         }
 
         // Send Enrollment Email
-        Accounts.sendEnrollmentEmail(newUserId);
-        user = Users.findOne(newUserId);
+        user = Users.findOne({_id: newUserId});
+
+        var token = Random.secret();
+        var newDate = new Date();
+        var tokenRecord = JSON.parse(JSON.stringify({
+          token: token,
+          email: email,
+          when: newDate,
+          reason: 'enroll'
+        }));
+
+        Users.update({ _id: newUserId }, {
+          $set: {
+            'services.password.reset': tokenRecord
+          }
+        });
+
+        // before passing to template, update user object with new token
+        Meteor._ensure(user, 'services', 'password').reset = tokenRecord;
+
+        const enrollLink = Accounts.urls.enrollAccount(token);
+        const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+
+        const parameters = {
+          user: user.username,
+          enrollUrl: enrollLink,
+          logoUrl: logoUrl
+        };
+        const lang = user.getLanguage();
+
+        const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+
+        Email.send({
+          to: user.emails[0].address.toLowerCase(),
+          from: Accounts.emailTemplates.from,
+          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
+          html: message,
+        });
 
         board.addMember(user._id);
         user.addInvite(boardId);
