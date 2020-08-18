@@ -54,7 +54,7 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('templateBoards');
     Meteor.subscribe('userCards');
   },
-  
+
   showBoards() {
   	const selector = $('.board-list > .sk-spinner.sk-spinner-wave');
   	if (selector.length > 0) {
@@ -85,7 +85,7 @@ BlazeComponent.extendComponent({
   		}
   	}
 
-  	// Add member to its template-container, case the template-container 
+  	// Add member to its template-container, case the template-container
   	// member is null but the user has the template-container's id
   	var templatesBoardId = Meteor.user().profile.templatesBoardId;
   	var container = Boards.findOne({_id: templatesBoardId});
@@ -111,8 +111,8 @@ BlazeComponent.extendComponent({
     Meteor.subscribe('mailServerInfo', {
       onReady() {
         const mailSettings = Settings.findOne();
-        if (mailSettings && mailSettings.mailServer.host && mailSettings.mailServer.port && mailSettings.mailServer.username && 
-        		mailSettings.mailServer.password && mailSettings.mailServer.enableTLS && mailSettings.mailServer.from 
+        if (mailSettings && mailSettings.mailServer.host && mailSettings.mailServer.port && mailSettings.mailServer.username &&
+        		mailSettings.mailServer.password && mailSettings.mailServer.enableTLS && mailSettings.mailServer.from
         ) {
           Settings.update(mailSettings._id, {
             $set: {
@@ -127,7 +127,7 @@ BlazeComponent.extendComponent({
 
   	/******************/
 
-    // Find all boards and any of the board that do not have an admin (the user who had created the board), 
+    // Find all boards and any of the board that do not have an admin (the user who had created the board),
     // out of its own members make one of them an admin of the board, preferably the member with the highest role,
     // only if there is no other boardadmin for that specific board
     const adminBoardIds = new Array();
@@ -170,7 +170,7 @@ BlazeComponent.extendComponent({
               	if (!coachRoleMember) {
               		const randomMemberId = memberIds[0].userId;
               		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
+            				{ _id: nonAdminBoard._id },
                     { $pull: {
                         members: {
                           userId: randomMemberId,
@@ -179,7 +179,7 @@ BlazeComponent.extendComponent({
                     }
           				);
               		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
+            				{ _id: nonAdminBoard._id },
                     { $push: {
                         members: {
                           userId: randomMemberId,
@@ -192,7 +192,7 @@ BlazeComponent.extendComponent({
           				);
               	} else {
               		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
+            				{ _id: nonAdminBoard._id },
                     { $pull: {
                         members: {
                           userId: coachRoleMember._id,
@@ -201,7 +201,7 @@ BlazeComponent.extendComponent({
                     }
           				);
               		Boards.update(
-            				{ _id: nonAdminBoard._id }, 
+            				{ _id: nonAdminBoard._id },
                     { $push: {
                         members: {
                           userId: coachRoleMember._id,
@@ -216,7 +216,7 @@ BlazeComponent.extendComponent({
           		}
           	} else {
           		Boards.update(
-        				{ _id: nonAdminBoard._id }, 
+        				{ _id: nonAdminBoard._id },
                 { $pull: {
                     members: {
                       userId: managerRoleMember._id,
@@ -225,7 +225,7 @@ BlazeComponent.extendComponent({
                 }
       				);
           		Boards.update(
-        				{ _id: nonAdminBoard._id }, 
+        				{ _id: nonAdminBoard._id },
                 { $push: {
                     members: {
                       userId: managerRoleMember._id,
@@ -240,7 +240,7 @@ BlazeComponent.extendComponent({
       		}
       	} else {
       		Boards.update(
-    				{ _id: nonAdminBoard._id }, 
+    				{ _id: nonAdminBoard._id },
             { $pull: {
                 members: {
                   userId: adminRoleMember._id,
@@ -249,7 +249,7 @@ BlazeComponent.extendComponent({
             }
   				);
       		Boards.update(
-    				{ _id: nonAdminBoard._id }, 
+    				{ _id: nonAdminBoard._id },
             { $push: {
                 members: {
                   userId: adminRoleMember._id,
@@ -286,7 +286,7 @@ BlazeComponent.extendComponent({
   everyBoardTemplates() {
     return Boards.find({
       type: 'template-board',
-      archived: false, 
+      archived: false,
     });
   },
 
@@ -294,14 +294,45 @@ BlazeComponent.extendComponent({
     return Boards.find({
       type: 'template-board',
       'members.userId': Meteor.userId(),
-      archived: false, 
+      archived: false,
     });
   },
 
   isBoardTemplateAdmin() {
-  	var currentBoard = Boards.findOne({_id: this.currentData()._id});
-  	// returns true or false
-  	return currentBoard && currentBoard.members[0].isAdmin == true && currentBoard.members[0].userId == Meteor.userId();
+    var isBoardTemplateAdmin = Boards.findOne({
+      _id: this.currentData()._id,
+      type: 'template-board',
+      members: {
+        $elemMatch: {
+          userId: Meteor.userId(),
+          isAdmin: true
+        }
+      }
+    });
+
+    if (isBoardTemplateAdmin && isBoardTemplateAdmin._id) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  isBoardAdmin() {
+  	var isBoardAdmin = Boards.findOne({
+      _id: this.currentData()._id,
+      members: {
+        $elemMatch: {
+          userId: Meteor.userId(),
+          isAdmin: true
+        }
+      }
+    });
+
+    if (isBoardAdmin && isBoardAdmin._id) {
+      return true;
+    } else {
+      return false;
+    }
   },
 
   searchedBoards() {
@@ -311,8 +342,8 @@ BlazeComponent.extendComponent({
       	title: {$regex: typedTitle, $options: 'i'},
         archived: false,
         'members.userId': Meteor.userId(),
-      }, { 
-      	sort: ['title'] 
+      }, {
+      	sort: ['title']
       });
   	} else {
   		return null;
@@ -337,7 +368,7 @@ BlazeComponent.extendComponent({
 
       if (folderBoardsIds.length > 0) {
         return Boards.find(
-          { _id: { $in: folderBoardsIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+          { _id: { $in: folderBoardsIds }, archived: false, 'members.userId': Meteor.userId(), },
           { sort: ['title'], }
         );
       } else {
@@ -366,14 +397,14 @@ BlazeComponent.extendComponent({
       }
     }
 
-    var uncategorisedBoardsDetails = Boards.find({ 
-        _id: { $nin: categorisedBoardIds }, 
-        archived: false, 
-        'members.userId': Meteor.userId(), 
-        type: { 
+    var uncategorisedBoardsDetails = Boards.find({
+        _id: { $nin: categorisedBoardIds },
+        archived: false,
+        'members.userId': Meteor.userId(),
+        type: {
         	$nin: [ 'template-board', 'template-container' ]
         },
-      }, 
+      },
       {fields: {'_id': 1}}
     ).fetch();
     var uncategorisedBoardIds = new Array();
@@ -383,7 +414,7 @@ BlazeComponent.extendComponent({
     }
 
     return Boards.find(
-      { _id: { $in: uncategorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), }, 
+      { _id: { $in: uncategorisedBoardIds }, archived: false, 'members.userId': Meteor.userId(), },
       { sort: ['title'], }
     );
   },
@@ -411,10 +442,10 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click .js-add-board, click .js-add-board-template'(evt) {
-      	// First, archive any card of type "cardType-linkedBoard" whose 
-      	// Board has been archived but the card by any chance was not archived 
+      	// First, archive any card of type "cardType-linkedBoard" whose
+      	// Board has been archived but the card by any chance was not archived
       	// Then we open the targetted popup
-      	Boards.find({ 
+      	Boards.find({
       		type: 'template-board',
       		archived: true,
       		'members.userId': Meteor.user()._id
@@ -422,7 +453,7 @@ BlazeComponent.extendComponent({
       		var cardLinkedBoard = Cards.findOne({linkedId: archivedBoard._id});
       		if (cardLinkedBoard && !cardLinkedBoard.archived) {
       			Cards.update(
-    					{ _id: cardLinkedBoard._id }, 
+    					{ _id: cardLinkedBoard._id },
     					{ $set: {
     						archived: true,
     					} }
@@ -498,9 +529,9 @@ Template.createNewFolder.events({
 
     Modal.close('createNewFolder');
 
-    var newDoc = Folders.insert({ 
-      name: $(e.target).find('input[name=name]').val(), 
-      level: 'first', 
+    var newDoc = Folders.insert({
+      name: $(e.target).find('input[name=name]').val(),
+      level: 'first',
       userId: Meteor.userId()
     }, function(error) {
       if (error) {
@@ -518,7 +549,7 @@ Template.createNewFolder.events({
         return false;
       }
     });
-    
+
     var folderId = newDoc;
     var boardIds = new Array;
     boardIds.push(sessionStorage.getItem('draggedBoardId'));
@@ -534,9 +565,9 @@ Template.createNewFolder.events({
   	  );
     }
 
-    var $successMessage = $('<div class="successStatus">' + 
+    var $successMessage = $('<div class="successStatus">' +
       '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-      '<p><b>Folder was succesfully created and the boards have been moved into it!</b></p>' + 
+      '<p><b>Folder was succesfully created and the boards have been moved into it!</b></p>' +
       '</div>'
     );
 
