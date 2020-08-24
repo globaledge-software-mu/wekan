@@ -75,14 +75,19 @@ BlazeComponent.extendComponent({
   		this.showBoards();
       $('a#templatesFolder').trigger('click');
   	} else {
-  		if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
-    		this.showBoards();
-    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
-  		} else {
-  			$('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
-    		this.showBoards();
-    		$('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
-  		}
+      if ($('.myFolder[data-id="'+folder+'"]').length > 0) {
+        if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+          this.showBoards();
+          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+        } else {
+          $('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
+          this.showBoards();
+          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+        }
+      } else {
+        this.showBoards();
+        $('a#uncategorisedBoardsFolder').trigger('click');
+      }
   	}
 
   	// Add member to its template-container, case the template-container
