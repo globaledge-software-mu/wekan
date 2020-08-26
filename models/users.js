@@ -1908,8 +1908,12 @@ if (Meteor.isServer) {
       if (data !== undefined) {
         if (action === 'takeOwnership') {
           data = Boards.find({
-            'members.userId': id,
-            'members.isAdmin': true,
+            members: {
+              $elemMatch: {
+                userId: id,
+                isAdmin: true
+              }
+            }
           }).map(function(board) {
             if (board.hasMember(req.userId)) {
               board.removeMember(req.userId);

@@ -42,9 +42,10 @@ template(name="boardList")
                         i.fa.js-clone-board(
                             class="fa-clone"
                             title="{{_ 'duplicate-board'}}")
-                      i.fa.js-archive-board(
-                          class="fa-archive"
-                          title="{{_ 'archive-board'}}")
+                      if isBoardAdmin
+                        i.fa.js-archive-board(
+                            class="fa-archive"
+                            title="{{_ 'archive-board'}}")
 
         each uncategorisedBoards
           li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
@@ -78,9 +79,10 @@ template(name="boardList")
                     i.fa.js-clone-board(
                         class="fa-clone"
                         title="{{_ 'duplicate-board'}}")
-                  i.fa.js-archive-board(
-                      class="fa-archive"
-                      title="{{_ 'archive-board'}}")
+                  if isBoardAdmin
+                    i.fa.js-archive-board(
+                        class="fa-archive"
+                        title="{{_ 'archive-board'}}")
 
         if currentUser.isAdminOrManager
           each everyBoardTemplates
@@ -169,9 +171,10 @@ template(name="boardList")
                     i.fa.js-clone-board(
                         class="fa-clone"
                         title="{{_ 'duplicate-board'}}")
-                  i.fa.js-archive-board(
-                      class="fa-archive"
-                      title="{{_ 'archive-board'}}")
+                  if isBoardAdmin
+                    i.fa.js-archive-board(
+                        class="fa-archive"
+                        title="{{_ 'archive-board'}}")
 
       else
         +addboard
@@ -199,7 +202,7 @@ template(name="boardListHeaderBar")
     a#reset-search-board-input
       i.fa.fa-times#reset-search-board-icon(title="clear")
 
-template(name="createNewFolder") 
+template(name="createNewFolder")
   form#createFolderForBoardsDroppedOnEachOther.modal-form
     div
       h3.formHeader {{_ 'create-folder'}}

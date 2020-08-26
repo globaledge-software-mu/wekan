@@ -32,19 +32,33 @@ ListProperties.attachSchema(new SimpleSchema({
 }));
 
 ListProperties.helpers({
-  copy(boardId, listId, alias, i18nKey) {
+  copy(boardId, listId, alias, i18nKey, visible, useDateWarnings, useTime, color) {
   	var hasListProperty = ListProperties.findOne({
   		boardId: boardId,
   		listId: listId,
       alias: alias,
       i18nKey: i18nKey
   	});
-  	if (!hasListProperty) {
+  	if (!hasListProperty && color === 'undefined') {
       ListProperties.insert({
       	boardId: boardId,
       	listId: listId,
         alias: alias,
-        i18nKey: i18nKey
+        i18nKey: i18nKey,
+        visible: visible,
+        useDateWarnings: useDateWarnings,
+        useTime: useTime
+      });
+  	} else if (!hasListProperty && color !== 'undefined') {
+      ListProperties.insert({
+      	boardId: boardId,
+      	listId: listId,
+        alias: alias,
+        i18nKey: i18nKey,
+        visible: visible,
+        useDateWarnings: useDateWarnings,
+        useTime: useTime,
+        color: color
       });
   	}
   },

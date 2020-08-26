@@ -46,17 +46,8 @@ template(name="header")
       If the user is not connected we display "sign in" and "log in" buttons.
     #header-main-bar(class="{{#if wrappedHeader}}wrapper{{/if}}")
       +Template.dynamic(template=headerBar)
-
-      //unless hideLogo
-
-        //-
-          On sandstorm, the logo shouldn't be clickable, because we only have one
-          page/document on it, and we don't want to see the home page containing
-          the list of all boards.
-
-      //  unless currentSetting.hideLogo
-      //    a.wekan-logo(href="{{pathFor 'home'}}" title="{{_ 'header-logo-title'}}")
-      //    img(src="{{pathFor '/logo-header.png'}}" alt="")
+      a.wekan-logo(href="{{pathFor 'home'}}" title="{{_ 'header-logo-title'}}")
+        img(src="{{pathFor '/rh-header-logo.png'}}" alt="" style="height: 100%;")
 
   if appIsOffline
     +offlineWarning

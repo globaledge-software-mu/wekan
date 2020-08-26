@@ -134,8 +134,8 @@ BlazeComponent.extendComponent({
         createdBy: Meteor.user()._id,
       }).forEach((invitee) => {
         sameUserGroupsUserIds.push(invitee._id)
-      }); 
- 
+      });
+
       // Then push the users of the same user groups as of the logged in user
     	AssignedUserGroups.find({
     		userGroupId: { $in: userUserGroupsIds }
@@ -180,7 +180,7 @@ BlazeComponent.extendComponent({
         createdBy: Meteor.user()._id,
       }).forEach((invitee) => {
         sameUserGroupsUserIds.push(invitee._id)
-      }); 
+      });
 
       // Then push the users of the same user groups as of the logged in user
     	AssignedUserGroups.find({
@@ -394,8 +394,8 @@ Template.peopleRow.helpers({
     const user = userCollection.findOne(this.userId);
     if (user && user._id) {
       var userGroupsIds = new Array();
-      AssignedUserGroups.find({ 
-        userId: user._id 
+      AssignedUserGroups.find({
+        userId: user._id
       }).forEach((assignedUserGroup) => {
         userGroupsIds.push(assignedUserGroup.userGroupId);
       });
@@ -566,8 +566,12 @@ BlazeComponent.extendComponent({
           	// only if there is no other boardadmin for that specific board,
           	// preferably a member with the highest user role of the board
             Boards.find({
-            	'members.userId': toBeDeletedUserId,
-            	'members.isAdmin': true,
+              members: {
+                $elemMatch: {
+                  userId: toBeDeletedUserId,
+                  isAdmin: true
+                }
+              }
           	}).forEach((board) => {
           		Boards.update(
         				{ _id: board._id },
