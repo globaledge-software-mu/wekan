@@ -36,24 +36,20 @@ template(name="minicard")
           | {{ parentCardName }}
 
     .dates
-      if getReceived
-        unless getStart
-          unless getDue
-            unless getEnd
-              .date
-                +minicardReceivedDate
-      if getStart
-        .date
-          +minicardStartDate
-      if getCurrentScore
-        .score
-          +cardCurrentScore
-      if getDue
-        .date
-          +minicardDueDate
-      if getTargetScore
-        .score
-          +cardTargetScore
+      if isPropertyVisible 'card-start'
+        if getStart
+          .date
+            +minicardStartDate
+        if getCurrentScore
+          .score
+            +cardCurrentScore
+      if isPropertyVisible 'card-due'
+        if getDue
+          .date
+            +minicardDueDate
+        if getTargetScore
+          .score
+            +cardTargetScore
       if getSpentTime
         .date
           +cardSpentTime

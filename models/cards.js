@@ -699,10 +699,6 @@ Cards.helpers({
         for (var i = 0; i < card.members.length; i++) {
           const users = Users.find({ _id: card.members[i] });
           if (users.count() < 1) {
-
-        /////
-        console.log('cc');
-
             Cards.update(
               { _id: card._id },
               { $pull: { members: card.members[i] }}
@@ -1367,6 +1363,10 @@ Cards.helpers({
     let lastScores = CardScores.find({type: 'current', 'cardId': card._id, 'date': {$gte: lastDateStart, $lte: lastDateEnd}}, {limit: 1}).fetch();
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
+    }
+    
+    if (!card.startAt) {
+      return false;
     }
 
     return CardScores.insert({

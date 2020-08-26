@@ -97,10 +97,7 @@ Template.userFormsLayout.events({
   'click #at-btn'(event, instance) {
     if (FlowRouter.getRouteName() === 'atSignIn') {
       instance.isLoading.set(true);
-      authentication(event, instance)
-        .then(() => {
-          instance.isLoading.set(false);
-        });
+      authentication(event, instance);
     }
   },
 });
@@ -115,11 +112,17 @@ async function authentication(event, instance) {
   const match = $('#at-field-username_and_email').val();
   const password = $('#at-field-password').val();
 
-  if (!match || !password) return undefined;
+  if (!match || !password) {
+    instance.isLoading.set(false);
+    return undefined;
+  }
 
   const result = await getAuthenticationMethod(instance.currentSetting.get(), match);
 
-  if (result === 'password') return undefined;
+  if (result === 'password') {
+    instance.isLoading.set(false);
+    return undefined;
+  }
 
   // Stop submit #at-pwd-form
   event.preventDefault();

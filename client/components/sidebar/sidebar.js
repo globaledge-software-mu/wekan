@@ -142,6 +142,19 @@ Template.memberPopup.helpers({
   isInvited() {
     return Users.findOne(this.userId).isInvitedTo(Session.get('currentBoard'));
   },
+  memberIsBoardAdmin() {
+    const board = Boards.findOne({
+      _id: Session.get('currentBoard'),
+      members: {
+        $elemMatch: {
+          userId: this.userId,
+          isAdmin: true
+        }
+      },
+    });
+
+    return board;
+  },
 });
 
 Template.boardMenuPopup.events({

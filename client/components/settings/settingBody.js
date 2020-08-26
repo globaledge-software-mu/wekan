@@ -41,20 +41,24 @@ BlazeComponent.extendComponent({
   ownBoards() {
     return Boards.find({
       archived: false,
-      'members.userId': Meteor.userId(),
-      'members.isAdmin': true,
+      members: {
+        $elemMatch: {
+          userId: Meteor.userId(),
+          isAdmin: true
+        }
+      },
       type: {$ne: 'template-container'}
     }, {
       sort: ['title'],
     });
   },
-  
+
   folders() {
-    return Folders.find({ 
-      userId: Meteor.user()._id, 
+    return Folders.find({
+      userId: Meteor.user()._id,
       contents: { $exists: true }
-    }, { 
-      sort: ['name'] 
+    }, {
+      sort: ['name']
     }
     );
   },
@@ -141,14 +145,14 @@ BlazeComponent.extendComponent({
     }
     if (validEmails.length) {
       this.setLoading(true);
-      // Call method to Invite User(s) to Board(s) 
+      // Call method to Invite User(s) to Board(s)
 //      Meteor.call('sendInvitation', validEmails, boardsToInvite, () => {
 //        // if (!err) {
 //        //   TODO - show more info to user
 //        // }
 //        this.setLoading(false);
 //      });
-      
+
       // Added the following logic to call the 'inviteUserToBoard' method from the model 'Users'
       // so that the system creates the user record and then an email to the user to complete its registration by just entering his password
       const self = this;
@@ -177,8 +181,8 @@ BlazeComponent.extendComponent({
               });
             } else if (ret.email) {
               Users.update(
-            		{ _id: ret.userID }, 
-            		{ $set: 
+            		{ _id: ret.userID },
+            		{ $set:
             			{ 'roleId': roleId, 'roleName': roleName },
             		}
           		);
@@ -285,8 +289,12 @@ BlazeComponent.extendComponent({
             $('.scrollableBoardsList').empty();
             Boards.find({
               archived: false,
-              'members.userId': Meteor.userId(),
-              'members.isAdmin': true,
+              members: {
+                $elemMatch: {
+                  userId: Meteor.userId(),
+                  isAdmin: true
+                }
+              },
               type: {$ne: 'template-container'}
             }, {
               sort: ['title'],
@@ -295,7 +303,7 @@ BlazeComponent.extendComponent({
                 '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
                 '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
                 '<span>'+board.title+'</span>'+
-                '</a>'     
+                '</a>'
               );
             });
           } else if (optionSelected === 'templates') {
@@ -312,7 +320,7 @@ BlazeComponent.extendComponent({
                 '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
                 '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
                 '<span>'+board.title+'</span>'+
-                '</a>'     
+                '</a>'
               );
             });
           } else if (optionSelected === 'uncategorised') {
@@ -334,20 +342,20 @@ BlazeComponent.extendComponent({
             }
 
             Boards.find({
-              _id: { $nin: categorisedBoardIds }, 
-              archived: false, 
-              'members.userId': Meteor.userId(), 
-              type: { 
+              _id: { $nin: categorisedBoardIds },
+              archived: false,
+              'members.userId': Meteor.userId(),
+              type: {
                 $nin: [ 'template-board', 'template-container' ]
               },
-            }, { 
-              sort: ['title'], 
+            }, {
+              sort: ['title'],
             }).forEach((board) => {
             $('.scrollableBoardsList').append(
                 '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
                 '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
                 '<span>'+board.title+'</span>'+
-                '</a>'     
+                '</a>'
               );
             });
           } else {
@@ -366,20 +374,20 @@ BlazeComponent.extendComponent({
               }
 
               Boards.find({
-                _id: { $in: boardIds }, 
-                archived: false, 
-                'members.userId': Meteor.userId(), 
-                type: { 
+                _id: { $in: boardIds },
+                archived: false,
+                'members.userId': Meteor.userId(),
+                type: {
                   $nin: [ 'template-board', 'template-container' ]
                 },
-              }, { 
-                sort: ['title'], 
+              }, {
+                sort: ['title'],
               }).forEach((board) => {
               $('.scrollableBoardsList').append(
                   '<a class="option flex js-toggle-board-choose" id="'+board._id+'" href="#">'+
                   '<div class="materialCheckBox" data-id="'+board._id+'"></div>'+
                   '<span>'+board.title+'</span>'+
-                  '</a>'     
+                  '</a>'
                 );
               });
             }
@@ -402,7 +410,7 @@ BlazeComponent.extendComponent({
         });
         var validEmailNotEntered = !validEmails.length;
       	var roleNotSelected = $('.select-role.js-profile-role option:selected').html() === 'Select One';
-      	var boardNotSelected = !$('.materialCheckBox.is-checked').length; 
+      	var boardNotSelected = !$('.materialCheckBox.is-checked').length;
       	if (validEmailNotEntered && !boardNotSelected && !roleNotSelected) {
         	$('.enter-valid-email').show();
         	$('html, body, .main-body').animate({scrollTop: '0px'}, 300);

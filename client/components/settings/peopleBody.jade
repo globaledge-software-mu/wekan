@@ -13,7 +13,7 @@ template(name="people")
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
             if currentUser.isAdmin
-              li.active.hide
+              li.active
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
               li.active
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
@@ -118,7 +118,7 @@ template(name="peopleGeneral")
         // List users from his own groups which have the role 'Coachee'
         each user in coachUserGroupsUsersAndInviteesList
           +peopleRow(userId=user._id)
-        
+
 
 template(name="peopleRow")
   tr
@@ -142,7 +142,7 @@ template(name="peopleRow")
         | {{_ 'no'}}
       else
         | {{_ 'yes'}}
-    td 
+    td
       ul
         each userGroup in assignedUserGroups
           li {{ userGroup.title }}
@@ -225,27 +225,425 @@ template(name="roleOptions")
         option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
 
 template(name="rolesGeneral")
+  h2.listHeader {{_ 'Dots at the bottom-right of the avatar'}}:
+    ul
+      li.listItem {{_ 'Color "green" means "Active"'}}
+      li.listItem {{_ 'Color "yellow" means "Idle"'}}
+      li.listItem {{_ 'Color "grey" means "Disconnected" '}}
+      li.listItem {{_ 'Color "red" means "Pending"'}}
+    br
+  h2.listHeader {{_ 'Avatar\'s cirle border\'s color indicates the user\'s user-role'}}:
+    ul
+      li.listItem {{_ 'Admins are maroon'}}
+      li.listItem {{_ 'Managers are darkblue'}}
+      li.listItem {{_ 'Coaches are orange'}}
+      li.listItem {{_ 'Coachees are limegreen'}}
+    br
   table.roleList
     tbody
       tr
-        th {{_ 'role'}}
-        th {{_ 'permissions'}}
-        th
-      each role in roles
-        +roleRow(roleId=role._id)
-  button.js-open-create-role.primary {{_ 'create'}}
+        th#roleHeader {{_ 'role'}}
+        th#resourceHeader {{_ 'resource'}}
+        th#permissionHeader {{_ 'Permission'}}
+        th#permissionDetailsHeader {{_ 'Permission Details'}}
+
+      //- Admin's Permissions
+      tr
+        td.badge(rowspan="20") {{_ 'admin'}}
+        //- Admin's Card Priviledges
+        td.resourceCell(rowspan="4") {{_ 'cards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed except in templates of which he is not the owner'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates of which he is not the owner'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner of the resource'}}
+      tr
+        //- Admin's List Priviledges
+        td.resourceCell(rowspan="4") {{_ 'lists'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed except in templates of which he is not the owner'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates of which he is not the owner'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner of the resource'}}
+      tr
+        //- Admin's Boards Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Boards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        //- Admin's Templates Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Templates'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner of the resource'}}
+      tr
+        //- Admin's User Priviledges
+        td.resourceCell(rowspan="4") {{_ 'User'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+
+      //- Manager's Permissions
+      tr
+        td.badge(rowspan="20") Manager
+        //- Manager's Card Priviledges
+        td.resourceCell(rowspan="4") {{_ 'cards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'Except in the board templates that he do not own and is just a member'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates which is not his own'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner of the resource'}}
+      tr
+        //- Manager's List Priviledges
+        td.resourceCell(rowspan="4") {{_ 'lists'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'Except in the board templates that he do not own and is just a member'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates which is not his own'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner of the resource'}}
+      tr
+        //- Manager's Boards Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Boards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+          p  {{_ 'He can archive it but he cannot delete it, if he is not the owner'}}
+      tr
+        //- Manager's Templates Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Templates'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+          p  {{_ 'Except for adding members to it.'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+      tr
+        //- Manager's User Priviledges
+        td.resourceCell(rowspan="4") {{_ 'User'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But he can only create users of either of the user-role "Coach" or of the user-role "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But in the admin panel he can only see users of the user-role "Coach" and "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But he can only update users of the user-role "Coach" and "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+      //- Coach's Permissions
+      tr
+        td.badge(rowspan="20") Coach
+        //- Coach's Card Priviledges
+        td.resourceCell(rowspan="4") {{_ 'cards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But not in templates'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the board in which the card is found.'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the board in which the card is found except in templates'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+          p  {{_ 'He can archive it but he cannot delete it, if he is not the owner'}}
+      tr
+        //- Coach's List Priviledges
+        td.resourceCell(rowspan="4") {{_ 'lists'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But not in templates'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed only if user is the owner of the board in which the list is found'}}
+      tr
+        //- Coach's Boards Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Boards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+          p  {{_ 'He can archive it but he cannot delete it, if he is not the owner'}}
+      tr
+        //- Coach's Templates Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Templates'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p {{_ 'Allowed'}}
+          p {{_ 'But he can only see the ones that have been assigned to him and use it to create boards or assign coachees to it'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+          p  {{_ 'Except to only asssign it to coachees'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+      tr
+        //- Coach's User Priviledges
+        td.resourceCell(rowspan="4") {{_ 'User'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But he can only create users of the user-role "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But he can only update the users of the user-role "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But he can only update the users of the user-role "Coachee"'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Not allowed'}}
+      //- Coachee's Permissions
+      tr
+        td.badge(rowspan="20") Coachee
+        //- Coachee's Card Priviledges
+        td.resourceCell(rowspan="4") {{_ 'cards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But not in templates'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        //- Coachee's List Priviledges
+        td.resourceCell(rowspan="4") {{_ 'lists'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+          p  {{_ 'But not in templates'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource except in templates'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed only if user is the owner of the board in which the list is found'}}
+      tr
+        //- Coachee's Boards Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Boards'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner or a member of the resource'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell
+          p {{_ 'Allowed if user is the owner or a member of the resource'}}
+          p {{_ 'But if he is just a regular member, he cannot update the board title, nor add a member to it and not even update the list properties. But he can add list and cards to it and so on.'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell
+          p  {{_ 'Allowed if user is the owner. But if he is a member of the baord, he can only archive it but not delete it permanently'}}
+      tr
+        //- Coachee's Templates Priviledges
+        td.resourceCell(rowspan="4") {{_ 'Templates'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p {{_ 'Not allowed'}}
+          p {{_ 'But he can be assigned to it by an Admin or a Manager or a Coach'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p {{_ 'Allowed'}}
+          p {{_ 'But he can only see the ones that have been assigned to him and use it to create boards'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell {{_ 'Not Allowed'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell {{_ 'Not Allowed'}}
+      tr
+        //- Coachee's User Priviledges
+        td.resourceCell(rowspan="4") {{_ 'User'}}
+        td.permissionCell {{_ 'Create'}}
+        td.permissionDetailsCell
+          p {{_ 'Not allowed'}}
+          p {{_ 'But he can invite existing users to his own board provided he searches for them by their names or their usernames'}}
+      tr
+        td.permissionCell {{_ 'Read'}}
+        td.permissionDetailsCell
+          p {{_ 'Allowed'}}
+          p {{_ 'But he can only see them when he is searching for the user by his name or username from his board\'s sidebar while trying to add a member to his board.'}}
+          p {{_ 'He does not have access to the Admin Panel and hence also not to its tab "People"'}}
+      tr
+        td.permissionCell {{_ 'Update'}}
+        td.permissionDetailsCell {{_ 'Not allowed'}}
+      tr
+        td.permissionCell {{_ 'Delete'}}
+        td.permissionDetailsCell {{_ 'Not allowed'}}
 
 template(name="roleRow")
   tr
     td.rolename {{ roleData.name }}
-    td 
+    td
       each permission in roleData.permissions
         span.badge {{permission.group}}:
           span.access {{permission.access}}
-
-    td
-      a.edit-role
-        | {{_ 'edit'}}
 
 template(name="createRolePopup")
   form
@@ -298,28 +696,28 @@ template(name="userGroupsGeneral")
   table
     tbody
       tr
-        th 
+        th
           ul
             li {{_ 'title'}}
-        th 
+        th
           ul
-            li {{_ 'users-quota'}}   
-        th 
+            li {{_ 'users-quota'}}
+        th
           ul
-            li {{_ 'used-users-quota'}}   
-        th 
+            li {{_ 'used-users-quota'}}
+        th
           ul
             li {{_ 'boards-quota'}}
-        th 
+        th
           ul
-            li {{_ 'used-boards-quota'}}    
-        th 
+            li {{_ 'used-boards-quota'}}
+        th
           ul
-            li {{_ 'group-admins'}} 
-        th 
+            li {{_ 'group-admins'}}
+        th
           ul
-            li {{_ 'createdAt'}} 
-        th 
+            li {{_ 'createdAt'}}
+        th
           ul
             li {{_ 'action'}}
           // if isAdmin
@@ -329,26 +727,26 @@ template(name="userGroupsGeneral")
 
 template(name="userGroupRow")
   tr
-    td 
+    td
       ul
         li {{ userGroupData.title }}
-    td 
+    td
       ul
         li {{ userGroupData.usersQuota }}
-    td 
+    td
       ul
         li {{ userGroupData.usedUsersQuota }}
-    td 
+    td
       ul
         li {{ userGroupData.boardsQuota }}
-    td 
+    td
       ul
         li {{ userGroupData.usedBoardsQuota }}
     td
       ul
-        each groupAdmin in userGroupData.groupAdmins 
+        each groupAdmin in userGroupData.groupAdmins
           li {{ groupAdmin }} <br />
-    td 
+    td
       ul
         li {{ moment userGroupData.createdAt 'LLL' }}
     td
@@ -388,7 +786,7 @@ template(name="createUserGroupPopup")
 template(name="editUserGroup")
   #modalBanner
     h4#modalLabel
-      | {{_ 'manage-user-group'}} 
+      | {{_ 'manage-user-group'}}
     h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
       | {{userGroup.title}}
   a#manageUserGroupResponse
@@ -426,12 +824,12 @@ template(name="editUserGroup")
         #membersList(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
           if hasUsersAssignedToIt
             each user in users
-              .fa.fa-circle.listIndicator 
+              .fa.fa-circle.listIndicator
                 span.memberListComponent {{user.username}}
                 a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
                   .fa.fa-times-circle
           else
-            .fa.fa-circle.listIndicator 
+            .fa.fa-circle.listIndicator
               span.memberListComponent {{_ 'none'}}
       #manageGroupAdmin
         label#groupAdminLabel
@@ -446,12 +844,12 @@ template(name="editUserGroup")
         #groupAdminslist(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
           if hasGroupAdmin
             each groupAdmin in userGroupAdmins
-              .fa.fa-circle.listIndicator 
+              .fa.fa-circle.listIndicator
                 span.groupAdminListComponent {{groupAdmin.username}}
                 a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
                   .fa.fa-times-circle
           else
-            .fa.fa-circle.listIndicator 
+            .fa.fa-circle.listIndicator
               span.groupAdminListComponent {{_ 'none'}}
      if notAsssignedToAnyUser
        hr.hrEditUserGroupForm
@@ -503,7 +901,7 @@ template(name="subscriptionRow")
     td {{ moment subscription.subscribedOn 'LL' }}
     td {{ moment subscription.expiresOn 'LL' }}
     td {{_ subscription.billingCycle}}
-    td
+    td#subscriptionsActionCol
       a.renewSubscription(data-subscription-id=subscription._id)
         | {{_ 'renew'}}
       a.upgradeSubscription(data-subscription-id=subscription._id)
@@ -530,7 +928,7 @@ template(name="addSubscriptionPopup")
           option(value='', selected='selected') Select One
           option(value='monthly') {{_ 'monthly'}}
           option(value='yearly') {{_ 'yearly'}}
-      // select user and have the usergroup dropdown options be only of the selected user's user groups 
+      // select user and have the usergroup dropdown options be only of the selected user's user groups
       label
         | {{_ 'subscriber'}}
         #subscriber-error-msg.newSubscriptionErrorMsg.error-msg.hide {{_ 'error-subscriber-not-selected'}}
@@ -557,12 +955,12 @@ template(name="upgradeSubscriptionPopup")
   else
     form#upgradeSubscriptionForm
       input#upgradeSubscriptionHiddenInput
-      p.center.bold 
+      p.center.bold
         | {{_ 'subscriber'}}
         | :
         span.upgradeSubscriptionFormTitle
           | {{subscription.subscriberUsername}}
-      p.center.bold 
+      p.center.bold
         | {{_ 'user-group'}}
         | :
         span.upgradeSubscriptionFormTitle

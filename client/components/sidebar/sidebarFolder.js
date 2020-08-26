@@ -14,12 +14,12 @@ BlazeComponent.extendComponent({
       accept: function(dropElem) {
         var droppedInFolderId = $('p#actionTitle').find('.fa-arrow-left').data('id');
         var fromFolderId = dropElem.closest('div.folderDetails').data('folder-id');
-        if (droppedInFolderId !== fromFolderId && 
+        if (droppedInFolderId !== fromFolderId &&
         		( dropElem.hasClass('uncategorised_boards') ||
-      				dropElem.hasClass('categorised_boards') || 
-      				( dropElem.hasClass('board_templates') && 
-    						Meteor.user().isAdminOrManager() && 
-    						dropElem.data('is-template-admin') 
+      				dropElem.hasClass('categorised_boards') ||
+      				( dropElem.hasClass('board_templates') &&
+    						Meteor.user().isAdminOrManager() &&
+    						dropElem.data('is-template-admin')
   						)
     				)
     		) {
@@ -34,7 +34,7 @@ BlazeComponent.extendComponent({
         var boardIdentifier = $(ui.draggable).data('id');
         var fromFolderId = $(ui.draggable).closest('div.folderDetails').data('folder-id');
         var boardTemplateIsDropped = $(ui.draggable).hasClass('board_templates');
-  
+
         // Update old folder's contents
         if ($('li.categorised_boards').is(':visible') && fromFolderId !== droppedInFolderId) {
           var fromFolder = Folders.findOne(fromFolderId);
@@ -76,7 +76,7 @@ BlazeComponent.extendComponent({
   		// for it to accept a template board, the user needs to be the template board's admin, have the class 'board_templates'
   		// and the user has to be of the user role admin or manager of the system
       accept: function(dropElem) {
-        if (dropElem.hasClass('categorised_boards') || 
+        if (dropElem.hasClass('categorised_boards') ||
         		( dropElem.hasClass('board_templates') && Meteor.user().isAdminOrManager() && dropElem.data('is-template-admin') )
     		) {
             return true;
@@ -99,10 +99,10 @@ BlazeComponent.extendComponent({
         // If board is being dropped from template folder
         if (boardTemplateIsDropped) {
         	// Since dropping in uncategorised from template folder, remove its old categorised folder parent , if it has any, but
-        	// we do that only for the user that moves the board, that is the admin. We do not scrap the members old categorised folder 
-        	// record at the moment that its moved into the templates folder as when the board is moved out of the template folder, 
-        	// the other members find it eaxactly in the same folder that they had put it in earlier on (before it was put in the templates 
-        	// folder ), provided they did not delete that folder, in which case the'll find in the uncategorised folder. 
+        	// we do that only for the user that moves the board, that is the admin. We do not scrap the members old categorised folder
+        	// record at the moment that its moved into the templates folder as when the board is moved out of the template folder,
+        	// the other members find it eaxactly in the same folder that they had put it in earlier on (before it was put in the templates
+        	// folder ), provided they did not delete that folder, in which case the'll find in the uncategorised folder.
         	var hasOldFolder = false;
         	var oldFolderId = null;
         	var userFolders = Folders.find({ userId: Meteor.userId() });
@@ -169,7 +169,7 @@ BlazeComponent.extendComponent({
         Meteor.user().addEveryAdminAndManagerToBoard(boardIdentifier);
 
         // Create card and swimlane docs
-        // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default 
+        // We need these, because as per upstream logic they'll query for the list, the swimlane and the card that gets created by default
         // whenever the user creates a templates for when the system tries to list all the templates in feature to create boards with template
         const userProfile = Meteor.user().profile;
         var swimlanesFieldsValues = {
@@ -187,7 +187,7 @@ BlazeComponent.extendComponent({
         });
         var cardsFieldsValues = {
       		title: boardTitle,
-          listId: defaultBoardTemplatesList._id, 
+          listId: defaultBoardTemplatesList._id,
           boardId: userProfile.templatesBoardId,
           swimlaneId: userProfile.boardTemplatesSwimlaneId,
           type: 'cardType-linkedBoard',
@@ -216,7 +216,7 @@ BlazeComponent.extendComponent({
     	this.subscribe('folders');
     	this.subscribe('boards');
       this.subscribe('lists');
-      this.subscribe('cards');
+      this.subscribe('linkedBoardCards');
       this.subscribe('users');
     });
   },
@@ -256,21 +256,21 @@ BlazeComponent.extendComponent({
   getViewTemplate() {
     return `${this.getView()}FoldersWidget`;
   },
-  
+
   folders() {
   	return Folders.find(
-  	  { userId: Meteor.userId(), parentId: null }, 
+  	  { userId: Meteor.userId(), parentId: null },
   	  { sort: ['name'] }
   	);
   },
-  
+
   subFolders() {
   	return Folders.find(
-  	  { userId: Meteor.userId(), parentId: this.currentData()._id }, 
+  	  { userId: Meteor.userId(), parentId: this.currentData()._id },
   	  { sort: ['name'] }
   	);
   },
-  
+
   boards() {
     return Boards.find({'members.userId': Meteor.userId()});
   },
@@ -294,15 +294,15 @@ BlazeComponent.extendComponent({
 
       'submit #createFirstLevelFolderForm': function(e) {
         e.preventDefault();
-        Folders.insert({ 
-          name: $('input[name=name]').val(), 
-          level: "first", 
+        Folders.insert({
+          name: $('input[name=name]').val(),
+          level: "first",
           userId: Meteor.userId()
         }, function(error, result) {
           if (result) {
-            var $successMessage = $('<div class="successStatus">' + 
+            var $successMessage = $('<div class="successStatus">' +
               '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-              '<p><b>Folder succesfully created!</b></p>' + 
+              '<p><b>Folder succesfully created!</b></p>' +
               '</div>'
             );
 
@@ -347,16 +347,16 @@ BlazeComponent.extendComponent({
 
       'submit .createSubFolderForm': function(e) {
         e.preventDefault();
-        Folders.insert({ 
-          name: $(e.target).find('input[name=name]').val(), 
-          level: "second", 
+        Folders.insert({
+          name: $(e.target).find('input[name=name]').val(),
+          level: "second",
           userId: Meteor.userId(),
           parentId: $(e.target).data('parent-id')
         }, function(error, result) {
           if (result) {
-            var $successMessage = $('<div class="successStatus">' + 
+            var $successMessage = $('<div class="successStatus">' +
               '<a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a>' +
-              '<p><b>Folder succesfully created!</b></p>' + 
+              '<p><b>Folder succesfully created!</b></p>' +
               '</div>'
             );
 
@@ -430,7 +430,7 @@ BlazeComponent.extendComponent({
         if ($(e.target).closest('li.myFolder').children('a.folderOpener').hasClass('selected')) {
           var folderId = $(e.target).closest('li.myFolder').data('id');
           var boardIds = new Array();
-          var selectedFolder = Folders.findOne({ _id:folderId }); 
+          var selectedFolder = Folders.findOne({ _id:folderId });
           var folderContents = selectedFolder.contents;
 
           Session.set('folder', folderId);
@@ -441,7 +441,7 @@ BlazeComponent.extendComponent({
 
           if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
             for (var i=0; i < _.keys(folderContents).length; i++) {
-            	var boardTemplate = Boards.find({ 
+            	var boardTemplate = Boards.find({
             		_id: folderContents[i].boardId,
             		type: 'template-board'
           		});
@@ -464,12 +464,14 @@ BlazeComponent.extendComponent({
             $('li.categorised_boards').draggable({
               revert: 'invalid',
               start: function(event) {
-                $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-                $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+                $(this).css({'pointer-events': 'none'});
+                $(this).find('.board-list-item').css({'opacity': '0.5'});
+                $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css({'opacity': '1', 'color': '#2980b9'}));
               },
               drag: function() {},
               stop: function() {
-                $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+                $(this).css({'pointer-events': 'auto'});
+                $(this).find('.board-list-item').css({'opacity': '1'});
                 $('p#actionTitle').remove();
               }
             });
@@ -494,19 +496,21 @@ BlazeComponent.extendComponent({
         var boardTemplates = Boards.find({
           type: 'template-board',
           'members.userId': Meteor.userId(),
-          archived: false, 
+          archived: false,
         });
         if(boardTemplates.count() > 0) {
           // making the board templates draggable
           $('li.board_templates').draggable({
             revert: 'invalid',
             start: function(event) {
-              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+              $(this).css({'pointer-events': 'none'});
+              $(this).find('.board-list-item').css({'opacity': '0.5'});
+              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css({'opacity': '1', 'color': '#2980b9'}));
             },
             drag: function() {},
             stop: function() {
-              $(this).css({'opacity': '1', 'pointer-events': 'auto'});
+              $(this).css({'pointer-events': 'auto'});
+              $(this).find('.board-list-item').css({'opacity': '1'});
               $('p#actionTitle').remove();
             }
           });
@@ -531,12 +535,14 @@ BlazeComponent.extendComponent({
       	$('li.uncategorised_boards').draggable({
       	  revert: 'invalid',
       	  start: function(event) {
-              $(this).css({'opacity': '0.5', 'pointer-events': 'none'});
-              $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css('color', '#2980b9'));
+            $(this).css({'pointer-events': 'none'});
+            $(this).find('.board-list-item').css({'opacity': '0.5'});
+            $(this).append($('<p id="actionTitle" class="center"><span class="fa fa-arrow-left"> </span><b> Drop in a folder</b></p>').css({'opacity': '1', 'color': '#2980b9'}));
       	  },
       	  drag: function() {},
       	  stop: function() {
-      	    $(this).css({'opacity': '1', 'pointer-events': 'auto', 'height': 'auto'});
+            $(this).css({'pointer-events': 'auto'});
+            $(this).find('.board-list-item').css({'opacity': '1'});
             $('p#actionTitle', this).remove();
       	  }
       	});

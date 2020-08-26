@@ -166,14 +166,11 @@ const CreateBoard = BlazeComponent.extendComponent({
   },
 
   createTemplateBtn() {
-    var status = $('.board-list').children('.js-add-board-template:visible').length;
-    if (status < 1) {
+    if ($('.js-add-board').hasClass('is-active')) { // from Board List or from Header
       return false;
+    } else if ($('.js-add-board-template').hasClass('is-active')) { // from Board List
+      return true;
     }
-    if ($('.js-create-board.js-add-board').hasClass('is-active')) {
-      return false;
-    }
-    return true;
   },
 
   hasTemplate() {
@@ -201,8 +198,8 @@ const CreateBoard = BlazeComponent.extendComponent({
     if (!$('.js-new-board-title').hasClass('createBoardTemplate')) {
       const visibility = this.visibility.get();
 
-      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
-      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards,
+      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the
       // default order of the UGs assigned to him and is usable.
       if (selectedUserGroupId.length > 0) {
         this.boardId.set(Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId }));
@@ -216,13 +213,13 @@ const CreateBoard = BlazeComponent.extendComponent({
       });
 
       Utils.goBoardId(this.boardId.get());
-    } 
+    }
     // Creating board template
     else {
       let linkedId = '';
 
-      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
-      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+      // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards,
+      // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the
       // default order of the UGs assigned to him and is usable.
       if (selectedUserGroupId.length > 0) {
         linkedId = Boards.insert({ title, permission: 'private', type: 'template-board', quotaGroupId: selectedUserGroupId });
@@ -242,7 +239,7 @@ const CreateBoard = BlazeComponent.extendComponent({
       });
       const _id = Cards.insert({
         title,
-        listId: defaultBoardTemplatesList._id,   
+        listId: defaultBoardTemplatesList._id,
         boardId: userProfile.templatesBoardId,
         sort: -1,
         swimlaneId: userProfile.boardTemplatesSwimlaneId,
@@ -305,7 +302,7 @@ BlazeComponent.extendComponent({
   template() {
     return 'cloneBoardPopup';
   },
-    
+
   onSubmit(evt) {
     evt.preventDefault();
     const title = this.find('.js-new-board-title').value;

@@ -176,7 +176,7 @@ Lists.helpers({
     	boardId: oldBoardId,
       listId: oldId,
     }).forEach((listProperty) => {
-    	listProperty.copy(boardId, _id, listProperty.alias, listProperty.i18nKey);
+    	listProperty.copy(boardId, _id, listProperty.alias, listProperty.i18nKey, listProperty.visible, listProperty.useDateWarnings, listProperty.useTime, listProperty.color);
     });
   },
 
@@ -243,7 +243,7 @@ Lists.helpers({
     }
     return alias;
   },
-  
+
   getProperty(key) {
     const property = ListProperties.findOne({listId: this._id, i18nKey: key});
     if (typeof property !== 'undefined') {
@@ -251,7 +251,7 @@ Lists.helpers({
     }
     return null
   },
-  
+
   changePropertyVisibility(key, state) {
     const property = ListProperties.findOne({listId: this._id, i18nKey: key});
     if (typeof property !== 'undefined') {
@@ -260,7 +260,7 @@ Lists.helpers({
       ListProperties.insert({i18nKey: key, boardId: this.boardId, listId: this._id, alias: TAPi18n.__(key), visible: state});
     }
   },
-  
+
   getPropertyVisibility(key) {
     const property = ListProperties.findOne({listId: this._id, i18nKey: key});
     let visible = (typeof property !== 'undefined') ? property.visible : true;
@@ -270,7 +270,7 @@ Lists.helpers({
     }
     return visible;
   },
-  
+
   getPropertyColor(key) {
     const property = ListProperties.findOne({listId: this._id, i18nKey: key});
     if (typeof property !== 'undefined') {
@@ -278,7 +278,7 @@ Lists.helpers({
     }
     return null;
   },
-  
+
   properties() {
     return ListProperties.find({ listId: this._id });
   }
@@ -288,7 +288,7 @@ Lists.mutations({
   rename(title) {
     return { $set: { title } };
   },
-  
+
   setDescription(description) {
     return { $set: { description } };
   },
@@ -366,7 +366,7 @@ Lists.hookOptions.after.update = { fetchPrevious: false };
 if (Meteor.isServer) {
   Meteor.startup(() => {
     Lists._collection._ensureIndex({ boardId: 1 });
-    
+
     const users = Users.find();
 
     users.forEach((user) => {
