@@ -354,8 +354,8 @@ Boards.helpers({
     $('li.searched_boards').show();
     $('.searchedBoardsResultsHeader').remove();
     $('.board-list.clearfix.ui-sortable').prepend(
-      '<h1 class="searchedBoardsResultsHeader" style="margin-left: 8px;">' + 
-      TAPi18n.__('search-results-for')  + ' " ' + Session.get('searchingBoardTitle') + 
+      '<h1 class="searchedBoardsResultsHeader" style="margin-left: 8px;">' +
+      TAPi18n.__('search-results-for')  + ' " ' + Session.get('searchingBoardTitle') +
       ' "</h1>'
     );
   },
@@ -887,7 +887,7 @@ if (Meteor.isServer) {
         if (index >= 0) {
           if (board.type && board.type == 'template-board') {
           	Cards.update(
-        			{ linkedId: board._id }, 
+        			{ linkedId: board._id },
         			{ $set: { archived: true } }
       			);
           }
@@ -903,7 +903,7 @@ if (Meteor.isServer) {
   Meteor.startup(() => {
     var boardTemplates = Boards.find({
       type: 'template-board',
-      archived: false, 
+      archived: false,
     });
     var managerRole = Roles.findOne({name: 'Manager'});
     var managerRoleId = null;
@@ -911,16 +911,16 @@ if (Meteor.isServer) {
     	managerRoleId = managerRole._id;
     }
     var adminsOrManagers = Users.find({
-    	$or: [ 
-    		{ isAdmin: true }, 
-    		{ roleId: managerRoleId } 
+    	$or: [
+    		{ isAdmin: true },
+    		{ roleId: managerRoleId }
   		]
     });
     boardTemplates.forEach((boardTemplate) => {
     	adminsOrManagers.forEach((adminOrManager) => {
     		var boardTemplateId = boardTemplate._id;
     		var boardTemplateMembers = boardTemplate.members;
-    		var adminOrManagerId = adminOrManager._id; 
+    		var adminOrManagerId = adminOrManager._id;
   			isMember = false;
     		boardTemplateMembers.forEach((boardTemplateMember) => {
       		if (boardTemplateMember.userId == adminOrManagerId) {
@@ -977,12 +977,12 @@ if (Meteor.isServer) {
     			var usedQuota = userGroup.usedBoardsQuota  + 1;
     			// Update usedUsersQuota in UserGroups
     			UserGroups.update(
-  					{ _id: userGroup._id }, 
+  					{ _id: userGroup._id },
   					{ $set: { usedBoardsQuota: usedQuota } }
   				);
           // Update quotaGroupId in Boards
           Boards.update(
-            { _id: doc._id }, 
+            { _id: doc._id },
             { $set: { quotaGroupId: userGroup._id } }
           );
     		}
@@ -996,12 +996,12 @@ if (Meteor.isServer) {
         			var usedQuota = userGroup.usedBoardsQuota  + 1;
         			// Update usedUsersQuota in UserGroups
         			UserGroups.update(
-      					{ _id: userGroup._id }, 
+      					{ _id: userGroup._id },
       					{ $set: { usedBoardsQuota: usedQuota } }
       				);
         			// Update quotaGroupId in Boards
         			Boards.update(
-      					{ _id: doc._id }, 
+      					{ _id: doc._id },
       					{ $set: { quotaGroupId: userGroup._id } }
       				);
         			break;
@@ -1055,9 +1055,9 @@ if (Meteor.isServer) {
       return 10;
     }
 
-		//	Check in AssignedUserGroup whether the user has any user group assigned to it, 
-		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation 
-		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created 
+		//	Check in AssignedUserGroup whether the user has any user group assigned to it,
+		//	if so, it would in turn check if he's exhausted his quota of all the user groups assigned to him or not in order to proceed with the creation
+		//	but if no user group is assigned to him, then the system needs to check in the model's collection to see how much of it has the user already created
 		//	and whether he has exhausted his default trial quota
   	const userAssignedUserGroups = AssignedUserGroups.find({ userId: insertorId }, );
   	// If user has any AssignedUserGroup
@@ -1074,7 +1074,7 @@ if (Meteor.isServer) {
   		} else {
 	      throw new Meteor.Error('error-exhausted-boards-quota');
   		}
-  	} 
+  	}
   	// Else we check with the Default Trial 'Boards Quota'
   	else {
     	const boardsCreatedByCurrentUserCount = Boards.find({createdBy: insertorId}).count();
@@ -1204,7 +1204,7 @@ if (Meteor.isServer) {
 
   // Method executed before deleting a board from the database
   Boards.before.remove((userId, doc) => {
-    // CardScores, CardComments, Checklists, Activities and attachment gets removed 
+    // CardScores, CardComments, Checklists, Activities and attachment gets removed
     // in post card deletion method (cardRemover())
     Cards.remove({
       boardId: doc._id
@@ -1250,7 +1250,7 @@ if (Meteor.isServer) {
         }
       }
       Folders.update(
-        { _id : userFolders[i]._id }, 
+        { _id : userFolders[i]._id },
         { $unset: { contents : '' } }
       );
       for (var n = 0; n < boardIds.length; n++) {

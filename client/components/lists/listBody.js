@@ -569,20 +569,20 @@ BlazeComponent.extendComponent({
 	      const regex = new RegExp(this.term.get(), 'i');
 	      const boardIds = new Array();
 	      const templates = Boards.find({
-	      	type: 'template-board', 
-	    		'members.userId': Meteor.user()._id, 
-	    		archived: false,  
+	      	type: 'template-board',
+	    		'members.userId': Meteor.user()._id,
+	    		archived: false,
 	    		$or: [
 	          { title: regex },
 	          { description: regex },
 	        ],
 	      }).forEach((template) => {
 	      	boardIds.push(template._id);
-	      }); 
+	      });
 
 	      const projection = { limit: 15, sort: { createdAt: -1 } };
 
-	      boards = Cards.find({ 
+	      boards = Cards.find({
 	      	linkedId: { $in: boardIds }
 	      }, projection);
     	} else {
@@ -590,14 +590,14 @@ BlazeComponent.extendComponent({
       	if (Meteor.user().isAdminOrManager()) {
         	boards = Cards.find({
             type: 'cardType-linkedBoard',
-            archived: false, 
+            archived: false,
           });
-      	} 
+      	}
       	// else if Coach or Coachee
       	else if (Meteor.user().isCoachOrCoachee()) {
         	const linkedBoardCards = Cards.find({
             type: 'cardType-linkedBoard',
-            archived: false, 
+            archived: false,
           });
         	var boardIds = [];
         	linkedBoardCards.forEach((linkedBoardCard) => {
@@ -612,7 +612,7 @@ BlazeComponent.extendComponent({
         	});
     			boards = Cards.find({ linkedId: {$in: boardIds} });
       	}
-    	} 
+    	}
       boards.forEach((board) => {
         subManager.subscribe('board', board.linkedId, false);
       });
@@ -681,8 +681,8 @@ BlazeComponent.extendComponent({
           if ($('.select-specific-quota-to-use option:selected').length > 0) {
             selectedUserGroupId = $('.select-specific-quota-to-use option:selected').val().trim();
           }
-          // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards, 
-          // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the 
+          // Check if the user had selected any specifc user group's quota to use or not! If not, then in the model Boards,
+          // the part executes post a board insertion would update the board document's field quotaGroupId with the userGroupId based on the
           // default order of the UGs assigned to him and is usable.
           if (selectedUserGroupId.length > 0) {
             board.quotaGroupId = selectedUserGroupId;
