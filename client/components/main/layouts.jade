@@ -24,11 +24,18 @@ template(name="userFormsLayout")
           +connectionMethod(authenticationMethod=currentSetting.defaultAuthenticationMethod)
         div.at-form-lang
           select.select-lang.js-userform-set-language
-            each languages
-              if isCurrentLanguage
-                option(value="{{tag}}" selected="selected") {{name}}
-              else
-                option(value="{{tag}}") {{name}}
+            if isNewUserSetPassword
+              each languages
+                if isDefaultLanguage
+                  option(value="{{tag}}" selected="selected") {{name}}
+                else
+                  option(value="{{tag}}") {{name}}
+            else
+              each languages
+                if isCurrentLanguage
+                  option(value="{{tag}}" selected="selected") {{name}}
+                else
+                  option(value="{{tag}}") {{name}}
 
 template(name="defaultLayout")
   +header

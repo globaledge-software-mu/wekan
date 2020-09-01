@@ -756,7 +756,7 @@ Users.helpers({
 
   getLanguage() {
     const profile = this.profile || {};
-    return profile.language || 'en';
+    return profile.language || 'nl';
   },
 
   getTemplatesBoardId() {
@@ -933,6 +933,51 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+
+  	setLanguageNewUser(token, lang) {
+      check(token, String);
+      check(lang, String);
+
+      var user = Users.findOne({"services.password.reset.token": token});
+      if (user && user._id) {
+        Users.update(
+          { _id: user._id },
+          { $set: {
+            'profile.language': lang
+          } }
+        );
+      }
+  	},
+
+  	setLanguageExistingUser(match, lang) {
+      check(match, String);
+      check(lang, String);
+
+      var user = Users.findOne({
+        $or: [
+          {email: match},
+          {username: match}
+        ]
+      });
+      if (user && user._id) {
+        Users.update(
+          { _id: user._id },
+          { $set: {
+            'profile.language': lang
+          } }
+        );
+      }
+      return true;
+  	},
+
+  	getEnrollingUserEmail(token) {
+      check(token, String);
+
+      var user = Users.findOne({"services.password.reset.token": token});
+      if (user && user._id) {
+        return user.emails[0].address;
+      }
+  	},
 
   	mailNewSubscriptionSuccess(subscriberEmail, lang, params) {
       check(subscriberEmail, String);
