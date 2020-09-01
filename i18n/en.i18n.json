@@ -114,6 +114,7 @@
     "no-archived-boards": "No Boards in Archive.",
     "archives": "Archive",
     "template": "Template",
+    "orCreateFromTemplate": "Or Create using Template",
     "templates": "Templates",
     "aspectsList": "Aspects List",
     "assign-member": "Assign member",
