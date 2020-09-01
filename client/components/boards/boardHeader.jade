@@ -191,13 +191,16 @@ template(name="createBoard")
           a.js-change-visibility {{_ 'change'}}.
     input.primary.wide(type="submit" value="{{_ 'create'}}")
     unless createTemplateBtn
-      span.quiet
-        | {{_ 'or'}}
+      if currentUser.hasTemplatesOrIsAdminOrManager
+        span.quiet
+          | {{_ 'or'}}
+      if currentUser.isAdminOrManager
         a.js-import-board {{_ 'import'}}
-      if hasTemplate
+      if currentUser.hasTemplatesAndIsAdminOrManager
         span.quiet
           | /
-          a.js-board-template {{_ 'template'}}
+      if currentUser.hasTemplate
+        a.js-board-template {{_ 'template'}}
 
 template(name="cloneBoardPopup")
   form

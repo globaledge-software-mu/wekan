@@ -417,6 +417,35 @@ if (Meteor.isClient) {
       return UserGroups.find({_id: {$in: usableBoardsQuotaUserGroupsIds}});
     },
 
+    hasTemplate() {
+      var templateMember = Boards.find({
+        type: 'template-board',
+        'members.userId': Meteor.userId(),
+        archived: false,
+      });
+      if (templateMember.count() > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+
+    hasTemplatesOrIsAdminOrManager() {
+       if (this.hasTemplate() || this.isAdminOrManager()){
+        return true;
+       } else {
+        return false;
+       }
+    },
+
+    hasTemplatesAndIsAdminOrManager() {
+      if (this.hasTemplate() && this.isAdminOrManager()){
+       return true;
+      } else {
+       return false;
+      }
+    },
+
     isBoardAdmin() {
       const board = Boards.findOne(Session.get('currentBoard'));
       return board && board.hasAdmin(this._id);
