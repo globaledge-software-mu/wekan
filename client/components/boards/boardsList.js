@@ -296,6 +296,7 @@ BlazeComponent.extendComponent({
     return Boards.find({
       type: 'template-board',
       archived: false,
+      subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
     });
   },
 
@@ -304,6 +305,7 @@ BlazeComponent.extendComponent({
       type: 'template-board',
       'members.userId': Meteor.userId(),
       archived: false,
+      subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
     });
   },
 
@@ -351,6 +353,7 @@ BlazeComponent.extendComponent({
       	title: {$regex: typedTitle, $options: 'i'},
         archived: false,
         'members.userId': Meteor.userId(),
+        subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
       }, {
       	sort: ['title']
       });
@@ -376,10 +379,14 @@ BlazeComponent.extendComponent({
       }
 
       if (folderBoardsIds.length > 0) {
-        return Boards.find(
-          { _id: { $in: folderBoardsIds }, archived: false, 'members.userId': Meteor.userId(), },
-          { sort: ['title'], }
-        );
+        return Boards.find({
+          _id: { $in: folderBoardsIds },
+          archived: false,
+          'members.userId': Meteor.userId(),
+          subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
+        }, {
+          sort: ['title'],
+        });
       } else {
         return null
       }
@@ -410,6 +417,7 @@ BlazeComponent.extendComponent({
         _id: { $nin: categorisedBoardIds },
         archived: false,
         'members.userId': Meteor.userId(),
+        subtasksDefaultListId: null, // condition to avoid getting "SubTask" boards
         type: {
         	$nin: [ 'template-board', 'template-container' ]
         },

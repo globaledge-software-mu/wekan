@@ -441,14 +441,19 @@ BlazeComponent.extendComponent({
 
           if(typeof(folderContents) != 'undefined' && folderContents !== null && _.keys(folderContents).length > 0) {
             for (var i=0; i < _.keys(folderContents).length; i++) {
-            	var boardTemplate = Boards.find({
-            		_id: folderContents[i].boardId,
-            		type: 'template-board'
+            	var templatesOrSubTaskBoards = Boards.find({
+                _id: folderContents[i].boardId,
+                $or: [
+                  { type: 'template-board' }, // condition to get "Template" boards
+                  { subtasksDefaultListId: { $nin: [ null, '' ] } } // condition to get "SubTask" boards
+                ]
           		});
-            	if (boardTemplate.count() == 0) {
+
+            	if (templatesOrSubTaskBoards.count() == 0) {
                 boardIds.push(folderContents[i].boardId);
             	}
             }
+
             if (boardIds.length == 0) {
               $('.board-list.clearfix.ui-sortable').append(
                 '<h3 class="emptyFolderMessage">Folder is empty!</h3>'
