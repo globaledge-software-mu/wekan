@@ -8,7 +8,11 @@ template(name="minicard")
     if labels
       .minicard-labels
         each labels
-          .minicard-label(class="card-label-{{color}}" title="{{name}}" data-label-id="{{_id}}" data-color="{{color}}")
+          .compactLabel.minicard-label(class="card-label-{{color}}" title="{{name}}" data-label-id="{{_id}}" data-color="{{color}}")
+          .expandedLabel.card-label.hide(class="card-label-{{color}}")
+            span.card-label-name
+              +viewer
+                = name
     .minicard-title(data-card-id="{{getId}}")
       .handle
         .fa.fa-arrows
