@@ -16,6 +16,13 @@ template(name="editCardReceivedComposedScoreModal")
           | {{_ 'Initial Score'}}
         .saveDetailedScores(style="text-align: right; margin-left: auto;")
           input#submitDetailedInitialScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
+      .composedScoreOptions.form-group
+        label.bold
+          | {{_ 'Compose "Received Score" using the SUM or the AVERAGE of the scores'}}
+        input.form-control.receivedScoreComposeMethod(type="radio" name="receivedScoreComposeMethod" value="addition" checked="{{#unless choseAverage}}checked{{/unless}}")
+        span {{_ 'Addition'}}
+        input.form-control.receivedScoreComposeMethod(type="radio" name="receivedScoreComposeMethod" value="average" checked="{{#if choseAverage}}checked{{/if}}")
+        span {{_ 'Average'}}
       .scrollableList
         if hasOnlyAspects
           each aspects
@@ -45,12 +52,19 @@ template(name="editCardReceivedComposedScoreModal")
 
 template(name="editCardStartComposedScoreModal")
   #editCardStartComposedScoreFormContainer
-    form#editCardStartComposedScoreForm
+    form#editCardStartComposedScoreForm(style="text-align: center;")
       .formHeader(style="margin-top: 25px; display: flex;")
         p#modalLabel(style="line-height: 60px; margin-left: 20px;")
           | {{_ 'Start Score'}}
         .saveDetailedScores(style="text-align: right; margin-left: auto;")
           input#submitDetailedCurrentScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
+      .composedScoreOptions.form-group
+        label.bold
+          | {{_ 'Compose "Start Score" using the SUM or the AVERAGE of the scores'}}
+        input.form-control.startScoreComposeMethod(type="radio" name="startScoreComposeMethod" value="addition" checked="{{#unless choseAverage}}checked{{/unless}}")
+        span {{_ 'Addition'}}
+        input.form-control.startScoreComposeMethod(type="radio" name="startScoreComposeMethod" value="average" checked="{{#if choseAverage}}checked{{/if}}")
+        span {{_ 'Average'}}
       .scrollableList
         if hasOnlyAspects
           each aspects

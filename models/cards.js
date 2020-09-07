@@ -289,6 +289,16 @@ Cards.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+	choseAverageReceived: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
+	choseAverageStart: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
 }));
 
 Cards.allow({
@@ -903,7 +913,7 @@ Cards.helpers({
 
         if (teamMembersCount == 1) {
           AspectsListItems.update(
-            { _id: aspect._id }, 
+            { _id: aspect._id },
             { $set: {
               initialScore: '',
               currentScore: ''
@@ -1364,7 +1374,7 @@ Cards.helpers({
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
     }
-    
+
     if (!card.startAt) {
       return false;
     }
