@@ -91,3 +91,45 @@ template(name="editCardStartComposedScoreModal")
                     | {{teamMemberAspectTitle(_id)}}
                   input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{currentScore}}" style="width: fit-content; margin-left: 8px;")
             hr(style="background: #005377;")
+
+template(name="editCardDueComposedScoreModal")
+  #editCardDueComposedScoreFormContainer
+    form#editCardDueComposedScoreForm(style="text-align: center;")
+      .formHeader(style="margin-top: 25px; display: flex;")
+        p#modalLabel(style="line-height: 60px; margin-left: 20px;")
+          | {{_ 'Target Score'}}
+        .saveDetailedScores(style="text-align: right; margin-left: auto;")
+          input#submitDetailedTargetScores.primary.wide(type="submit" value="{{_ 'save'}}" style="margin-right: 25px;")
+      .composedScoreOptions.form-group
+        label.bold
+          | {{_ 'Compose "Target Score" using the SUM or the AVERAGE of the scores'}}
+        input.form-control.dueScoreComposeMethod(type="radio" name="dueScoreComposeMethod" value="addition" checked="{{#unless choseAverage}}checked{{/unless}}")
+        span {{_ 'Addition'}}
+        input.form-control.dueScoreComposeMethod(type="radio" name="dueScoreComposeMethod" value="average" checked="{{#if choseAverage}}checked{{/if}}")
+        span {{_ 'Average'}}
+      .scrollableList
+        if hasOnlyAspects
+          each aspects
+            label.bold
+              | {{title}}
+              input.aspects-score-input(id="{{_id}}" type="text" value="{{targetScore}}")
+            hr(style="background: #005377;")
+        if hasOnlyTeamMembers
+          each teamMembers
+            label.bold
+              | {{username}}
+              input.team-members-score-input(id="{{_id}}" type="text" value="{{teamMemberScore(_id)}}")
+            hr(style="background: #005377;")
+        if hasBothTeamMembersAndAspects
+          each teamMembers
+            .bothAspectsAndTeamMembersContainer
+              .teamMembersContainer(style="display: flex;")
+                label.team-member-label.bold(style="line-height: 40px;")
+                  | {{username}}
+                input.team-members-score-input(id="{{_id}}" disabled type="text" value="{{teamMemberScore(_id)}}" style="width: fit-content; margin-left: 8px; height: fit-content;")
+              each teamMemberAspects _id
+                .aspectsContainer(style="margin-left: 50px; display: flex;")
+                  label.aspects-label.bold(style="line-height: 40px;")
+                    | {{teamMemberAspectTitle(_id)}}
+                  input.team-members-aspects-score-input(id="{{_id}}" type="text" value="{{targetScore}}" style="width: fit-content; margin-left: 8px;")
+            hr(style="background: #005377;")

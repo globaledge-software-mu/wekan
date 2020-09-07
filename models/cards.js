@@ -299,6 +299,11 @@ Cards.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: true,
   },
+	choseAverageDue: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
 }));
 
 Cards.allow({

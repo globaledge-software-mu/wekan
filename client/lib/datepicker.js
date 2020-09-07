@@ -83,7 +83,7 @@ DatePicker = BlazeComponent.extendComponent({
 
       'click #score'(evt) {
         const formTitle = $(evt.currentTarget).closest('.content-wrapper').siblings('.header').find('.header-title').text();
-        if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title') || formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
+        if (formTitle === TAPi18n.__('editCardReceivedDatePopup-title') || formTitle === TAPi18n.__('editCardStartDatePopup-title') || formTitle === TAPi18n.__('editCardDueDatePopup-title')) {
           const cardId = this.card._id;
           var hasAspects = false;
           var hasTeamMembers = false;
@@ -128,6 +128,9 @@ DatePicker = BlazeComponent.extendComponent({
               } else if (formTitle === TAPi18n.__('editCardStartDatePopup-title')) {
                 Modal.open('editCardStartComposedScoreModal');
                 Session.set('composedStartScoreCardId', cardId);
+              } else if (formTitle === TAPi18n.__('editCardDueDatePopup-title')) {
+                Modal.open('editCardDueComposedScoreModal');
+                Session.set('composedDueScoreCardId', cardId);
               }
           	}
           } else {
