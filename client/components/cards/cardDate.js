@@ -643,7 +643,7 @@ BlazeComponent.extendComponent({
           }
 
           const dateString = Session.get('dateString');
-          date = moment(dateString, 'L LT', true).toDate();
+          const date = moment(dateString, 'L LT', true).toDate();
 
           var hasOnlyAspects = false;
           var hasOnlyTeamMembers = false;
@@ -966,7 +966,7 @@ BlazeComponent.extendComponent({
           }
 
           const dateString = Session.get('dateString');
-          date = moment(dateString, 'L LT', true).toDate();
+          const date = moment(dateString, 'L LT', true).toDate();
 
           var hasOnlyAspects = false;
           var hasOnlyTeamMembers = false;
@@ -1292,7 +1292,7 @@ BlazeComponent.extendComponent({
           }
 
           const dateString = Session.get('dateString');
-          date = moment(dateString, 'L LT', true).toDate();
+          const date = moment(dateString, 'L LT', true).toDate();
 
           var hasOnlyAspects = false;
           var hasOnlyTeamMembers = false;
