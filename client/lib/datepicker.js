@@ -98,6 +98,11 @@ DatePicker = BlazeComponent.extendComponent({
             hasTeamMembers = true;
           }
 
+          // if is from chart, do not open composed score modal
+          if (typeof this.card.dataPointDate !== 'undefined' && this.card.dataPointDate !== null) {
+            return false;
+          }
+
           if ($('#date').val() !== "") {
           	if (hasAspects || hasTeamMembers) {
               var newDate = '';
