@@ -1000,6 +1000,7 @@ Cards.helpers({
           });
           const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
           if (teamMemberScore && teamMemberScore._id) {
+            // Update TeamMembersScores
             TeamMembersScores.update(
               { _id: teamMemberScore._id },
               { $set: {
@@ -1038,9 +1039,22 @@ Cards.helpers({
           }
         });
 
-        card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
-        card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
-        card.setTargetScore(totalTeamMembersTargetScores.toFixed(2).toString());
+        var finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores;
+        var finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores;
+        var finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores;
+        if (card.choseAverageReceived && card.choseAverageReceived === true) {
+          finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores / teamMembersScores.count();
+        }
+        if (card.choseAverageStart && card.choseAverageStart === true) {
+          finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores / teamMembersScores.count();
+        }
+        if (card.choseAverageDue && card.choseAverageDue === true) {
+          finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores / teamMembersScores.count();
+        }
+
+        card.setInitialScore(finalTotalTeamMembersInitialScores.toFixed(2).toString());
+        card.setCurrentScore(finalTotalTeamMembersCurrentScores.toFixed(2).toString());
+        card.setTargetScore(finalTotalTeamMembersTargetScores.toFixed(2).toString());
       }
     }
 

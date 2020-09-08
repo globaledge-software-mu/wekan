@@ -691,9 +691,22 @@ BlazeComponent.extendComponent({
                       }
                     });
 
-                    card.setInitialScore(totalAspectsInitialScore.toFixed(2).toString());
-                    card.setCurrentScore(totalAspectsCurrentScore.toFixed(2).toString());
-                    card.setTargetScore(totalAspectsTargetScore.toFixed(2).toString());
+                    var finalTotalAspectsInitialScore = totalAspectsInitialScore;
+                    var finalTotalAspectsCurrentScore = totalAspectsCurrentScore;
+                    var finalTotalAspectsTargetScore = totalAspectsTargetScore;
+                    if (card.choseAverageReceived && card.choseAverageReceived === true) {
+                      finalTotalAspectsInitialScore = totalAspectsInitialScore / aspects.count();
+                    }
+                    if (card.choseAverageStart && card.choseAverageStart === true) {
+                      finalTotalAspectsCurrentScore = totalAspectsCurrentScore / aspects.count();
+                    }
+                    if (card.choseAverageDue && card.choseAverageDue === true) {
+                      finalTotalAspectsTargetScore = totalAspectsTargetScore / aspects.count();
+                    }
+
+                    card.setInitialScore(finalTotalAspectsInitialScore.toFixed(2).toString());
+                    card.setCurrentScore(finalTotalAspectsCurrentScore.toFixed(2).toString());
+                    card.setTargetScore(finalTotalAspectsTargetScore.toFixed(2).toString());
                   } else if (hasbothAspectsAndTeamMembers) {
                     const teamMembers = card.team_members;
                     teamMembers.forEach((teamMember) => {
@@ -750,9 +763,22 @@ BlazeComponent.extendComponent({
                         }
                       });
 
-                      card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
-                      card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
-                      card.setTargetScore(totalTeamMembersTargetScores.toFixed(2).toString());
+                      var finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores;
+                      var finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores;
+                      var finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores;
+                      if (card.choseAverageReceived && card.choseAverageReceived === true) {
+                        finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores / teamMembersScores.count();
+                      }
+                      if (card.choseAverageStart && card.choseAverageStart === true) {
+                        finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores / teamMembersScores.count();
+                      }
+                      if (card.choseAverageDue && card.choseAverageDue === true) {
+                        finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores / teamMembersScores.count();
+                      }
+
+                      card.setInitialScore(finalTotalTeamMembersInitialScores.toFixed(2).toString());
+                      card.setCurrentScore(finalTotalTeamMembersCurrentScores.toFixed(2).toString());
+                      card.setTargetScore(finalTotalTeamMembersTargetScores.toFixed(2).toString());
                     }
                   }
                 }
