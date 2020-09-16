@@ -75,7 +75,7 @@ table#subscriptionsDataTable
 .error-msg
   color: red;
 
-#modalLabel
+.modalLabel
   text-align: center;
   margin-top: 0px;
   font-size: 20px;
@@ -102,6 +102,53 @@ table#subscriptionsDataTable
 
 #manageUserGroupContainer
   display: inline-block;
+
+.userGroupMembers
+  display: grid;
+
+.userGroupMembersListIndicator
+  display: flex;
+  margin-bottom: 0px;
+  margin-top: 12px;
+
+.userGroupMemberListComponent
+  font-size: 14px;
+  font-weight: bold;
+  padding-left: 10px;
+  font-family: arial;
+  line-height: 15px;
+  max-width: 200px;
+  word-wrap: break-word;
+  margin-right: 10px;
+
+.setOrUnsetUserGroupLogoForUser
+  font-size: 14px;
+  font-weight: bold;
+  font-family: arial;
+  line-height: 15px;
+  margin-left: 5px;
+  margin-right: 20px;
+
+.scrollableMembersList
+  overflow: auto;
+  background-color: #f7f7f7;
+  padding: 7px;
+  margin-bottom: 0px;
+  height: fit-content;
+  max-height: 250px;
+  border-radius: 5px;
+  border: 3px solid #a9a9a9;
+
+.choiceCell
+  display: inline-flex;
+  margin-top: 12px;
+
+.userGroupMembers
+  table
+    tbody
+      tr
+        td
+          text-align: center;
 
 #manageUserGroup
   display: flex;
@@ -146,7 +193,7 @@ table#subscriptionsDataTable
   .displayGrid
     display: grid;
 
-#userGroupTitle
+.userGroupTitle
   text-align: center;
   font-size: 25px;
   padding: 0px 20px 00px 20px;
@@ -154,6 +201,10 @@ table#subscriptionsDataTable
 
 .hrEditUserGroupForm
   background: darkgray;
+
+.hrListUserGroupMembers
+  background: darkgray;
+  margin-top: 0px;
 
 #manageQuota
   background-color: whitesmoke;
@@ -364,3 +415,19 @@ table
 #subscriptionsActionCol
   display: flex;
 
+.defaultSettingsBtnContainer
+  text-align: center;
+  #openModalLogoSettings, #openModalBoardColorSettings
+    margin-top: 0px;
+
+#manageUserGroupLogo, #manageUserGroupBoardColor
+  min-width: 400px;
+
+.goBackToManageUserGroupBaseModal
+  margin-top: 0px !important;
+
+#uploadedLogoContainer, #logoMaxSizseMessageContainer
+    text-align: center;
+
+.logo-image
+  max-height: 200px;

@@ -1060,6 +1060,9 @@ BlazeComponent.extendComponent({
 
 BlazeComponent.extendComponent({
   onCreated() {
+    Meteor.subscribe('logos');
+
+    this.error = new ReactiveVar('');
     this.loading = new ReactiveVar(false);
   },
 
@@ -1075,15 +1078,44 @@ BlazeComponent.extendComponent({
     return this.loading.get();
   },
 
+  logoUrlOptions() {
+    return {
+      auth: false,
+      brokenIsFine: true,
+    };
+  },
+
+  setLogo(logoUrl, userGroupId) {
+    const userGroup = UserGroups.findOne({_id: userGroupId});
+    if (userGroup && userGroup._id) {
+      if (userGroup.logoUrl && userGroup.logoUrl.length > 0) {
+        const oldLogoUrl = userGroup.logoUrl;
+        const splittedUrl = oldLogoUrl.split('/');
+        const oldLogoName = splittedUrl[5];
+        if (oldLogoName.length > 0) {
+          const oldLogo = Logos.findOne({'original.name': oldLogoName});
+          if (oldLogo && oldLogo._id) {
+            Logos.remove({_id: oldLogo._id});
+          }
+        }
+      }
+      userGroup.setLogoUrl(logoUrl);
+    }
+  },
+
+  setError(error) {
+    this.error.set(error);
+  },
+
   events() {
     return [{
     	'change #js-select-user'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageUserGroupResponse').empty();
+        	$('a.manageUserGroupResponse').empty();
         }
 
-    		const userGroupId = $('#userGroupTitle').data('user-group-id');
+    		const userGroupId = $('.userGroupTitle').data('user-group-id');
     		const selectedUserId = $("#js-select-user option:selected").val();
     		var groupOrder = 1;
     		const assignedUserGroups = AssignedUserGroups.find({ userId: selectedUserId, userGroupId }, {$sort: {groupOrder: -1}});
@@ -1103,14 +1135,14 @@ BlazeComponent.extendComponent({
           	} else {
           		message = err;
           	}
-            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           } else if (res) {
           	var message = TAPi18n.__('added-member-successfully');
-            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
               $(this).remove();
             });
           }
@@ -1120,9 +1152,9 @@ BlazeComponent.extendComponent({
     	'change #js-select-group-admin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageUserGroupResponse').empty();
+        	$('a.manageUserGroupResponse').empty();
         }
-    		const userGroupId = $('#userGroupTitle').data('user-group-id');
+    		const userGroupId = $('.userGroupTitle').data('user-group-id');
     		const userId = $("#js-select-group-admin option:selected").val();
     		const assignedUG = AssignedUserGroups.findOne({ userGroupId, userId });
     		if (assignedUG && assignedUG._id) {
@@ -1140,14 +1172,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-set-successfully');
-  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1159,9 +1191,9 @@ BlazeComponent.extendComponent({
     	'click .unsetUserGroupAdmin'(evt) {
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageUserGroupResponse').empty();
+        	$('a.manageUserGroupResponse').empty();
         }
-    		const userGroupId = $('#userGroupTitle').data('user-group-id');
+    		const userGroupId = $('.userGroupTitle').data('user-group-id');
     		const userId = $(evt.target).data('user-id');
     		const assignedUG = AssignedUserGroups.findOne({ userGroupId, userId });
     		if (assignedUG && assignedUG._id) {
@@ -1179,14 +1211,14 @@ BlazeComponent.extendComponent({
   	          	} else {
   	          		message = err;
   	          	}
-  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+  	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          } else if (res) {
   	          	var message = TAPi18n.__('group-admin-unset-successfully');
-  	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-  	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+  	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+  	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
   	              $(this).remove();
   	            });
   	          }
@@ -1205,7 +1237,7 @@ BlazeComponent.extendComponent({
         })
         .then((okDelete) => {
           if (okDelete) {
-        		const userGroupId = $('#userGroupTitle').data('user-group-id');
+        		const userGroupId = $('.userGroupTitle').data('user-group-id');
         		const userId = $(evt.target).data('user-id');
         		const assignedUG = AssignedUserGroups.findOne({ userId, userGroupId });
         		if (assignedUG && assignedUG._id) {
@@ -1244,11 +1276,11 @@ BlazeComponent.extendComponent({
 
         // clearing any immediate previous response
         if ($('.errorResponse').length > 0 || $('.successResponse').length > 0) {
-        	$('a#manageUserGroupResponse').empty();
+        	$('a.manageUserGroupResponse').empty();
         }
 
-        const userGroupId = $('#userGroupTitle').data('user-group-id');
-        const title = $('#userGroupTitle').data('user-group-title');
+        const userGroupId = $('.userGroupTitle').data('user-group-id');
+        const title = $('.userGroupTitle').data('user-group-title');
         const usersQuota = this.find('.js-user-group-users-quota').value.trim();
         const boardsQuota = this.find('.js-user-group-boards-quota').value.trim();
 
@@ -1280,14 +1312,14 @@ BlazeComponent.extendComponent({
 	          	} else {
 	          		message = err;
 	          	}
-	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
-	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          } else if (res) {
 	          	var message = TAPi18n.__('user-group-edited');
-	            $('a#manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
-	            $('a#manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+	            $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+	            $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
 	              $(this).remove();
 	            });
 	          }
@@ -1296,7 +1328,7 @@ BlazeComponent.extendComponent({
       },
 
       'click #deleteUGButton'() {
-        const userGroupId = $('#userGroupTitle').data('user-group-id');
+        const userGroupId = $('.userGroupTitle').data('user-group-id');
         swal({
           title: 'Confirm Delete User-Group!',
           text: 'Are you sure?',
@@ -1324,11 +1356,162 @@ BlazeComponent.extendComponent({
           }
         });
       },
+
+      'click #openModalLogoSettings'() {
+        $('.manageUserGroupResponse').empty();
+        $('.modal-close-btn').hide();
+        $('#manageUserGroupBaseModal').addClass('hide');
+        $('#manageUserGroupBoardColor').addClass('hide');
+        $('#manageUserGroupLogo').removeClass('hide');
+      },
+
+      'click #openModalBoardColorSettings'() {
+        $('.manageUserGroupResponse').empty();
+        $('.modal-close-btn').hide();
+        $('#manageUserGroupBaseModal').addClass('hide');
+        $('#manageUserGroupLogo').addClass('hide');
+        $('#manageUserGroupBoardColor').removeClass('hide');
+      },
+
+      'click .goBackToManageUserGroupBaseModal'() {
+        $('.manageUserGroupResponse').empty();
+        $('#manageUserGroupBoardColor').addClass('hide');
+        $('#manageUserGroupLogo').addClass('hide');
+        $('#manageUserGroupBaseModal').removeClass('hide');
+        $('.modal-close-btn').show();
+      },
+
+      'click .uploadLogo'() {
+        this.$('.uploadLogoInput').click();
+      },
+
+      'change .uploadLogoInput'(evt) {
+        $('.warning').empty();
+        var userGroupId = $('.userGroupTitle').data('user-group-id');
+        let file, fileUrl;
+
+        FS.Utility.eachFile(evt, (f) => {
+          try {
+            var fileObj = new FS.File(f);
+            fileObj.name(Math.random().toString(36));
+            file = Logos.insert(fileObj);
+            fileUrl = file.url(this.logoUrlOptions());
+          } catch (e) {
+            this.setError('Error uploading file! Check file size');
+          }
+        });
+
+        if (fileUrl) {
+          this.setError('');
+          const fetchLogoInterval = window.setInterval(() => {
+            $.ajax({
+              url: fileUrl,
+              success: () => {
+                this.setLogo(file.url(this.logoUrlOptions()), userGroupId);
+                window.clearInterval(fetchLogoInterval);
+              },
+            });
+          }, 100);
+        }
+      },
+
+      'click .closeResponse'() {
+        $('a.manageUserGroupResponse a,p').remove();
+      },
+
+      'click .setOrUnsetUserGroupLogoForMember'(evt) {
+        const userId = $(evt.target).data('user-id');
+        const userGroupId = $('.userGroupTitle').data('user-group-id');
+        const checkedOption = $('[name=setOrUnsetUserGroupLogoForMember' + userId + ']:checked').val();
+
+    		const assignedUG = AssignedUserGroups.findOne({ userGroupId, userId });
+    		if (assignedUG && assignedUG._id) {
+          // 1. First set the selcted choice for that user's assigned user group
+          AssignedUserGroups.update(
+            { _id: assignedUG._id },
+            { $set: {
+              useCustomDefaultLogo: checkedOption
+            } },
+            (err, res) => {
+              this.setLoading(false);
+              if (err) {
+                var message = '';
+                if (err.error) {
+                  message = TAPi18n.__(err.error);
+                } else {
+                  message = err;
+                }
+                $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+                $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+                  $(this).remove();
+                });
+              } else if (res) {
+                if (!$('a.manageUserGroupResponse > a.closeResponse').is(":visible")) {
+                  var message = 'changes saved successfully';
+                  $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+                  $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+                }
+              }
+            }
+          );
+
+          // 2. Then check if the choice was yes or no.
+          // If it was yes, set "No" to all of his other assigned user groups
+          if (checkedOption === 'Yes') {
+            const currentAssignedUGId = assignedUG._id;
+            AssignedUserGroups.find({
+              _id: { $ne: currentAssignedUGId },
+              userId: userId,
+            }).forEach((aUG) => {
+              AssignedUserGroups.update(
+                { _id: aUG._id },
+                { $set: {
+                  useCustomDefaultLogo: 'No'
+                } }
+              );
+            });
+          }
+        }
+      },
     }];
   },
 }).register('editUserGroup');
 
 Template.editUserGroup.helpers({
+  hasLogo() {
+		const groupId = Session.get('manageUserGroupId');
+    const userGroup = UserGroups.findOne({_id: groupId});
+    if (userGroup && userGroup._id && userGroup.logoUrl) {
+      return true
+    } else {
+      return false;
+    }
+  },
+
+  logoUrl(userGroupId) {
+    const userGroup = UserGroups.findOne({_id: userGroupId});
+    if (userGroup && userGroup._id && userGroup.logoUrl) {
+      return userGroup.logoUrl
+    } else {
+      return '#';
+    }
+  },
+
+	useCustomDefaultLogo(userId) {
+    const groupId = Session.get('manageUserGroupId');
+		const assignedUG = AssignedUserGroups.findOne({
+      userGroupId: groupId,
+      userId: userId
+    });
+		if (assignedUG && assignedUG._id && assignedUG.groupOrder && assignedUG.groupOrder === 1 && assignedUG.useCustomDefaultLogo && assignedUG.useCustomDefaultLogo === 'Yes') {
+			return true;
+		} else {
+      return false;
+    }
+	},
+
 	hasUsersAssignedToIt() {
 		const groupId = Session.get('manageUserGroupId');
 		const assignedUGs = AssignedUserGroups.find({userGroupId: groupId});
@@ -1442,6 +1625,21 @@ Template.editUserGroup.helpers({
 	  } else {
 	    return false;
 		}
+  },
+
+  isUserGroupAmin() {
+		const groupId = Session.get('manageUserGroupId');
+	  const userGroupAdmin = AssignedUserGroups.find({
+      userGroupId: groupId,
+      userId: Meteor.user()._id,
+      groupAdmin: {$in: ['Yes', 'yes']}
+    });
+
+    if (userGroupAdmin.count() > 0) {
+      return true;
+    } else {
+      return false;
+    }
   },
 
   userGroupAdmins() {

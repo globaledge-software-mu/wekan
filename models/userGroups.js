@@ -20,6 +20,13 @@ UserGroups.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: 0,
   },
+  logoUrl: {
+    /**
+     * URL of the logo of the usergroup
+     */
+    type: String,
+    optional: true,
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return
@@ -59,3 +66,19 @@ UserGroups.allow({
   },
   fetch: [],
 })
+
+UserGroups.mutations({
+  setLogoUrl(logoUrl) {
+    return {$set: {logoUrl: logoUrl}};
+  },
+});
+
+
+UserGroups.after.remove((userId, doc) => {
+  if (doc && doc._id && doc.logoUrl && doc.logoUrl.length > 0) {
+    const logo = Logos.findOne({ 'original.name': (doc.logoUrl.split('/'))[5] });
+    if (logo && logo._id) {
+      Logos.remove({_id: logo._id});
+    }
+  }
+});

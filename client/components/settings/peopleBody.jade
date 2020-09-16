@@ -784,76 +784,145 @@ template(name="createUserGroupPopup")
         input#cancelUserGroupCreation.primary.wide(type="button" value="{{_ 'cancel'}}")
 
 template(name="editUserGroup")
-  #modalBanner
-    h4#modalLabel
-      | {{_ 'manage-user-group'}}
-    h2#userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
-      | {{userGroup.title}}
-  a#manageUserGroupResponse
-  hr.hrEditUserGroupForm
-  #manageUserGroupContainer
-    #manageUserGroup
-      #manageQuota
-        label#quota
-          | {{_ 'manage-quota'}}
-        if loading.get
-          +spinner
-        form#editUserGroupPopup
-          label.bold
-            | {{_ 'users-quota'}}
-            span.error.hide.users-quota-blank.user-group-not-edited
-              | {{_ 'error-users-quota-blank'}}
-            input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
-          label.bold
-            | {{_ 'boards-quota'}}
-            span.error.hide.boards-quota-blank.user-group-not-edited
-              | {{_ 'error-boards-quota-blank'}}
-            input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
-          div.editUGButtonsContainer
-            input.primary.wide(type="submit" value="{{_ 'save'}}")
-      #manageMembers.bold
-        label#memberLabel
-          | {{_ 'manage-members'}}
-        if canAddMoreMember
-          label
-            | {{_ 'add-member'}}
-            select#js-select-user
-              option(value='', selected='selected') Select One
-              each user in notUserGroupMember
-                option(value=user._id) {{user.username}}
-        #membersList(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
+  #manageUserGroupBaseModal
+    .modalBanner
+      h4.modalLabel
+        | {{_ 'manage-user-group'}}
+      h2.userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
+        | {{userGroup.title}}
+    a.manageUserGroupResponse
+    hr.hrEditUserGroupForm
+    if isUserGroupAmin
+      .defaultSettingsBtnContainer
+        button#openModalLogoSettings.btn.btn-primary(data-user-group-id=userGroup._id) {{_ 'Default Logo Settings'}}
+        button#openModalBoardColorSettings.btn.btn-primary(data-user-group-id=userGroup._id) {{_ 'Default Board Color Settings'}}
+      hr.hrEditUserGroupForm
+    #manageUserGroupContainer
+      #manageUserGroup
+        #manageQuota
+          label#quota
+            | {{_ 'manage-quota'}}
+          if loading.get
+            +spinner
+          form#editUserGroupPopup
+            label.bold
+              | {{_ 'users-quota'}}
+              span.error.hide.users-quota-blank.user-group-not-edited
+                | {{_ 'error-users-quota-blank'}}
+              input.js-user-group-users-quota(type="text" value=userGroup.usersQuota)
+            label.bold
+              | {{_ 'boards-quota'}}
+              span.error.hide.boards-quota-blank.user-group-not-edited
+                | {{_ 'error-boards-quota-blank'}}
+              input.js-user-group-boards-quota(type="text" value=userGroup.boardsQuota)
+            div.editUGButtonsContainer
+              input.primary.wide(type="submit" value="{{_ 'save'}}")
+        #manageMembers.bold
+          label#memberLabel
+            | {{_ 'manage-members'}}
+          if canAddMoreMember
+            label
+              | {{_ 'add-member'}}
+              select#js-select-user
+                option(value='', selected='selected') Select One
+                each user in notUserGroupMember
+                  option(value=user._id) {{user.username}}
+          .membersList(class="listProperties{{#if lessThan4Members}} displayContents{{else}} displayGrid{{/if}}")
+            if hasUsersAssignedToIt
+              each user in users
+                .fa.fa-circle.listIndicator
+                  span.memberListComponent {{user.username}}
+                  a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
+                    .fa.fa-times-circle
+            else
+              .fa.fa-circle.listIndicator
+                span.memberListComponent {{_ 'none'}}
+        #manageGroupAdmin
+          label#groupAdminLabel
+            | {{_ 'manage-group-admin'}}
+          if canAddMoreGroupAdmin
+            label.bold
+              | {{_ 'add-group-admin'}}
+              select#js-select-group-admin
+                option(value='', selected='selected') Select One
+                each userGroupNonAdmin in userGroupNonAdmins
+                  option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
+          #groupAdminslist(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
+            if hasGroupAdmin
+              each groupAdmin in userGroupAdmins
+                .fa.fa-circle.listIndicator
+                  span.groupAdminListComponent {{groupAdmin.username}}
+                  a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
+                    .fa.fa-times-circle
+            else
+              .fa.fa-circle.listIndicator
+                span.groupAdminListComponent {{_ 'none'}}
+      if notAsssignedToAnyUser
+        hr.hrEditUserGroupForm
+        input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
+
+  #manageUserGroupLogo.hide
+    button.btn.secondary.goBackToManageUserGroupBaseModal
+      i.fa.fa-chevron-left
+      | {{{_ 'back'}}}
+    .modalBanner
+      h4.modalLabel
+        | {{userGroup.title}}
+      h2.userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
+        | {{_ 'Logo Settings'}}
+    a.manageUserGroupResponse
+    hr.hrEditUserGroupForm
+    if hasLogo
+      #uploadedLogoContainer
+        img.logo.logo-image(src="{{logoUrl(userGroup._id)}}")
+    input.hide.uploadLogoInput(accept="image/*;capture=camera" type="file")
+    button.full.uploadLogo
+      i.fa.fa-upload
+      | {{_ 'Upload logo'}}
+    #logoMaxSizseMessageContainer
+      label(style="margin-top: 5px;")
+        | {{_ '(Logo needs to be 100 kb or less)'}}
+    if error.get
+      .warning {{_ error.get}}
+    hr.hrEditUserGroupForm
+    label#memberLabel
+      | {{_ 'Use this User-Group\'s logo for the Members'}}
+    .userGroupMembers.scrollableMembersList
+      table
+        tbody
           if hasUsersAssignedToIt
             each user in users
-              .fa.fa-circle.listIndicator
-                span.memberListComponent {{user.username}}
-                a.buttonRemoveMember(data-user-id=user._id) {{_ 'remove'}}
-                  .fa.fa-times-circle
+              tr
+                td
+                  .userGroupMembersListIndicator
+                    .fa.fa-circle(style="line-height: 12px;")
+                    label.bold.userGroupMemberListComponent
+                      | {{user.username}}
+                td
+                  .choiceCell
+                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomDefaultLogo (user._id)}}checked{{/if}}")
+                    span.setOrUnsetUserGroupLogoForUser
+                      | {{_ 'Yes'}}
+                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomDefaultLogo (user._id)}}checked{{/unless}}")
+                    span.setOrUnsetUserGroupLogoForUser
+                      | {{_ 'No'}}
           else
-            .fa.fa-circle.listIndicator
-              span.memberListComponent {{_ 'none'}}
-      #manageGroupAdmin
-        label#groupAdminLabel
-          | {{_ 'manage-group-admin'}}
-        if canAddMoreGroupAdmin
-          label.bold
-            | {{_ 'add-group-admin'}}
-            select#js-select-group-admin
-              option(value='', selected='selected') Select One
-              each userGroupNonAdmin in userGroupNonAdmins
-                option(value=userGroupNonAdmin._id) {{userGroupNonAdmin.username}}
-        #groupAdminslist(class="listProperties{{#if lessThan4GroupAdmins}} displayContents{{else}} displayGrid{{/if}}")
-          if hasGroupAdmin
-            each groupAdmin in userGroupAdmins
-              .fa.fa-circle.listIndicator
-                span.groupAdminListComponent {{groupAdmin.username}}
-                a.unsetUserGroupAdmin(data-user-id=groupAdmin._id) {{_ 'unset'}}
-                  .fa.fa-times-circle
-          else
-            .fa.fa-circle.listIndicator
-              span.groupAdminListComponent {{_ 'none'}}
-     if notAsssignedToAnyUser
-       hr.hrEditUserGroupForm
-       input#deleteUGButton.primary.wide.pull-right(type="button" value="{{_ 'delete-user-group'}}")
+            tr
+              td
+                .fa.fa-circle.userGroupMembersListIndicator
+                  span.memberListComponent {{_ 'none'}}
+
+  #manageUserGroupBoardColor.hide
+    button.btn.secondary.goBackToManageUserGroupBaseModal
+      i.fa.fa-chevron-left
+      | {{{_ 'back'}}}
+    .modalBanner
+      h4.modalLabel
+        | {{userGroup.title}}
+      h2.userGroupTitle(data-user-group-id=userGroup._id data-user-group-title=userGroup.title)
+        | {{_ 'Board Color Settings'}}
+    a.manageUserGroupResponse
+    hr.hrEditUserGroupForm
 
 
 template(name="plansGeneral")
