@@ -47,7 +47,7 @@ template(name="header")
     #header-main-bar(class="{{#if wrappedHeader}}wrapper{{/if}}")
       +Template.dynamic(template=headerBar)
       a.wekan-logo(href="{{pathFor 'home'}}" title="{{_ 'header-logo-title'}}")
-        img(src="{{pathFor '/rh-header-logo.png'}}" alt="" style="height: 100%;")
+        img(src="{{logoUrl(currentUser._id)}}" alt="" style="height: 100%;")
 
   if appIsOffline
     +offlineWarning

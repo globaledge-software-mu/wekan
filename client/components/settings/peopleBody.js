@@ -1118,14 +1118,22 @@ BlazeComponent.extendComponent({
     		const userGroupId = $('.userGroupTitle').data('user-group-id');
     		const selectedUserId = $("#js-select-user option:selected").val();
     		var groupOrder = 1;
+    		var useCustomDefaultLogo = 'No';
     		const assignedUserGroups = AssignedUserGroups.find({ userId: selectedUserId, userGroupId }, {$sort: {groupOrder: -1}});
     		if (assignedUserGroups && assignedUserGroups.count() > 0)  {
     			groupOrder = assignedUserGroups[0].groupOrder + 1;
     		}
+    		
+    		const userGroup = AssignedUserGroups.findOne({ userGroupId});
+    		if (userGroup && userGroup.groupOrder == 1) {
+    			useCustomDefaultLogo = 'Yes';
+    		}
+    		
     		AssignedUserGroups.insert({
     			userId: selectedUserId,
     			userGroupId,
     			groupOrder,
+    			useCustomDefaultLogo
     		}, (err, res) => {
         	this.setLoading(false);
           if (err) {

@@ -2,6 +2,8 @@ Meteor.subscribe('user-admin');
 Meteor.subscribe('roles');
 Meteor.subscribe('boards');
 Meteor.subscribe('setting');
+Meteor.subscribe('user_groups');
+Meteor.subscribe('assigned_user_groups');
 
 Template.header.helpers({
   wrappedHeader() {
@@ -29,6 +31,20 @@ Template.header.helpers({
     $('.announcement').show();
     const announcements =  Announcements.findOne();
     return announcements && announcements.body;
+  },
+  
+  logoUrl(userId) {
+    let defaultLogo = '/rh-header-logo.png';
+    const assignedUserGroup = AssignedUserGroups.findOne({userId:userId, useCustomDefaultLogo:'Yes'});
+    if (assignedUserGroup) {
+        const userGroup = UserGroups.findOne({_id: assignedUserGroup.userGroupId});
+        if (userGroup && userGroup._id && userGroup.logoUrl) {
+            return userGroup.logoUrl
+        } else {
+            return defaultLogo;
+        }
+    }
+    return defaultLogo;
   },
 });
 

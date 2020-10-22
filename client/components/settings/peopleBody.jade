@@ -923,6 +923,33 @@ template(name="editUserGroup")
         | {{_ 'Board Color Settings'}}
     a.manageUserGroupResponse
     hr.hrEditUserGroupForm
+    label#memberLabel
+      | {{_ 'Use this Default Board Color for the Members'}}
+    .userGroupMembers.scrollableMembersList
+      table
+        tbody
+          if hasUsersAssignedToIt
+            each user in users
+              tr
+                td
+                  .userGroupMembersListIndicator
+                    .fa.fa-circle(style="line-height: 12px;")
+                    label.bold.userGroupMemberListComponent
+                      | {{user.username}}
+                td
+                  .choiceCell
+                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes")
+                    span.setOrUnsetUserBoardColorForUser
+                      | {{_ 'Yes'}}
+                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No")
+                    span.setOrUnsetUserBoardColorForUser
+                      | {{_ 'No'}}
+          else
+            tr
+              td
+                .fa.fa-circle.userGroupMembersListIndicator
+                  span.memberListComponent {{_ 'none'}}
+    
 
 
 template(name="plansGeneral")
