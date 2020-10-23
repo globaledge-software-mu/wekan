@@ -1483,7 +1483,62 @@ BlazeComponent.extendComponent({
           }
         }
       },
-    }];
+    'click .setOrUnsetUserBoardColorForMember'(evt) {
+         const userId = $(evt.target).data('user-id');
+         const userGroupId = $('.userGroupTitle').data('user-group-id');
+         const checkedOption = $('[name=defaultBoardColor' + userId + ']:checked').val();
+         
+         const assignedUserGroup = AssignedUserGroups.findOne({ userGroupId, userId });
+         if (assignedUserGroup && assignedUserGroup._id) {
+             AssignedUserGroups.update(
+                 { _id: assignedUserGroup._id},
+                 { $set: { useCustomDefaultBoardColor: checkedOption} },
+                 (err, res) => {
+                     this.setLoading(false);
+                     if (err) {
+                         var message = '';
+                         if (err.error) {
+                         message = TAPi18n.__(err.error);
+                     } else {
+                         message = err;
+                     }
+                         $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse errorResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="errorResponse"><b>'+message+'</b></p>');
+                         $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+                             $(this).remove();
+                         });
+                     } else if (res) {
+                    	 if (!$('a.manageUserGroupResponse > a.closeResponse').is(":visible")) {
+                    		 var message = 'changes saved successfully';
+                             $('a.manageUserGroupResponse').append('<a href="#" class="pull-right closeResponse successResponse" data-dismiss="alert" aria-label="close">&times;</a><p class="successResponse"><b>'+message+'</b></p>');
+                             $('a.manageUserGroupResponse a,p').delay(10000).slideUp(500, function() {
+                                 $(this).remove();
+                             });
+                          }
+                     }
+                 }
+               );
+             if (checkedOption === 'Yes') {
+                 const currentAssignedUserGroupId = assignedUserGroup._id;
+                 AssignedUserGroups.find({
+                   _id: { $ne: currentAssignedUserGroupId },
+                   userId: userId,
+                 }).forEach((aUG) => {
+                   console.log(aUG);
+                   AssignedUserGroups.update(
+                     { _id: aUG._id },
+                     { $set: {
+                    	 useCustomDefaultBoardColor: 'No'
+                     } }
+                   );
+                 });
+               }
+             }
+         },
+         
+         'click .setBoardColor'() {
+             $('.setBoardcolor').click();
+         },
+      }];
   },
 }).register('editUserGroup');
 
@@ -1658,6 +1713,17 @@ Template.editUserGroup.helpers({
 	  });
 	  return Users.find({ _id: {$in: userGroupAdminIds} });
   },
+  
+  useCustomBoardColor(userId) {
+    const groupId = Session.get('manageUserGroupId');
+    const assignedUG = AssignedUserGroups.findOne({ userGroupId: groupId,userId: userId });
+    
+    if (assignedUG && assignedUG._id && assignedUG.groupOrder && assignedUG.groupOrder === 1 && assignedUG.useCustomDefaultBoardColor && assignedUG.useCustomDefaultBoardColor === 'Yes') {
+        return true;
+    } else {
+        return false;
+    }
+  }
 });
 
 BlazeComponent.extendComponent({

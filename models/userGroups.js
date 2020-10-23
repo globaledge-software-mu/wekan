@@ -27,6 +27,10 @@ UserGroups.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+  boardColor: {
+    type: String,
+    optional: true,
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return

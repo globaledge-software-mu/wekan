@@ -923,6 +923,9 @@ template(name="editUserGroup")
         | {{_ 'Board Color Settings'}}
     a.manageUserGroupResponse
     hr.hrEditUserGroupForm
+    #uploadedLogoContainer
+    input.form-control.setBoardColor(type="color" name="boardColor" value='')
+    hr.hrEditUserGroupForm
     label#memberLabel
       | {{_ 'Use this Default Board Color for the Members'}}
     .userGroupMembers.scrollableMembersList
@@ -938,10 +941,10 @@ template(name="editUserGroup")
                       | {{user.username}}
                 td
                   .choiceCell
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes")
+                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomBoardColor (user._id)}}checked{{/if}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'Yes'}}
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No")
+                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomBoardColor (user._id)}}checked{{/unless}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'No'}}
           else
