@@ -27,7 +27,7 @@ UserGroups.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
-  boardColor: {
+  defaultBoardColor: {
     type: String,
     optional: true,
   },
@@ -75,6 +75,9 @@ UserGroups.mutations({
   setLogoUrl(logoUrl) {
     return {$set: {logoUrl: logoUrl}};
   },
+  setBoardColor(color) {
+    return {$set: {defaultBoardColor: color}}
+  }
 });
 
 

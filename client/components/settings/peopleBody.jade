@@ -923,8 +923,11 @@ template(name="editUserGroup")
         | {{_ 'Board Color Settings'}}
     a.manageUserGroupResponse
     hr.hrEditUserGroupForm
-    #uploadedLogoContainer
-    input.form-control.setBoardColor(type="color" name="boardColor" value='')
+    #boardColor.row.form-group.col-md-12
+      label.form-control.col-md-6
+        | {{_ 'Select Color for Board'}}
+      input.form-control.setBoardColor(type="color" name="boardColor" value=boardColor)
+      
     hr.hrEditUserGroupForm
     label#memberLabel
       | {{_ 'Use this Default Board Color for the Members'}}

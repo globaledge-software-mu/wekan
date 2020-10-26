@@ -1535,8 +1535,13 @@ BlazeComponent.extendComponent({
              }
          },
          
-         'click .setBoardColor'() {
-             $('.setBoardcolor').click();
+         'change .setBoardColor'(evt) {
+              const boardColor = evt.target.value;
+              const userGroupId = Session.get('manageUserGroupId');
+              const userGroup = UserGroups.findOne({_id: userGroupId});
+              if (userGroup && userGroup._id) {
+                  userGroup.setBoardColor(boardColor);
+              }
          },
       }];
   },
@@ -1561,19 +1566,19 @@ Template.editUserGroup.helpers({
       return '#';
     }
   },
-
-	useCustomDefaultLogo(userId) {
+  
+  useCustomDefaultLogo(userId) {
     const groupId = Session.get('manageUserGroupId');
-		const assignedUG = AssignedUserGroups.findOne({
+    const assignedUG = AssignedUserGroups.findOne({
       userGroupId: groupId,
       userId: userId
     });
-		if (assignedUG && assignedUG._id && assignedUG.groupOrder && assignedUG.groupOrder === 1 && assignedUG.useCustomDefaultLogo && assignedUG.useCustomDefaultLogo === 'Yes') {
-			return true;
-		} else {
+    if (assignedUG && assignedUG._id && assignedUG.groupOrder && assignedUG.groupOrder === 1 && assignedUG.useCustomDefaultLogo && assignedUG.useCustomDefaultLogo === 'Yes') {
+      return true;
+	} else {
       return false;
     }
-	},
+  },
 
 	hasUsersAssignedToIt() {
 		const groupId = Session.get('manageUserGroupId');
@@ -1723,6 +1728,22 @@ Template.editUserGroup.helpers({
     } else {
         return false;
     }
+  },
+  
+  boardColor() {
+    const groupId = Session.get('manageUserGroupId');
+    const assignedUserGroups = AssignedUserGroups.findOne({userGroupId: groupId, userId: Meteor.user()._id })
+    
+    if (assignedUserGroups && assignedUserGroups._id && assignedUserGroups.groupOrder && assignedUserGroups.groupOrder === 1 && 
+        assignedUserGroups.useCustomDefaultBoardColor && assignedUserGroups.useCustomDefaultBoardColor === 'Yes') {
+        const userGroup = UserGroups.findOne({_id: assignedUserGroups.userGroupId });
+        if (userGroup && userGroup.defaultBoardColor) {
+            return userGroup.defaultBoardColor;
+        } else {
+        	return '#2980B9';
+        }
+    }
+    return '#2980B9';
   }
 });
 
