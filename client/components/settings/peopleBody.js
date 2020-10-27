@@ -1155,7 +1155,17 @@ BlazeComponent.extendComponent({
             });
           }
         });
-    	},
+    	
+    	AssignedUserGroups.find({ 
+    		userId: selectedUserId, useCustomDefaultLogo:'Yes'
+        }).forEach((aUG) => {
+        	AssignedUserGroups.update({_id: aUG._id},
+        			{$set: {
+        				useCustomDefaultLogo:'No'
+        			}
+        	});
+        });
+    },
 
     	'change #js-select-group-admin'(evt) {
         // clearing any immediate previous response
