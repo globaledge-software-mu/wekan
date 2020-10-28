@@ -23,7 +23,7 @@ template(name="boardList")
                       button.js-accept-invite.primary {{_ 'accept'}}
                       button.js-decline-invite {{_ 'decline'}}
                 else
-                  a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+                  a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}" style="{{#if hasDefaultBoardColor}}background-color:{{defaultBoardColor}} {{/if}}")
                     span.details
                       span.board-list-item-name
                         +viewer
@@ -48,7 +48,7 @@ template(name="boardList")
                             title="{{_ 'archive-board'}}")
 
         each uncategorisedBoards
-          li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass data-title="{{title}}" data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
+          li.uncategorised_boards(class="{{#if isStarred}}starred{{/if}}" class=colorClass  data-title="{{title}}" data-defaultColor="{{#if hasDefaultBoardColor}}true{{else}}false{{/if}}"  data-id="{{_id}}" id="{{_id}}" data-is-template-admin="{{#if isBoardTemplateAdmin}}true{{else}}false{{/if}}")
             if isInvited
               .board-list-item
                 span.details
@@ -60,7 +60,7 @@ template(name="boardList")
                   button.js-accept-invite.primary {{_ 'accept'}}
                   button.js-decline-invite {{_ 'decline'}}
             else
-              a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}")
+              a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}" style="{{#if hasDefaultBoardColor}}background-color:{{defaultBoardColor}} {{/if}}")
                 span.details
                   span.board-list-item-name
                     +viewer
