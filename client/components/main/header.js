@@ -46,6 +46,41 @@ Template.header.helpers({
     }
     return defaultLogo;
   },
+  
+  hasDefaultBoardColor() {
+	  const user = Meteor.user();
+	  const assignedGroups = AssignedUserGroups.findOne({ userId: Meteor.user()._id, useCustomDefaultBoardColor: 'Yes'});
+	  if (assignedGroups && assignedGroups._id) {
+		  return true;
+	  } else {
+		   return false;
+	  }
+  },
+  
+  currentBoardColor() {
+	  const boards = Boards.findOne({_id: Session.get('currentBoard')});
+	  const assignedUG = AssignedUserGroups.findOne({userId: Meteor.user()._id ,useCustomDefaultBoardColor: 'Yes'});
+	  if (Session.get('currentBoard') && !assignedUG) {
+		  const boards = Boards.findOne({_id: Session.get('currentBoard')});
+		  return boards.colorClass();
+	  } else{
+		  return 'custom-color'
+	  }
+  },
+  
+  defaultBoardColor() {
+	  var admin = '';
+	  if (Session.get('currentBoard')) {
+		  const boards = Boards.findOne({_id: Session.get('currentBoard')});
+		  admin = boards.boardAdmin();
+	  }
+	  
+	  const assignedUG = AssignedUserGroups.findOne({userId: admin.userId, useCustomDefaultBoardColor: 'Yes'});
+	  if (assignedUG && assignedUG._id) {
+		  const userGroup = UserGroups.findOne({ _id:assignedUG.userGroupId });
+		  return userGroup.defaultBoardColor;
+	  }
+  },
 });
 
 Template.header.events({

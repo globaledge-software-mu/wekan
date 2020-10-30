@@ -5,7 +5,7 @@ template(name="header")
     Reddit "subreddit" bar.
     The first link goes to the boards page.
   if currentUser
-    #header-quick-access(class=currentBoard.colorClass)
+    #header-quick-access(class=currentBoard.colorClass style="{{#if hasDefaultBoardColor }}background-color:{{defaultBoardColor}};filter:brightness(89%) {{/if}}")
       if isMiniScreen
         ul
           li
@@ -39,7 +39,7 @@ template(name="header")
 
       +headerUserBar
 
-  #header(class=currentBoard.colorClass)
+  #header(class=currentBoard.colorClass style="{{#if hasDefaultBoardColor }}background-color:{{defaultBoardColor}}{{/if}}")
     //-
       The main bar is a colorful bar that provide all the meta-data for the
       current page. This bar is contextual based.

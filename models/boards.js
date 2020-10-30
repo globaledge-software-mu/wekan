@@ -488,6 +488,9 @@ Boards.helpers({
     return !!_.findWhere(this.members, { userId: memberId, isActive: true, isAdmin: false, isCommentOnly: true });
   },
 
+  boardAdmin() {
+	  return _.findWhere(this.members, {isAdmin: true});
+  },
   absoluteUrl() {
     return FlowRouter.url('board', { id: this._id, slug: this.slug });
   },
