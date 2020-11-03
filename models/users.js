@@ -367,6 +367,25 @@ if (Meteor.isClient) {
       return false;
     },
 
+    
+    hasUsableUserQuotaGroups() {
+        var handler1 = Meteor.subscribe('assigned_user_groups');
+        var handler2 = Meteor.subscribe('user_groups');
+        if (handler1.ready() && handler2.ready()) {
+        	var usableUserQuotaGroups = false;
+        	AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+            const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+            if (userGroup && userGroup._id) {
+                const unusedQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+                if (unusedQuota > 0) {
+                    usableUserQuotaGroups = true;
+                }
+        	}
+        });
+        }
+      return usableUserQuotaGroups;
+    },
+    
     hasMultipleUsableBoardQuotaGroups() {
     	var handler1 = Meteor.subscribe('assigned_user_groups');
     	var handler2 = Meteor.subscribe('user_groups');
@@ -388,7 +407,6 @@ if (Meteor.isClient) {
     	}
       return false;
     },
-
     usableUsersQuotaGroups() {
       const usableUsersQuotaUserGroupsIds = new Array();
       AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {

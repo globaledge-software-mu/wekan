@@ -294,7 +294,11 @@ template(name="addMemberPopup")
           if loadingAfterSelectedRole.get
             +spinner
           // Invite directly from board's sidebar
+        if currentUser.hasUsableUserQuotaGroups
           button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
+        else
+          .manage-member-section
+           p.quiet {{_ 'error-exhausted-users-quota'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list
