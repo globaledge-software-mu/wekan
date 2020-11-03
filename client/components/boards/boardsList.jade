@@ -23,7 +23,7 @@ template(name="boardList")
                       button.js-accept-invite.primary {{_ 'accept'}}
                       button.js-decline-invite {{_ 'decline'}}
                 else
-                  a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}" style="{{#if hasDefaultBoardColor}}background-color:{{defaultBoardColor}} {{/if}}")
+                  a.js-open-board.board-list-item(href="{{pathFor 'board' id=_id slug=slug}}" data-id="{{_id}}" style="{{#if hasDefaultBoardColor}}background-color:{{defaultBoardColor(_id)}} {{/if}}")
                     span.details
                       span.board-list-item-name
                         +viewer
