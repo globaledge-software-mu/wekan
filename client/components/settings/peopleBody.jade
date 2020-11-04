@@ -12,14 +12,16 @@ template(name="people")
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
+            li
+              a.js-setting-menu(data-id="invitation-setting") {{_ 'Invitations'}}
             if currentUser.isAdmin
-              li.active
+              li
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
-              li.active
+              li
                 a.js-setting-menu(data-id="user-groups-setting") {{_ 'user-groups'}}
-              li.active
+              li
                 a.js-setting-menu(data-id="plans-setting") {{_ 'plans'}}
-              li.active
+              li
                 a.js-setting-menu(data-id="subscriptions-setting") {{_ 'subscriptions'}}
                   if hasExpiredSubscriptions
                     span#expiredSubscriptionsBadge
@@ -29,6 +31,8 @@ template(name="people")
             +spinner
           else if people.get
             +peopleGeneral
+          else if invitations.get
+            +invitationsGeneral
           else if roles.get
             +rolesGeneral
           else if userGroups.get
@@ -200,6 +204,66 @@ template(name="editUserPopup")
         if currentUser.isAdmin
           input#deleteButton.primary.wide(type="button" value="{{_ 'delete'}}")
 
+template(name="invitationsGeneral")
+  button#create-user.btn.btn-primary {{_ 'add-user'}}
+  table
+    tbody
+      tr
+        th {{_ 'username'}}
+        th {{_ 'fullname'}}
+        th {{_ 'admin'}}
+        th {{_ 'role'}}
+        th {{_ 'email'}}
+        th {{_ 'verified'}}
+        th {{_ 'createdAt'}}
+        th {{_ 'user-groups'}}
+
+        th
+      // If isAdmin
+      if currentUser.isAdmin
+        // List all the users
+        each user in inviteesList
+          +invitationRow(userId=user._id)
+      // If isManagerAndNotAdmin
+      if currentUser.isManagerAndNotAdmin
+        // List users from his own groups which have either the role 'Coach' or 'Coachee'
+        each user in managerUserGroupsUsersAndInviteesList
+          +peopleRow(userId=user._id)
+
+      // If isCoachAndNotAdmin
+      if currentUser.isCoachAndNotAdmin
+        // List users from his own groups which have the role 'Coachee'
+        each user in coachUserGroupsUsersAndInviteesList
+          +peopleRow(userId=user._id)
+
+template(name="invitationRow")
+  tr
+    td.username {{ userData.username }}
+    td {{ userData.profile.fullname }}
+    td
+      if userData.isAdmin
+        | {{_ 'yes'}}
+      else
+        | {{_ 'no'}}
+    td {{ roleName }}
+    td {{ userData.emails.[0].address }}
+    td
+      if userData.emails.[0].verified
+        | {{_ 'yes'}}
+      else
+        | {{_ 'no'}}
+    td {{ moment userData.createdAt 'LLL' }}
+    td
+      ul
+        each userGroup in assignedUserGroups
+          li {{ userGroup.title }}
+
+    td
+      a.edit-invitee
+        | {{_ 'edit'}}
+      a.resend-invite
+        | {{_ 'Resend'}}
+        
 template(name="roleOptions")
   select.select-role.js-profile-role
     option(value='', selected='selected') Select One

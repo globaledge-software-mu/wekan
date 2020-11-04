@@ -16,6 +16,7 @@ BlazeComponent.extendComponent({
     this.subscriptions = new ReactiveVar(false);
     this.findUsersOptions = new ReactiveVar({});
     this.findRolesOptions = new ReactiveVar({});
+    this.invitations = new ReactiveVar(false);
     this.number = new ReactiveVar(0);
 
     this.page = new ReactiveVar(1);
@@ -92,10 +93,22 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-    const users = Users.find();
+    const users = Users.find({
+    	'emails.verified':true
+    });
     this.number.set(users.count());
     return users;
   },
+  
+  inviteesList() {
+	  const invitees = Users.find({
+		  'emails.verified':false
+	  },
+	  {sort: {createdAt: -1}
+	  });
+	  return invitees;
+  },
+  
   hasExpiredSubscriptions() {
   	const expiredSubscription = Subscriptions.findOne({
   		archived: { $ne: true },
@@ -231,6 +244,7 @@ BlazeComponent.extendComponent({
       this.userGroups.set('user-groups-setting' === targetID);
       this.plans.set('plans-setting' === targetID);
       this.subscriptions.set('subscriptions-setting' === targetID);
+      this.invitations.set('invitation-setting' === targetID);
     }
   },
   events() {
@@ -375,6 +389,50 @@ BlazeComponent.extendComponent({
   },
 }).register('createNewUserPopup');
 
+BlazeComponent.extendComponent({
+  onCreated() {
+  },
+  
+  onRendered() {
+    
+  },
+  
+  setLoading(w) {
+    
+  },
+  
+  isLoading() {
+    
+  },
+  
+  events() {
+    return [{
+      'click a.edit-invitee': Popup.open('editUser'),
+      'click a.resend-invite': function () {
+    	  const user = Users.findOne({ _id: Template.instance().data.userId});
+    	  const boards = Boards.findOne({
+    	      'members.userId': user._id
+    	  });
+    	  if  (boards && boards.hasMember(user._id)) {
+              Meteor.call('inviteUserToBoard', user.emails[0].address, boards._id, '', '', (err, ret) => {
+                  if (err) {
+                    
+                  } else if (ret.email) {
+                      var message = TAPi18n.__('email_sent');
+                      var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                      $('#header-main-bar').before($successMessage);
+                      $successMessage.delay(10000).slideUp(500, function() {
+                        $(this).remove();
+                      });
+                 }
+             });
+    	  }
+      },
+    }]
+  }
+}).register('invitationRow');
+
+
 Template.peopleRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
@@ -402,6 +460,39 @@ Template.peopleRow.helpers({
       return UserGroups.find({ _id: { $in: userGroupsIds } });
     }
   }
+});
+
+Template.invitationRow.helpers({
+  userData() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    return userCollection.findOne(this.userId);
+  },
+  
+  assignedUserGroups() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    const user = userCollection.findOne(this.userId);
+    if (user && user._id) {
+      var userGroupsIds = new Array();
+      AssignedUserGroups.find({
+	        userId: user._id
+	  }).forEach((assignedUserGroup) => {
+		  userGroupsIds.push(assignedUserGroup.userGroupId);
+	  });
+      return UserGroups.find({ _id: { $in: userGroupsIds } });
+	 }
+  },
+  
+  roleName() {
+    const userCollection = this.esSearch ? ESSearchResults : Users;
+    let user = userCollection.findOne(this.userId);
+    if (!user.roleId) {
+	      return '-';
+	}
+    let role = Roles.findOne(user.roleId);
+      return role.name;
+	}
+  
+  
 });
 
 Template.roleRow.helpers({
