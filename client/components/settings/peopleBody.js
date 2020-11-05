@@ -161,14 +161,28 @@ BlazeComponent.extendComponent({
 
       // Query the users using the ids pushed in sameUserGroupsUserIds
       // and the users can't be admins nor have the role manager
-      const users = Users.find({
+      let users;
+      users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
+      	'emails.verified': true,
         $nor: [
           { isAdmin: true },
           { roleId: role._id }
         ]
       });
-    	this.number.set(users.count());
+      
+      if (this.invitations.get()) {
+          users = Users.find({
+              _id: { $in: sameUserGroupsUserIds },
+              'emails.verified': false,
+              $nor: [
+                { isAdmin: true },
+                { roleId: role._id }
+              ]
+            });
+          
+      }
+      this.number.set(users.count());
       return users;
     } else {
       this.number.set(0);
@@ -207,14 +221,28 @@ BlazeComponent.extendComponent({
 
       // Query the users using the ids pushed in sameUserGroupsUserIds
       // and the users can't be admins nor have the role manager or coach
-      const users = Users.find({
+      let users;
+      users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
+      	'emails.verified': true,
         $nor: [
           { isAdmin: true },
           { roleId: managerRole._id },
           { roleId: coachRole._id }
         ]
       });
+      
+      if (this.invitations.get()) {
+    	  users = Users.find({
+               _id: { $in: sameUserGroupsUserIds },
+               'emails.verified': false,
+              $nor: [
+                { isAdmin: true },
+                { roleId: managerRole._id },
+                { roleId: coachRole._id }
+              ]
+            });
+      }
       this.number.set(users.count());
       return users;
     } else {

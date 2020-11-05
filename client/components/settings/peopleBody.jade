@@ -228,13 +228,13 @@ template(name="invitationsGeneral")
       if currentUser.isManagerAndNotAdmin
         // List users from his own groups which have either the role 'Coach' or 'Coachee'
         each user in managerUserGroupsUsersAndInviteesList
-          +peopleRow(userId=user._id)
+          +invitationRow(userId=user._id)
 
       // If isCoachAndNotAdmin
       if currentUser.isCoachAndNotAdmin
         // List users from his own groups which have the role 'Coachee'
         each user in coachUserGroupsUsersAndInviteesList
-          +peopleRow(userId=user._id)
+          +invitationRow(userId=user._id)
 
 template(name="invitationRow")
   tr
