@@ -101,11 +101,18 @@ BlazeComponent.extendComponent({
   },
   
   inviteesList() {
-	  const invitees = Users.find({
-		  'emails.verified':false
-	  },
-	  {sort: {createdAt: -1}
+	  var sameUserGroupsUserIds = new Array();
+	  const user = Users.find({
+      createdBy: Meteor.user()._id
+    }).forEach((invitee) => {
+      sameUserGroupsUserIds.push(invitee._id)
 	  });
+	  
+	  const invitees = Users.find({
+      _id: { $in: sameUserGroupsUserIds },
+      'emails.verified': false,
+      }, {sort :{ createdAt: -1 }});
+	  this.number.set(invitees.count());
 	  return invitees;
   },
   
@@ -178,8 +185,8 @@ BlazeComponent.extendComponent({
               $nor: [
                 { isAdmin: true },
                 { roleId: role._id }
-              ]
-            });
+              ],
+            }, {sort: {createdAt:-1 }});
           
       }
       this.number.set(users.count());
@@ -437,24 +444,23 @@ BlazeComponent.extendComponent({
     return [{
       'click a.edit-invitee': Popup.open('editUser'),
       'click a.resend-invite': function () {
-    	  const user = Users.findOne({ _id: Template.instance().data.userId});
-    	  const boards = Boards.findOne({
-    	      'members.userId': user._id
-    	  });
-    	  if  (boards && boards.hasMember(user._id)) {
-              Meteor.call('inviteUserToBoard', user.emails[0].address, boards._id, '', '', (err, ret) => {
-                  if (err) {
-                    
-                  } else if (ret.email) {
-                      var message = TAPi18n.__('email_sent');
-                      var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                      $('#header-main-bar').before($successMessage);
-                      $successMessage.delay(10000).slideUp(500, function() {
-                        $(this).remove();
-                      });
-                 }
-             });
-    	  }
+    	  const user = Template.instance().data.userId;
+          Meteor.call('resendInviteToUser', user , (err, ret) => {
+        	  if (err) {
+                  var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
+                  $('#header-main-bar').before($message);
+                  $message.delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+              } else if (ret.email) {
+            	  var message = TAPi18n.__('email-sent');
+                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                  $('#header-main-bar').before($successMessage);
+                  $successMessage.delay(10000).slideUp(500, function() {
+                    $(this).remove();
+                  });
+             }
+         });
       },
     }]
   }
@@ -616,13 +622,39 @@ BlazeComponent.extendComponent({
             }
 
             function displayEditUserSuccessMsg() {
-            	var message = TAPi18n.__('edit-user-successful');
+              var message = TAPi18n.__('edit-user-successful');
               var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
               $('#header-main-bar').before($successMessage);
               $successMessage.delay(10000).slideUp(500, function() {
                 $(this).remove();
               });
               Popup.close();
+            };
+            
+            function sendEmail()
+            {
+                const boards = Boards.findOne({
+        	      'members.userId': user._id
+        	    });
+                
+            	if  (boards && boards.hasMember(user._id)) {
+            		Meteor.call('resendInviteToUser', user._id, (err, ret) => {
+            			if (err) {
+                            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
+                            $('#header-main-bar').before($erroMessage);
+                            $errorMessage.delay(10000).slideUp(500, function() {
+                              $(this).remove();
+                            });
+                        } else if (ret.email) {
+                          var message = TAPi18n.__('email-sent');
+                          var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                          $('#header-main-bar').before($successMessage);
+                          $successMessage.delay(10000).slideUp(500, function() {
+                            $(this).remove();
+                          });
+                       }
+                   });
+        	   }
             };
 
             if (isChangeUserName && isChangeEmail) {
@@ -658,6 +690,7 @@ BlazeComponent.extendComponent({
                   	this.$('.email-taken').show();
                   }
                 } else {
+                  sendEmail();
                   displayEditUserSuccessMsg();
                 }
               });

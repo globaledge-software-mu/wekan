@@ -1423,7 +1423,95 @@ if (Meteor.isServer) {
 
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
-
+    
+    resendInviteToUser(userId) {
+      check(userId, String);
+      const user = Users.findOne({_id: userId});
+      const inviter = Meteor.user();
+      
+      //
+      if (user && user._id !== inviter._id) {
+    	  //if user is invited to a board, resend  invite to board
+    	  if (user.profile.invitedBoards && user.profile.invitedBoards.length > 0) {
+    		  const boardId = user.profile.invitedBoards[0];
+    		  const board = Boards.findOne({_id:boardId});
+    	      var allowInvite;
+    	      console.log(board);
+    	      if (board.type = 'template-board') {
+    		      allowInvite = inviter &&
+    		        board &&
+    		        board.members &&
+    		        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+    		        _.where(board.members, {userId: inviter._id})[0].isActive;
+    	      } else {
+    		      allowInvite = inviter &&
+    		        board &&
+    		        board.members &&
+    		        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+    		        _.where(board.members, {userId: inviter._id})[0].isActive &&
+    		        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+    	      }
+    	      if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
+              // Send Invite 'Login To Accept Invite To Board'
+              try {
+                const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+                const params = {
+                  user: user.username,
+                  inviter: inviter.username,
+                  board: board.title,
+                  url: board.absoluteUrl(),
+                  logoUrl: logoUrl
+                };
+                const lang = user.getLanguage();
+                Email.send({
+                  to: user.emails[0].address.toLowerCase(),
+                  from: Accounts.emailTemplates.from,
+                  subject: TAPi18n.__('email-invite-subject', params, lang),
+                  html: TAPi18n.__('email-invite-text', params, lang),
+                });
+              } catch (e) {
+                throw new Meteor.Error('email-fail', e.message);
+              }
+    	  } else {
+    		  //or from a add user resend enrollment email
+    		  var token = Random.secret();
+    		  var newDate = new Date();
+    	      var tokenRecord = JSON.parse(JSON.stringify({
+    	    	  token: token,
+    	          email: user.emails[0].address.toLowerCase(),
+    	          when: newDate,
+    	          reason: 'enroll'
+    	       }));
+    	      Users.update({ _id: user._id }, {
+    	    	  $set: {
+    	            'services.password.reset': tokenRecord
+    	          }
+    	      });
+    	      // before passing to template, update user object with new token
+    	      Meteor._ensure(user, 'services', 'password').reset = tokenRecord;
+    	      const enrollLink = Accounts.urls.enrollAccount(token);
+    	      const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+    	      const parameters = {
+    	          user: user.username,
+    	          enrollUrl: enrollLink,
+    	          logoUrl: logoUrl
+    	        };
+    	      const lang = user.getLanguage();
+    	      const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+    	      Email.send({
+    	    	  to: user.emails[0].address.toLowerCase(),
+    	          from: Accounts.emailTemplates.from,
+    	          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
+    	          html: message,
+    	      });
+    	}
+        
+      } else {
+      	throw new Meteor.Error('error-user-notAllowSelf');
+      }
+      
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
+    }
   });
 
   Accounts.onCreateUser((options, user) => {
