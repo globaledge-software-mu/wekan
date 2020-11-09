@@ -206,7 +206,7 @@ template(name="editUserPopup")
 
 template(name="invitationsGeneral")
   button#create-user.btn.btn-primary {{_ 'add-user'}}
-  table
+  table#subscriptionsDataTable
     tbody
       tr
         th {{_ 'username'}}
@@ -258,10 +258,10 @@ template(name="invitationRow")
         each userGroup in assignedUserGroups
           li {{ userGroup.title }}
 
-    td
-      a.edit-invitee
+    td#subscriptionsActionCol
+      a.edit-invitee.renewSubscription
         | {{_ 'edit'}}
-      a.resend-invite
+      a.resend-invite.upgradeSubscription
         | {{_ 'Resend'}}
         
 template(name="roleOptions")

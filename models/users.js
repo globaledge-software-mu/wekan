@@ -1432,11 +1432,10 @@ if (Meteor.isServer) {
       //
       if (user && user._id !== inviter._id) {
     	  //if user is invited to a board, resend  invite to board
-    	  if (user.profile.invitedBoards && user.profile.invitedBoards.length > 0) {
+    	  if (user.profile.invitedBoards && user.profile.invitedBoards.length > 0 && user.emails[0].verified == true) {
     		  const boardId = user.profile.invitedBoards[0];
     		  const board = Boards.findOne({_id:boardId});
     	      var allowInvite;
-    	      console.log(board);
     	      if (board.type = 'template-board') {
     		      allowInvite = inviter &&
     		        board &&
