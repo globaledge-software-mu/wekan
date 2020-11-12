@@ -1899,8 +1899,7 @@ Template.editUserGroup.helpers({
     const groupId = Session.get('manageUserGroupId');
     const assignedUserGroups = AssignedUserGroups.findOne({userGroupId: groupId, userId: Meteor.user()._id })
     
-    if (assignedUserGroups && assignedUserGroups._id && assignedUserGroups.groupOrder && assignedUserGroups.groupOrder === 1 && 
-        assignedUserGroups.useCustomDefaultBoardColor && assignedUserGroups.useCustomDefaultBoardColor === 'Yes') {
+    if (assignedUserGroups && assignedUserGroups._id && assignedUserGroups.groupOrder && assignedUserGroups.groupOrder === 1 ) {
         const userGroup = UserGroups.findOne({_id: assignedUserGroups.userGroupId });
         if (userGroup && userGroup.defaultBoardColor) {
             return userGroup.defaultBoardColor;
