@@ -1271,6 +1271,7 @@ BlazeComponent.extendComponent({
     		const selectedUserId = $("#js-select-user option:selected").val();
     		var groupOrder = 1;
     		var useCustomDefaultLogo = 'No';
+    		var useCustomBoardColor = 'No';
     		const assignedUserGroups = AssignedUserGroups.find({ userId: selectedUserId, userGroupId }, {$sort: {groupOrder: -1}});
     		if (assignedUserGroups && assignedUserGroups.count() > 0)  {
     			groupOrder = assignedUserGroups[0].groupOrder + 1;
@@ -1279,6 +1280,7 @@ BlazeComponent.extendComponent({
     		const userGroup = AssignedUserGroups.findOne({ userGroupId});
     		if (userGroup && userGroup.groupOrder == 1) {
     			useCustomDefaultLogo = 'Yes';
+    			useCustomBoardColor = 'Yes';
     		}
     		
     		AssignedUserGroups.insert({
@@ -1309,7 +1311,7 @@ BlazeComponent.extendComponent({
         });
     	
     	AssignedUserGroups.find({ 
-    		userId: selectedUserId, useCustomDefaultLogo:'Yes'
+    		userId: selectedUserId, useCustomDefaultLogo:'Yes' , useCustomDefaultBoardColor:'Yes'
         }).forEach((aUG) => {
         	AssignedUserGroups.update({_id: aUG._id},
         			{$set: {
