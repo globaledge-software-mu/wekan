@@ -1313,7 +1313,8 @@ BlazeComponent.extendComponent({
         }).forEach((aUG) => {
         	AssignedUserGroups.update({_id: aUG._id},
         			{$set: {
-        				useCustomDefaultLogo:'No'
+        				useCustomDefaultLogo:'No',
+        				useCustomDefaultBoardColor:'No'
         			}
         	});
         });
@@ -1711,7 +1712,7 @@ BlazeComponent.extendComponent({
 
 Template.editUserGroup.helpers({
   hasLogo() {
-		const groupId = Session.get('manageUserGroupId');
+	const groupId = Session.get('manageUserGroupId');
     const userGroup = UserGroups.findOne({_id: groupId});
     if (userGroup && userGroup._id && userGroup.logoUrl) {
       return true
