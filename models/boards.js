@@ -1168,15 +1168,14 @@ if (Meteor.isServer) {
       }
 
       // Say goodbye to the former member
-      if (modifier.$set) {
-        foreachRemovedMember(doc, modifier.$set, (memberId) => {
-          Activities.insert({
-            userId,
-            memberId,
-            type: 'member',
-            activityType: 'removeBoardMember',
-            boardId: doc._id,
-          });
+      if (modifier.$pull) {
+      	const memberId = modifier.$pull.members.userId;
+      	Activities.insert({
+          userId,
+          memberId,
+          type: 'member',
+          activityType: 'removeBoardMember',
+          boardId: doc._id,
         });
       }
     }
