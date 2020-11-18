@@ -53,6 +53,7 @@
     "activity-moved": "%s verplaatst van %s naar %s",
     "activity-on": "bij %s",
     "activity-removed": "%s verwijderd van %s",
+    "activity-accepted-invitation": "uitnodiging hiervoor geaccepteerd %s",
     "activity-sent": "%s gestuurd naar %s",
     "activity-unjoined": "uit %s gegaan",
     "activity-subtask-added": "added subtask to %s",

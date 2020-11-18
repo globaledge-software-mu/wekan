@@ -53,6 +53,7 @@
     "activity-moved": "moved %s from %s to %s",
     "activity-on": "on %s",
     "activity-removed": "removed %s from %s",
+    "activity-accepted-invitation": "accepted invitation to this %s",
     "activity-sent": "sent %s to %s",
     "activity-unjoined": "unjoined %s",
     "activity-subtask-added": "added subtask to %s",

@@ -1740,7 +1740,7 @@ if (Meteor.isServer) {
   // counter.
   // We need to run this code on the server only, otherwise the incrementation
   // will be done twice.
-  Users.after.update(function (userId, user, fieldNames) {
+  Users.after.update(function (userId, user, fieldNames, modifier) {
 
   	// When a user doc is updated, if his role is Admin or manager,
   	// make him a member of all the template boards of which he was not a member before
@@ -1783,6 +1783,20 @@ if (Meteor.isServer) {
   	//_______________________//
 
 
+    if (_.contains(fieldNames,'profile') && modifier.$pull) {
+    	const boardId = modifier.$pull['profile.invitedBoards'];
+    	const board = Boards.findOne({_id: boardId, 'members.userId': user._id });
+    	console.log(board);
+    	if (board && board._id){
+    		Activities.insert({
+          userId: user._id,
+          memberId: userId,
+          type: 'member',
+          activityType: 'acceptBoardInvitation',
+          boardId: boardId
+        });
+    	}
+    }
     // The `starredBoards` list is hosted on the `profile` field. If this
     // field hasn't been modificated we don't need to run this hook.
     if (!_.contains(fieldNames, 'profile'))
