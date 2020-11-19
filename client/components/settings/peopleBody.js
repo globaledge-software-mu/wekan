@@ -1008,8 +1008,191 @@ BlazeComponent.extendComponent({
            }
          });
        },
+       
+       'click #deleteButton'() {
+       	const toBeDeletedUserId = Template.instance().data.userId;
+         Popup.close();
+         swal({
+           title: 'Confirm Delete User!',
+           text: 'Are you sure?',
+           icon: 'warning',
+           buttons: [true, 'Remove'],
+           dangerMode: true,
+         })
+         .then((okDelete) => {
+           if (okDelete) {
+         		// If the user to be deleted was an admin of a board, we need to
+           	// make one of the would-be remaining members of that board an admin of those specific boards,
+           	// only if there is no other boardadmin for that specific board,
+           	// preferably a member with the highest user role of the board
+             Boards.find({
+               members: {
+                 $elemMatch: {
+                   userId: toBeDeletedUserId,
+                   isAdmin: true
+                 }
+               }
+           	}).forEach((board) => {
+           		Boards.update(
+         				{ _id: board._id },
+                 { $pull: {
+                     members: {
+                       userId: toBeDeletedUserId,
+                     },
+                   },
+                 }
+       				);
+           		const memberIds = new Array();
+         			const hasOtherBoardAdmin = false;
+         			board.members.forEach((member) => {
+         				if (toBeDeletedUserId !== member.userId) {
+           				memberIds.push(member.userId);
+           				if (member.isAdmin === true) {
+           					hasOtherBoardAdmin = true;
+           				}
+         				}
+         			});
+         			if (memberIds.length > 0 && hasOtherBoardAdmin === false) {
+           			const adminRoleMember = Users.findOne({
+               		_id: {$in: memberIds},
+               		isAdmin: true
+               	});
+               	if (adminRoleMember) {
+               		Boards.update(
+             				{ _id: board._id },
+                     { $pull: {
+                         members: {
+                           userId: adminRoleMember._id,
+                         },
+                       },
+                     }
+           				);
+               		Boards.update(
+             				{ _id: board._id },
+                     { $push: {
+                         members: {
+                           isAdmin: true,
+                           isActive: true,
+                           isCommentOnly: false,
+                           userId: adminRoleMember._id,
+                         },
+                       },
+                     }
+           				);
+               	} else {
+               		const managerRole = Roles.findOne({name: 'Manager'});
+               		if (managerRole && managerRole._id) {
+               			const managerRoleMember = Users.findOne({
+                   		_id: {$in: memberIds},
+                   		roleId: managerRole._id
+                   	});
+                   	if (!managerRoleMember) {
+                   		const coachRole = Roles.findOne({name: 'Coach'});
+                   		if (coachRole && coachRole._id) {
+                   			const coachRoleMember = Users.findOne({
+                       		_id: {$in: memberIds},
+                       		roleId: coachRole._id
+                       	});
+                       	if (!coachRoleMember) {
+                       		const randomMemberId = memberIds[0].userId;
+                       		Boards.update(
+                     				{ _id: board._id },
+                             { $pull: {
+                                 members: {
+                                   userId: randomMemberId,
+                                 },
+                               },
+                             }
+                   				);
+                       		Boards.update(
+                     				{ _id: board._id },
+                             { $push: {
+                                 members: {
+                                   isAdmin: true,
+                                   isActive: true,
+                                   isCommentOnly: false,
+                                   userId: randomMemberId,
+                                 },
+                               },
+                             }
+                   				);
+                       	} else {
+                       		Boards.update(
+                     				{ _id: board._id },
+                             { $pull: {
+                                 members: {
+                                   userId: coachRoleMember._id,
+                                 },
+                               },
+                             }
+                   				);
+                       		Boards.update(
+                     				{ _id: board._id },
+                             { $push: {
+                                 members: {
+                                   isAdmin: true,
+                                   isActive: true,
+                                   isCommentOnly: false,
+                                   userId: coachRoleMember._id,
+                                 },
+                               },
+                             }
+                   				);
+                       	}
+                   		}
+                   	} else {
+                   		Boards.update(
+                 				{ _id: board._id },
+                         { $pull: {
+                             members: {
+                               userId: managerRoleMember._id,
+                             },
+                           },
+                         }
+               				);
+                   		Boards.update(
+                 				{ _id: board._id },
+                         { $push: {
+                             members: {
+                               isAdmin: true,
+                               isActive: true,
+                               isCommentOnly: false,
+                               userId: managerRoleMember._id,
+                             },
+                           },
+                         }
+               				);
+                   	}
+               		}
+               	}
+         			}
+           	});
+
+           	// Remove deleting user as a member of any board he was a member of.
+             Boards.find({
+             	'members.userId': toBeDeletedUserId,
+           	}).forEach((board) => {
+           		Boards.update(
+         				{ _id: board._id },
+                 { $pull: {
+                     members: {
+                       userId: toBeDeletedUserId,
+                     },
+                   },
+                 }
+       				);
+           	});
+
+             // Remove User
+             Users.remove(toBeDeletedUserId);
+           } else {
+             return false;
+           }
+         });
+       },
+       
     }]
-  }
+  },
 }).register('editInviteePopup');
 
 Template.editInviteePopup.helpers({
