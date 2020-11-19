@@ -442,7 +442,7 @@ BlazeComponent.extendComponent({
   
   events() {
     return [{
-      'click a.edit-invitee': Popup.open('editUser'),
+      'click a.edit-invitee': Popup.open('editInvitee'),
       'click a.resend-invite': function () {
     	  const user = Template.instance().data.userId;
           Meteor.call('resendInviteToUser', user , (err, ret) => {
@@ -631,32 +631,6 @@ BlazeComponent.extendComponent({
               Popup.close();
             };
             
-            function sendEmail()
-            {
-                const boards = Boards.findOne({
-        	      'members.userId': user._id
-        	    });
-                
-            	if  (boards && boards.hasMember(user._id)) {
-            		Meteor.call('resendInviteToUser', user._id, (err, ret) => {
-            			if (err) {
-                            var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
-                            $('#header-main-bar').before($erroMessage);
-                            $errorMessage.delay(10000).slideUp(500, function() {
-                              $(this).remove();
-                            });
-                        } else if (ret.email) {
-                          var message = TAPi18n.__('email-sent');
-                          var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                          $('#header-main-bar').before($successMessage);
-                          $successMessage.delay(10000).slideUp(500, function() {
-                            $(this).remove();
-                          });
-                       }
-                   });
-        	   }
-            };
-
             if (isChangeUserName && isChangeEmail) {
               Meteor.call('setUsernameAndEmail', username, email.toLowerCase(), user_id, function (error) {
                 if (error) {
@@ -885,6 +859,176 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('editUserPopup');
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+
+  onRendered() {
+    this.setLoading(false);
+  },
+
+	setLoading(w) {
+    this.loading.set(w);
+  },
+
+  isLoading() {
+    return this.loading.get();
+  },
+  
+  events() {
+    return[{
+    	 submit(evt) {
+         evt.preventDefault();
+       	$('#editUserPopup').find('.errorStatus').remove();
+         const user_id = Template.instance().data.userId;
+         const user = Users.findOne(user_id);
+         const fullname = this.find('.js-profile-fullname').value.trim();
+         const username = this.find('.js-profile-username').value.trim();
+         
+         var isAdmin = false;
+         if (this.find('.js-profile-isadmin') && this.find('.js-profile-isadmin').value) {
+           isAdmin = this.find('.js-profile-isadmin').value.trim();
+         }
+         const roleId = this.find('.js-profile-role').value;
+       	const roleName = null;
+         const role = Roles.findOne({_id: roleId});
+         if (role && role.name) {
+         	roleName = role.name;
+         }
+         
+         const email = this.find('.js-profile-email').value.trim();
+
+         const isChangeUserName = username !== user.username;
+         const isChangeEmail = email.toLowerCase() !== user.emails[0].address.toLowerCase();
+
+         this.setLoading(true);
+
+         Users.update(user_id, {
+           $set: {
+             'profile.fullname': fullname,
+             'isAdmin': isAdmin === 'true',
+             'roleId': roleId,
+             'roleName': roleName
+           },
+         }, (err, res) => {
+         	this.setLoading(false);
+           if (err) {
+           	var message = '';
+           	if (err.error) {
+             	message = TAPi18n.__(err.error);
+           	} else {
+           		message = err;
+           	}
+             var $errorMessage = $('<div class="errorStatus" style="padding: 0px; margin: 0px 20px 0px 20px"><p><b>'+message+'</b></p></div>');
+             $('#editUserPopup').prepend($errorMessage);
+           } else if (res) {
+             this.$('.username-taken').hide();
+             this.$('.email-taken').hide();
+
+             function displayEditUserSuccessMsg() {
+               var message = TAPi18n.__('edit-user-successful');
+               var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+               $('#header-main-bar').before($successMessage);
+               $successMessage.delay(10000).slideUp(500, function() {
+                 $(this).remove();
+               });
+               Popup.close();
+             };
+             
+             function sendEmail(emailAddress)
+             {
+            	 const boards = Boards.findOne({
+         	      'members.userId': user_id
+         	     });
+            	 
+            	 Meteor.call('resendInviteToUser', emailAddress, (err, ret) => {
+          			 if (err) {
+          				 console.log(err);
+          				 var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
+          				 $('#header-main-bar').before($erroMessage);
+          				 $errorMessage.delay(10000).slideUp(500, function() {
+                     $(this).remove();
+                   });
+                 } else if (ret.email) {
+                	 console.log(ret);
+                   var message = TAPi18n.__('email-sent');
+                   var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+                   $('#header-main-bar').before($successMessage);
+                   $successMessage.delay(10000).slideUp(500, function() {
+                     $(this).remove();
+                   });
+                 }
+                });
+              };
+             
+             if (isChangeUserName && isChangeEmail) {
+               Meteor.call('setUsernameAndEmail', username, email.toLowerCase(), user_id, function (error) {
+                 if (error) {
+                   const errorElement = error.error;
+                   if (errorElement === 'username-already-taken') {
+                   	this.$('.username-taken').show();
+                   }
+                   if (errorElement === 'email-already-taken') {
+                   	this.$('.email-taken').show();
+                   }
+                 } else {
+                	 sendEmail(email.toLowerCase);
+                   displayEditUserSuccessMsg();
+                 }
+               });
+             } else if (isChangeUserName && !isChangeEmail) {
+               Meteor.call('setUsername', username, user_id, function (error) {
+                 if (error) {
+                   const errorElement = error.error;
+                   if (errorElement === 'username-already-taken') {
+                   	this.$('.username-taken').show();
+                   }
+                 } else {
+                   displayEditUserSuccessMsg();
+                 }
+               });
+             } else if (!isChangeUserName && isChangeEmail) {
+               Meteor.call('setEmail', email.toLowerCase(), user_id, function (error) {
+                 if (error) {
+                   const errorElement = error.error;
+                   if (errorElement === 'email-already-taken') {
+                   	this.$('.email-taken').show();
+                   }
+                 } else {
+                	 const newEmail = email.toLowerCase();
+                   sendEmail(newEmail);
+                   displayEditUserSuccessMsg();
+                 }
+               });
+             } else {
+               displayEditUserSuccessMsg();
+             }
+           }
+         });
+       },
+    }]
+  }
+}).register('editInviteePopup');
+
+Template.editInviteePopup.helpers({
+	user() {
+	  return Users.findOne(this.userId);
+	},
+
+	isSelected(match) {
+	  const userId = Template.instance().data.userId;
+	  const selected = Users.findOne(userId).authenticationMethod;
+	  return selected === match;
+	},
+
+	isLdap() {
+	  const userId = Template.instance().data.userId;
+	  const selected = Users.findOne(userId).authenticationMethod;
+	  return selected === 'ldap';
+	},
+});
 
 Template.editUserPopup.helpers({
 	user() {

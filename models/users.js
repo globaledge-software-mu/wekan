@@ -1424,9 +1424,9 @@ if (Meteor.isServer) {
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
     
-    resendInviteToUser(userId) {
-      check(userId, String);
-      const user = Users.findOne({_id: userId});
+    resendInviteToUser(emailAddress) {
+      check(emailAddress, String);
+      const user = Users.findOne({'emails.address': emailAddress});
       const inviter = Meteor.user();
       
       //
