@@ -78,7 +78,7 @@ Template.header.helpers({
 	  const assignedUG = AssignedUserGroups.findOne({userId: admin.userId, useCustomDefaultBoardColor: 'Yes'});
 	  if (assignedUG && assignedUG._id) {
 		  const userGroup = UserGroups.findOne({ _id:assignedUG.userGroupId });
-		  return userGroup.defaultBoardColor;
+		  return {color:userGroup.defaultBoardColor, adjust:'brightness(90%)'};
 	  }
   },
 });
