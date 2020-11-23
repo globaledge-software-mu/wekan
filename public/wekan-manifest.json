@@ -1,16 +1,16 @@
 {
-  "name": "Wekan",
-  "short_name": "Wekan",
+  "name": "OCT",
+  "short_name": "OCT",
   "description": "The open-source kanban",
   "lang": "en-US",
   "icons": [
     {
-      "src": "/wekan-logo-150.png",
+      "src": "/rh-header-logo.png",
       "type": "image/png",
       "sizes": "150x150"
     },
     {
-      "src": "/wekan-logo-150.svg",
+      "src": "/rh-header-logo.svg",
       "type": "image/svg+xml",
       "sizes": "150x150"
     }
