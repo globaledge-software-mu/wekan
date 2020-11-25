@@ -367,6 +367,25 @@ if (Meteor.isClient) {
       return false;
     },
 
+    
+    hasUsableUserQuotaGroups() {
+        var handler1 = Meteor.subscribe('assigned_user_groups');
+        var handler2 = Meteor.subscribe('user_groups');
+        if (handler1.ready() && handler2.ready()) {
+        	var usableUserQuotaGroups = false;
+        	AssignedUserGroups.find({userId: this._id}).forEach((aUG) => {
+            const userGroup = UserGroups.findOne({_id: aUG.userGroupId});
+            if (userGroup && userGroup._id) {
+                const unusedQuota = userGroup.usersQuota - userGroup.usedUsersQuota;
+                if (unusedQuota > 0) {
+                    usableUserQuotaGroups = true;
+                }
+        	}
+        });
+        }
+      return usableUserQuotaGroups;
+    },
+    
     hasMultipleUsableBoardQuotaGroups() {
     	var handler1 = Meteor.subscribe('assigned_user_groups');
     	var handler2 = Meteor.subscribe('user_groups');
@@ -388,7 +407,6 @@ if (Meteor.isClient) {
     	}
       return false;
     },
-
     usableUsersQuotaGroups() {
       const usableUsersQuotaUserGroupsIds = new Array();
       AssignedUserGroups.find({ userId: Meteor.userId() }).forEach((aUG) => {
@@ -415,6 +433,35 @@ if (Meteor.isClient) {
       	}
       });
       return UserGroups.find({_id: {$in: usableBoardsQuotaUserGroupsIds}});
+    },
+
+    hasTemplate() {
+      var templateMember = Boards.find({
+        type: 'template-board',
+        'members.userId': Meteor.userId(),
+        archived: false,
+      });
+      if (templateMember.count() > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+
+    hasTemplatesOrIsAdminOrManager() {
+       if (this.hasTemplate() || this.isAdminOrManager()){
+        return true;
+       } else {
+        return false;
+       }
+    },
+
+    hasTemplatesAndIsAdminOrManager() {
+      if (this.hasTemplate() && this.isAdminOrManager()){
+       return true;
+      } else {
+       return false;
+      }
     },
 
     isBoardAdmin() {
@@ -756,7 +803,7 @@ Users.helpers({
 
   getLanguage() {
     const profile = this.profile || {};
-    return profile.language || 'en';
+    return profile.language || 'nl';
   },
 
   getTemplatesBoardId() {
@@ -933,6 +980,51 @@ Meteor.methods({
 
 if (Meteor.isServer) {
   Meteor.methods({
+
+  	setLanguageNewUser(token, lang) {
+      check(token, String);
+      check(lang, String);
+
+      var user = Users.findOne({"services.password.reset.token": token});
+      if (user && user._id) {
+        Users.update(
+          { _id: user._id },
+          { $set: {
+            'profile.language': lang
+          } }
+        );
+      }
+  	},
+
+  	setLanguageExistingUser(match, lang) {
+      check(match, String);
+      check(lang, String);
+
+      var user = Users.findOne({
+        $or: [
+          {email: match},
+          {username: match}
+        ]
+      });
+      if (user && user._id) {
+        Users.update(
+          { _id: user._id },
+          { $set: {
+            'profile.language': lang
+          } }
+        );
+      }
+      return true;
+  	},
+
+  	getEnrollingUserEmail(token) {
+      check(token, String);
+
+      var user = Users.findOne({"services.password.reset.token": token});
+      if (user && user._id) {
+        return user.emails[0].address;
+      }
+  	},
 
   	mailNewSubscriptionSuccess(subscriberEmail, lang, params) {
       check(subscriberEmail, String);
@@ -1331,7 +1423,94 @@ if (Meteor.isServer) {
 
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
-
+    
+    resendInviteToUser(emailAddress) {
+      check(emailAddress, String);
+      const user = Users.findOne({'emails.address': emailAddress});
+      const inviter = Meteor.user();
+      
+      //
+      if (user && user._id !== inviter._id) {
+    	  //if user is invited to a board, resend  invite to board
+    	  if (user.profile.invitedBoards && user.profile.invitedBoards.length > 0 && user.emails[0].verified == true) {
+    		  const boardId = user.profile.invitedBoards[0];
+    		  const board = Boards.findOne({_id:boardId});
+    	      var allowInvite;
+    	      if (board.type = 'template-board') {
+    		      allowInvite = inviter &&
+    		        board &&
+    		        board.members &&
+    		        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+    		        _.where(board.members, {userId: inviter._id})[0].isActive;
+    	      } else {
+    		      allowInvite = inviter &&
+    		        board &&
+    		        board.members &&
+    		        _.contains(_.pluck(board.members, 'userId'), inviter._id) &&
+    		        _.where(board.members, {userId: inviter._id})[0].isActive &&
+    		        _.where(board.members, {userId: inviter._id})[0].isAdmin;
+    	      }
+    	      if (!allowInvite) throw new Meteor.Error('error-board-notAMember');
+              // Send Invite 'Login To Accept Invite To Board'
+              try {
+                const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+                const params = {
+                  user: user.username,
+                  inviter: inviter.username,
+                  board: board.title,
+                  url: board.absoluteUrl(),
+                  logoUrl: logoUrl
+                };
+                const lang = user.getLanguage();
+                Email.send({
+                  to: user.emails[0].address.toLowerCase(),
+                  from: Accounts.emailTemplates.from,
+                  subject: TAPi18n.__('email-invite-subject', params, lang),
+                  html: TAPi18n.__('email-invite-text', params, lang),
+                });
+              } catch (e) {
+                throw new Meteor.Error('email-fail', e.message);
+              }
+    	  } else {
+    		  //or from a add user resend enrollment email
+    		  var token = Random.secret();
+    		  var newDate = new Date();
+    	      var tokenRecord = JSON.parse(JSON.stringify({
+    	    	  token: token,
+    	          email: user.emails[0].address.toLowerCase(),
+    	          when: newDate,
+    	          reason: 'enroll'
+    	       }));
+    	      Users.update({ _id: user._id }, {
+    	    	  $set: {
+    	            'services.password.reset': tokenRecord
+    	          }
+    	      });
+    	      // before passing to template, update user object with new token
+    	      Meteor._ensure(user, 'services', 'password').reset = tokenRecord;
+    	      const enrollLink = Accounts.urls.enrollAccount(token);
+    	      const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+    	      const parameters = {
+    	          user: user.username,
+    	          enrollUrl: enrollLink,
+    	          logoUrl: logoUrl
+    	        };
+    	      const lang = user.getLanguage();
+    	      const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+    	      Email.send({
+    	    	  to: user.emails[0].address.toLowerCase(),
+    	          from: Accounts.emailTemplates.from,
+    	          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
+    	          html: message,
+    	      });
+    	}
+        
+      } else {
+      	throw new Meteor.Error('error-user-notAllowSelf');
+      }
+      
+      return {userID: user._id, username: user.username, email: user.emails[0].address};
+    }
   });
 
   Accounts.onCreateUser((options, user) => {
@@ -1561,7 +1740,7 @@ if (Meteor.isServer) {
   // counter.
   // We need to run this code on the server only, otherwise the incrementation
   // will be done twice.
-  Users.after.update(function (userId, user, fieldNames) {
+  Users.after.update(function (userId, user, fieldNames, modifier) {
 
   	// When a user doc is updated, if his role is Admin or manager,
   	// make him a member of all the template boards of which he was not a member before
@@ -1604,6 +1783,20 @@ if (Meteor.isServer) {
   	//_______________________//
 
 
+    if (_.contains(fieldNames,'profile') && modifier.$pull) {
+    	const boardId = modifier.$pull['profile.invitedBoards'];
+    	const board = Boards.findOne({_id: boardId, 'members.userId': user._id });
+    	console.log(board);
+    	if (board && board._id){
+    		Activities.insert({
+          userId: user._id,
+          memberId: userId,
+          type: 'member',
+          activityType: 'acceptBoardInvitation',
+          boardId: boardId
+        });
+    	}
+    }
     // The `starredBoards` list is hosted on the `profile` field. If this
     // field hasn't been modificated we don't need to run this hook.
     if (!_.contains(fieldNames, 'profile'))

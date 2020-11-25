@@ -226,6 +226,17 @@ Template.memberPopup.events({
       FlowRouter.go('home');
     });
   }),
+  
+  'click .js-reinvite'() {
+	  const userId = this.userId;
+	  Meteor.call('resendInviteToUser', userId, (err, res) => {
+		  if (err) {
+			 $('.danger').removeClass('hide');
+		  } else if(res.email) {
+			 $('.warning').removeClass('hide');
+		  }
+	  });
+   },
 });
 
 Template.removeMemberPopup.helpers({

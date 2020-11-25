@@ -22,6 +22,9 @@ template(name="boardActivities")
 
         if($eq activityType 'addBoardMember')
           | {{{_ 'activity-added' memberLink boardLabel}}}.
+        
+        if($eq activityType 'acceptBoardInvitation')
+          | {{{_ 'activity-accepted-invitation' boardLabel}}}.
 
         if($eq activityType 'addComment')
           | {{{_ 'activity-on' cardLink}}}

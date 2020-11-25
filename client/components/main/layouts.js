@@ -37,9 +37,13 @@ Template.userFormsLayout.onRendered(() => {
   AccountsTemplates.state.form.keys = new Proxy(AccountsTemplates.state.form.keys, validator);
 
   const i18nTag = navigator.language;
-  if (i18nTag) {
+  // Setting the default language nl at set password for new user
+  if (FlowRouter.getRouteName() === 'atEnrollAccount') {
+    T9n.setLanguage(i18nTagToT9n('nl'));
+  } else if (i18nTag) {
     T9n.setLanguage(i18nTagToT9n(i18nTag));
   }
+
   EscapeActions.executeAll();
 });
 
@@ -83,7 +87,23 @@ Template.userFormsLayout.helpers({
 
   isCurrentLanguage() {
     const t9nTag = i18nTagToT9n(this.tag);
-    const curLang = T9n.getLanguage() || 'en';
+    const curLang = T9n.getLanguage() || 'nl';
+
+    return t9nTag === curLang;
+  },
+
+  isNewUserSetPassword() {
+    if (FlowRouter.getRouteName() === 'atEnrollAccount') {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  isDefaultLanguage() {
+    const t9nTag = i18nTagToT9n(this.tag);
+    const curLang = 'nl';
+
     return t9nTag === curLang;
   },
 });
@@ -96,8 +116,15 @@ Template.userFormsLayout.events({
   },
   'click #at-btn'(event, instance) {
     if (FlowRouter.getRouteName() === 'atSignIn') {
+      const username = $('#at-field-username_and_email').val();
+      const lang = $('.js-userform-set-language').val();
+      Meteor.call('setLanguageExistingUser', username, lang);
       instance.isLoading.set(true);
       authentication(event, instance);
+    } else if (FlowRouter.getRouteName() === 'atEnrollAccount') {
+      const token = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+      const lang = $('.js-userform-set-language').val();
+      Meteor.call('setLanguageNewUser', token, lang);
     }
   },
 });
