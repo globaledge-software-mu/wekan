@@ -28,6 +28,24 @@ Template.connectionMethod.onRendered(() => {
   $('.at-form-authentication').addClass('hide');
   $('.at-oauth').remove();
   $('.at-sep').remove();
+
+  // Added the following part because Louis wanted the email address of the new user to be shown too when he is about to set up his password
+  if ($('#at-field-username_and_email').length < 1) {
+    $('.at-title').text('Set Your Password');
+    var token = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+    Meteor.call('getEnrollingUserEmail', token, (_, result) => {
+      if (result) {
+        var htmlElem = `<div class="at-input">
+          <label for="new_user_email">
+            Email
+          </label>
+          <input type="text" id="new_user_email" name="new_user_email" value=" ` +  result + ` " disabled style="display: block;">
+        </div>`;
+
+        $('#at-pwd-form').prepend(htmlElem);
+      }
+    });
+  }
 });
 
 Template.connectionMethod.helpers({

@@ -289,6 +289,21 @@ Cards.attachSchema(new SimpleSchema({
     type: String,
     optional: true,
   },
+	choseAverageReceived: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
+	choseAverageStart: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
+	choseAverageDue: {
+    type: Boolean,
+    optional: true,
+    defaultValue: true,
+  },
 }));
 
 Cards.allow({
@@ -903,7 +918,7 @@ Cards.helpers({
 
         if (teamMembersCount == 1) {
           AspectsListItems.update(
-            { _id: aspect._id }, 
+            { _id: aspect._id },
             { $set: {
               initialScore: '',
               currentScore: ''
@@ -949,14 +964,18 @@ Cards.helpers({
     // Recalculate the TeamMembersScores in both scenarios
     // (i)  card has only team member(s) remaining or
     // (ii) card has both team member(s) and aspect(s) remaining
-    // Then add the team members scores to get the composed initial/current scores
-    // and update the card's initial/current scores
+    // Then add the team members scores to get the composed initial/current/target scores
+    // and update the card's initial/current/target scores
+    // *** IMPORTANT NOTE *** : We need to verify the scores compose method chosen by the user first.
+    // The default method for compose scores is "Addition" but if the user chose "Average" for a specific score like initial or current or target,
+    // then it needs to re-composed using that method
     const card = Cards.findOne(cardId);
     if (card && card._id) {
       const teamMembers = card.team_members;
       teamMembers.forEach((teamMember) => {
         var teamMemberInitialScore = 0;
         var teamMemberCurrentScore = 0;
+        var teamMemberTargetScore = 0;
         const teamMembersAspects = TeamMembersAspects.find({ userId: teamMember, cardId });
         if (teamMembersAspects.count() > 0) {
           teamMembersAspects.forEach((teamMemberAspect) => {
@@ -972,14 +991,22 @@ Cards.helpers({
                 teamMemberCurrentScore += currentScore;
               }
             }
+            if (teamMemberAspect.targetScore) {
+              var targetScore = parseFloat(teamMemberAspect.targetScore);
+              if (targetScore > 0) {
+                teamMemberTargetScore += targetScore;
+              }
+            }
           });
           const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
           if (teamMemberScore && teamMemberScore._id) {
+            // Update TeamMembersScores
             TeamMembersScores.update(
               { _id: teamMemberScore._id },
               { $set: {
                 initialScore: teamMemberInitialScore.toFixed(2).toString(),
-                currentScore: teamMemberCurrentScore.toFixed(2).toString()
+                currentScore: teamMemberCurrentScore.toFixed(2).toString(),
+                targetScore: teamMemberTargetScore.toFixed(2).toString()
               } }
             );
           }
@@ -990,6 +1017,7 @@ Cards.helpers({
       if (teamMembersScores.count() > 0) {
         var totalTeamMembersInitialScores = 0;
         var totalTeamMembersCurrentScores = 0;
+        var totalTeamMembersTargetScores = 0;
         teamMembersScores.forEach((teamMemberScore) => {
           if (teamMemberScore.initialScore) {
             var teamMemberInitialScore = parseFloat(teamMemberScore.initialScore);
@@ -1003,10 +1031,30 @@ Cards.helpers({
               totalTeamMembersCurrentScores += teamMemberCurrentScore;
             }
           }
+          if (teamMemberScore.targetScore) {
+            var teamMemberTargetScore = parseFloat(teamMemberScore.targetScore);
+            if (teamMemberTargetScore > 0) {
+              totalTeamMembersTargetScores += teamMemberTargetScore;
+            }
+          }
         });
 
-        card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
-        card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
+        var finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores;
+        var finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores;
+        var finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores;
+        if (card.choseAverageReceived && card.choseAverageReceived === true) {
+          finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores / teamMembersScores.count();
+        }
+        if (card.choseAverageStart && card.choseAverageStart === true) {
+          finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores / teamMembersScores.count();
+        }
+        if (card.choseAverageDue && card.choseAverageDue === true) {
+          finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores / teamMembersScores.count();
+        }
+
+        card.setInitialScore(finalTotalTeamMembersInitialScores.toFixed(2).toString());
+        card.setCurrentScore(finalTotalTeamMembersCurrentScores.toFixed(2).toString());
+        card.setTargetScore(finalTotalTeamMembersTargetScores.toFixed(2).toString());
       }
     }
 
@@ -1364,7 +1412,7 @@ Cards.helpers({
     if (lastScores.length > 0) {
       return CardScores.update({_id: lastScores[0]._id}, {$set: {'score': currentScore, 'date': card.startAt}});
     }
-    
+
     if (!card.startAt) {
       return false;
     }

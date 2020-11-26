@@ -641,14 +641,17 @@ BlazeComponent.extendComponent({
                   TeamMembersAspects.remove({_id: idsToRemove[i]});
                 }
 
-                // Recalculate the card's composed initial/current scores by first checking if
+                // Recalculate the card's composed initial/current/target scores by first checking if
                 // (i)  card has only aspect(s) remaining or
                 // (ii) card has both aspect(s) and team member(s) remaining
-                // If case (i) is present, recalculate the card's composed initial/current scores
-                // by simply adding the initial/current scores of the aspects
-                // If case (ii) is present, recalculate the card's composed initial/current scores
+                // If case (i) is present, recalculate the card's composed initial/current/target scores
+                // by simply adding the initial/current/target scores of the aspects
+                // If case (ii) is present, recalculate the card's composed initial/current/target scores
                 // by first recalculating the TeamMembersScores with the total of their remaining TeamMembersAspects scores
                 // and then by adding the card's TeamMembersScores
+                // *** IMPORTANT NOTE *** : The addition of the scores is valid only if the user did not chose "Average".
+                // So before setting the initialScore, currentScore and targetScore, we need to check which method is valid for that
+                // specific score to be composed with.
                 const card = Cards.findOne(cardId);
                 if (card && card._id) {
                   var hasAspectsonly = false;
@@ -666,6 +669,7 @@ BlazeComponent.extendComponent({
                   if (hasAspectsonly) {
                     var totalAspectsInitialScore = 0;
                     var totalAspectsCurrentScore = 0;
+                    var totalAspectsTargetScore = 0;
                     aspects.forEach((aspect) => {
                       if (aspect.initialScore) {
                         var initialScore = parseFloat(aspect.initialScore);
@@ -679,15 +683,36 @@ BlazeComponent.extendComponent({
                           totalAspectsCurrentScore += currentScore;
                         }
                       }
+                      if (aspect.targetScore) {
+                        var targetScore = parseFloat(aspect.targetScore);
+                        if (targetScore > 0) {
+                          totalAspectsTargetScore += targetScore;
+                        }
+                      }
                     });
 
-                    card.setInitialScore(totalAspectsInitialScore.toFixed(2).toString());
-                    card.setCurrentScore(totalAspectsCurrentScore.toFixed(2).toString());
+                    var finalTotalAspectsInitialScore = totalAspectsInitialScore;
+                    var finalTotalAspectsCurrentScore = totalAspectsCurrentScore;
+                    var finalTotalAspectsTargetScore = totalAspectsTargetScore;
+                    if (card.choseAverageReceived && card.choseAverageReceived === true) {
+                      finalTotalAspectsInitialScore = totalAspectsInitialScore / aspects.count();
+                    }
+                    if (card.choseAverageStart && card.choseAverageStart === true) {
+                      finalTotalAspectsCurrentScore = totalAspectsCurrentScore / aspects.count();
+                    }
+                    if (card.choseAverageDue && card.choseAverageDue === true) {
+                      finalTotalAspectsTargetScore = totalAspectsTargetScore / aspects.count();
+                    }
+
+                    card.setInitialScore(finalTotalAspectsInitialScore.toFixed(2).toString());
+                    card.setCurrentScore(finalTotalAspectsCurrentScore.toFixed(2).toString());
+                    card.setTargetScore(finalTotalAspectsTargetScore.toFixed(2).toString());
                   } else if (hasbothAspectsAndTeamMembers) {
                     const teamMembers = card.team_members;
                     teamMembers.forEach((teamMember) => {
                       var teamMemberInitialScore = 0;
                       var teamMemberCurrentScore = 0;
+                      var teamMemberTargetScore = 0;
                       const teamMembersAspects = TeamMembersAspects.find({ userId: teamMember, cardId });
                       if (teamMembersAspects.count() > 0) {
                         teamMembersAspects.forEach((teamMemberAspect) => {
@@ -699,6 +724,10 @@ BlazeComponent.extendComponent({
                           if (currentScore > 0) {
                             teamMemberCurrentScore += currentScore;
                           }
+                          var targetScore = parseFloat(teamMemberAspect.targetScore);
+                          if (currentScore > 0) {
+                            teamMemberTargetScore += targetScore;
+                          }
                         });
                         const teamMemberScore = TeamMembersScores.findOne({ userId: teamMember, cardId });
                         if (teamMemberScore && teamMemberScore._id) {
@@ -706,7 +735,8 @@ BlazeComponent.extendComponent({
                             { _id: teamMemberScore._id },
                             { $set: {
                               initialScore: teamMemberInitialScore.toFixed(2).toString(),
-                              currentScore: teamMemberCurrentScore.toFixed(2).toString()
+                              currentScore: teamMemberCurrentScore.toFixed(2).toString(),
+                              targetScore: teamMemberTargetScore.toFixed(2).toString()
                             } }
                           );
                         }
@@ -717,6 +747,7 @@ BlazeComponent.extendComponent({
                     if (teamMembersScores.count() > 0) {
                       var totalTeamMembersInitialScores = 0;
                       var totalTeamMembersCurrentScores = 0;
+                      var totalTeamMembersTargetScores = 0;
                       teamMembersScores.forEach((teamMemberScore) => {
                         var teamMemberInitialScore = parseFloat(teamMemberScore.initialScore);
                         if (teamMemberInitialScore > 0) {
@@ -726,10 +757,28 @@ BlazeComponent.extendComponent({
                         if (teamMemberCurrentScore > 0) {
                           totalTeamMembersCurrentScores += teamMemberCurrentScore;
                         }
+                        var teamMemberTargetScore = parseFloat(teamMemberScore.targetScore);
+                        if (teamMemberTargetScore > 0) {
+                          totalTeamMembersTargetScores += teamMemberTargetScore;
+                        }
                       });
 
-                      card.setInitialScore(totalTeamMembersInitialScores.toFixed(2).toString());
-                      card.setCurrentScore(totalTeamMembersCurrentScores.toFixed(2).toString());
+                      var finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores;
+                      var finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores;
+                      var finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores;
+                      if (card.choseAverageReceived && card.choseAverageReceived === true) {
+                        finalTotalTeamMembersInitialScores = totalTeamMembersInitialScores / teamMembersScores.count();
+                      }
+                      if (card.choseAverageStart && card.choseAverageStart === true) {
+                        finalTotalTeamMembersCurrentScores = totalTeamMembersCurrentScores / teamMembersScores.count();
+                      }
+                      if (card.choseAverageDue && card.choseAverageDue === true) {
+                        finalTotalTeamMembersTargetScores = totalTeamMembersTargetScores / teamMembersScores.count();
+                      }
+
+                      card.setInitialScore(finalTotalTeamMembersInitialScores.toFixed(2).toString());
+                      card.setCurrentScore(finalTotalTeamMembersCurrentScores.toFixed(2).toString());
+                      card.setTargetScore(finalTotalTeamMembersTargetScores.toFixed(2).toString());
                     }
                   }
                 }

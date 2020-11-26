@@ -15,6 +15,15 @@ AssignedUserGroups.attachSchema(new SimpleSchema({
     optional: true,
     defaultValue: 'No',
   },
+  useCustomDefaultLogo: {
+    type: String,
+    optional: true,
+  },
+  useCustomDefaultBoardColor: {
+    type: String,
+    optional: true,
+    defaultValue: 'Yes',
+  },
   createdAt: {
     type: Date,
     autoValue() { // eslint-disable-line consistent-return

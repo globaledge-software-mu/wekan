@@ -488,6 +488,9 @@ Boards.helpers({
     return !!_.findWhere(this.members, { userId: memberId, isActive: true, isAdmin: false, isCommentOnly: true });
   },
 
+  boardAdmin() {
+	  return _.findWhere(this.members, {isAdmin: true});
+  },
   absoluteUrl() {
     return FlowRouter.url('board', { id: this._id, slug: this.slug });
   },
@@ -1165,15 +1168,14 @@ if (Meteor.isServer) {
       }
 
       // Say goodbye to the former member
-      if (modifier.$set) {
-        foreachRemovedMember(doc, modifier.$set, (memberId) => {
-          Activities.insert({
-            userId,
-            memberId,
-            type: 'member',
-            activityType: 'removeBoardMember',
-            boardId: doc._id,
-          });
+      if (modifier.$pull) {
+      	const memberId = modifier.$pull.members.userId;
+      	Activities.insert({
+          userId,
+          memberId,
+          type: 'member',
+          activityType: 'removeBoardMember',
+          boardId: doc._id,
         });
       }
     }
