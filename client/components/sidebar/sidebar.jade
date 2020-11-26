@@ -231,11 +231,17 @@ template(name="memberPopup")
             a.js-leave-member {{_ 'leave-board'}}
           else if currentUser.isAdminOrManager
             a.js-remove-member {{_ 'remove-from-board'}}
+          if isInvited
+            a.js-reinvite {{_ 'reinvite-to-board'}}
         else
           if $eq currentUser._id userId
             a.js-leave-member {{_ 'leave-board'}}
           else if currentUser.isBoardAdmin
             a.js-remove-member {{_ 'remove-from-board'}}
+          if isInvited
+            a.js-reinvite {{_ 'reinvite-to-board'}}
+            .warning.hide {{_'email-sent'}}
+            .danger.hide {{_'email-fail-text'}}
 
 
 template(name="removeMemberPopup")
@@ -294,7 +300,11 @@ template(name="addMemberPopup")
           if loadingAfterSelectedRole.get
             +spinner
           // Invite directly from board's sidebar
+        if currentUser.hasUsableUserQuotaGroups
           button.js-email-invite.primary.full.inviteFromBoardSidebar {{_ 'email-invite'}}
+        else
+          .manage-member-section
+           p.quiet {{_ 'error-exhausted-users-quota'}}
 
 template(name="changePermissionsPopup")
   ul.pop-over-list

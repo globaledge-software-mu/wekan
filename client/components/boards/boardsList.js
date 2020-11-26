@@ -296,6 +296,7 @@ BlazeComponent.extendComponent({
     return Boards.find({
       type: 'template-board',
       archived: false,
+      subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
     });
   },
 
@@ -304,6 +305,7 @@ BlazeComponent.extendComponent({
       type: 'template-board',
       'members.userId': Meteor.userId(),
       archived: false,
+      subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
     });
   },
 
@@ -351,6 +353,7 @@ BlazeComponent.extendComponent({
       	title: {$regex: typedTitle, $options: 'i'},
         archived: false,
         'members.userId': Meteor.userId(),
+        subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
       }, {
       	sort: ['title']
       });
@@ -376,10 +379,14 @@ BlazeComponent.extendComponent({
       }
 
       if (folderBoardsIds.length > 0) {
-        return Boards.find(
-          { _id: { $in: folderBoardsIds }, archived: false, 'members.userId': Meteor.userId(), },
-          { sort: ['title'], }
-        );
+        return Boards.find({
+          _id: { $in: folderBoardsIds },
+          archived: false,
+          'members.userId': Meteor.userId(),
+          subtasksDefaultListId: null // condition to avoid getting "SubTask" boards
+        }, {
+          sort: ['title'],
+        });
       } else {
         return null
       }
@@ -410,6 +417,7 @@ BlazeComponent.extendComponent({
         _id: { $nin: categorisedBoardIds },
         archived: false,
         'members.userId': Meteor.userId(),
+        subtasksDefaultListId: null, // condition to avoid getting "SubTask" boards
         type: {
         	$nin: [ 'template-board', 'template-container' ]
         },
@@ -448,6 +456,16 @@ BlazeComponent.extendComponent({
     return user && user.isInvitedTo(this.currentData()._id);
   },
 
+  
+  hasDefaultBoardColor() {
+	  const assignedUG = AssignedUserGroups.findOne({userId: Meteor.user()._id ,useCustomDefaultBoardColor: 'Yes'});
+	  if (assignedUG && assignedUG.groupOrder == 1) {
+		  return true ;
+	  } else {
+		  return false;
+	  }
+  },
+  
   events() {
     return [{
       'click .js-add-board, click .js-add-board-template'(evt) {
@@ -532,6 +550,20 @@ BlazeComponent.extendComponent({
   },
 }).register('boardList');
 
+Template.boardList.helpers({
+	defaultBoardColor(boardId) {
+		var boardAdmin = '';
+		if (boardId) {
+			const boards = Boards.findOne({_id:boardId});
+			boardAdmin = boards.boardAdmin();
+		}
+		const assignedUG = AssignedUserGroups.findOne({userId: boardAdmin.userId,useCustomDefaultBoardColor: 'Yes'});
+		if (assignedUG && assignedUG.groupOrder == 1) {
+			const userGroup = UserGroups.findOne({ _id:assignedUG.userGroupId });
+			return userGroup.defaultBoardColor;
+		}
+	},
+});
 Template.createNewFolder.events({
   'submit #createFolderForBoardsDroppedOnEachOther': function(e) {
     e.preventDefault();

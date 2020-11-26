@@ -11,10 +11,10 @@ Meteor.publish('userTemplateContainerBoard', function() {
 		const userTemplateContainerId = Meteor.user().profile.templatesBoardId;
 	  return Boards.find({
 	  	_id: userTemplateContainerId,
-	    archived: false, 
+	    archived: false,
 	  });
 	} else {
-		return null; 
+		return null;
 	}
 });
 
@@ -53,6 +53,7 @@ Meteor.publish('boards', function() {
       members: 1,
       permission: 1,
       type: 1,
+      subtasksDefaultListId: 1
     },
   });
 });

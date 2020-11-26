@@ -224,11 +224,11 @@ Template.dateBadge.helpers({
       this.card.setCurrentScore(null);
     } else {
       // from chart datapoint
-      cardScoreDoc = CardScores.findOne({ 
-      	date: datapointParams.dataPointDate, 
-      	score: datapointParams.dataPointScore, 
-      	type: 'current', 
-      	cardId: this.card._id 
+      cardScoreDoc = CardScores.findOne({
+      	date: datapointParams.dataPointDate,
+      	score: datapointParams.dataPointScore,
+      	type: 'current',
+      	cardId: this.card._id
     	});
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
@@ -301,11 +301,11 @@ Template.dateBadge.helpers({
     if (!clickedDatapoint) { // from badge
       this.card.setTargetScore(null);
     } else { // from chart datapoint
-      cardScoreDoc = CardScores.findOne({ 
-      	date: datapointParams.dataPointDate, 
-      	score: datapointParams.dataPointScore, 
-      	type: 'target', 
-      	cardId: this.card._id 
+      cardScoreDoc = CardScores.findOne({
+      	date: datapointParams.dataPointDate,
+      	score: datapointParams.dataPointScore,
+      	type: 'target',
+      	cardId: this.card._id
     	});
       if (typeof cardScoreDoc !== 'undefined') {
         CardScores.remove({_id: cardScoreDoc._id});
@@ -622,169 +622,193 @@ BlazeComponent.extendComponent({
     	'click #submitDetailedInitialScores'(e) {
         e.preventDefault();
 
-        const dateString = Session.get('dateString');
-        date = moment(dateString, 'L LT', true).toDate();
-
-        var hasOnlyAspects = false;
-        var hasOnlyTeamMembers = false;
-        var hasBothTeamMembersAndAspects = false;
-
-        const hasAspects = $('.aspects-score-input').length;
-        const hasTeamMembers = $('.team-members-score-input').length;
-        const hasTeamMembersAspects = $('.team-members-aspects-score-input').length;
-
-        if (hasAspects > 0) {
-          hasOnlyAspects = true;
-        }
-        if (hasTeamMembersAspects < 1 && hasTeamMembers > 0) {
-          hasOnlyTeamMembers = true;
-        }
-        if (hasTeamMembersAspects > 0) {
-          hasBothTeamMembersAndAspects = true;
-        }
-
-        // Has only Aspects
-        if (hasOnlyAspects) {
-          const cardId = Session.get('composedReceivedScoreCardId');
-          $('.aspects-score-input').each(function() {
-            const aspectId = $(this).attr('id');
-            var valueSet = $(this).val();
-            const aspectDoc = AspectsListItems.findOne({ _id: aspectId });
-            if (aspectDoc && aspectDoc._id) {
-              AspectsListItems.update(
-                { _id: aspectDoc._id },
-                { $set: {
-                  initialScore: valueSet,
-                } }
-              );
-            }
-          });
-
-          const aspectsDocs = AspectsListItems.find({ cardId });
-          if (aspectsDocs.count() > 0) {
-            var aspectsTotalScore = 0;
-            aspectsDocs.forEach((doc) => {
-              const aspectInitialScore = parseFloat(doc.initialScore);
-              if (aspectInitialScore > 0) {
-                aspectsTotalScore += aspectInitialScore;
-              }
-            });
-
-            const card = Cards.findOne({ _id: cardId });
-            if (card && card._id) {
-              // If CurrentScore is not set yet, set it too
-              const currentScore = card.getCurrentScore();
-              if (!currentScore || currentScore.length < 1 || currentScore == '') {
-                card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
-              }
-              card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
-            	card.reloadHistoricScoreChart();
-              Modal.close('editCardReceivedComposedScoreModal');
-            }
-          }
-        }
-
-        // Has only Team-Members
-        if (hasOnlyTeamMembers) {
-          const cardId = Session.get('composedReceivedScoreCardId');
-          $('.team-members-score-input').each(function() {
-            const userId = $(this).attr('id');
-            var valueSet = $(this).val();
-            const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
-            if (teamMemberScore && teamMemberScore._id) {
-              TeamMembersScores.update(
-                { _id: teamMemberScore._id },
-                { $set: {
-                  initialScore: valueSet,
-                } }
-              );
-            }
-          });
-
-          const teamMembersScores = TeamMembersScores.find({ cardId });
-          if (teamMembersScores.count() > 0) {
-            var teamMembersTotalScore = 0;
-            teamMembersScores.forEach((doc) => {
-              const team_member_score = parseFloat(doc.initialScore);
-              if (team_member_score > 0) {
-                teamMembersTotalScore += team_member_score;
-              }
-            });
-
-            const card = Cards.findOne({ _id: cardId });
-            if (card && card._id) {
-              // If CurrentScore is not set yet, set it too
-              const currentScore = card.getCurrentScore();
-              if (!currentScore || currentScore.length < 1 || currentScore == '') {
-                card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
-              }
-              card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
-            	card.reloadHistoricScoreChart();
-              Modal.close('editCardReceivedComposedScoreModal');
-            }
-          }
-        }
-
-        // Has both Team-Members & Aspects
-        if (hasBothTeamMembersAndAspects) {
-          const cardId = Session.get('composedReceivedScoreCardId');
-          $('.team-members-aspects-score-input').each(function() {
-            const teamMembersAspectsId = $(this).attr('id');
-            var valueSet = $(this).val();
-            TeamMembersAspects.update(
-              { _id: teamMembersAspectsId },
+        const cardId = Session.get('composedReceivedScoreCardId');
+        const card = Cards.findOne({ _id: cardId });
+        if (card && card._id) {
+          const receivedScoreComposeMethod = $('.receivedScoreComposeMethod:checked').val();
+          if (receivedScoreComposeMethod === 'average') {
+            Cards.update(
+              { _id: cardId },
               { $set: {
-                initialScore: valueSet,
+                choseAverageReceived: true
               } }
             );
-          });
+          } else if (receivedScoreComposeMethod === 'addition') {
+            Cards.update(
+              { _id: cardId },
+              { $set: {
+                choseAverageReceived: false
+              } }
+            );
+          }
 
-          $('.team-members-score-input').each(function() {
-            const userId = $(this).attr('id');
-            var teamMemberTotalAspectsInitialScores = 0;
-            const teamMemberAspects = TeamMembersAspects.find({ userId, cardId });
-            if (teamMemberAspects.count() > 0) {
-              teamMemberAspects.forEach((teamMemberAspect) => {
-                var initialScore = parseFloat(teamMemberAspect.initialScore);
-                if (initialScore > 0) {
-                  teamMemberTotalAspectsInitialScores += initialScore;
+          const dateString = Session.get('dateString');
+          const date = moment(dateString, 'L LT', true).toDate();
+
+          var hasOnlyAspects = false;
+          var hasOnlyTeamMembers = false;
+          var hasBothTeamMembersAndAspects = false;
+
+          const hasAspects = $('.aspects-score-input').length;
+          const hasTeamMembers = $('.team-members-score-input').length;
+          const hasTeamMembersAspects = $('.team-members-aspects-score-input').length;
+
+          if (hasAspects > 0) {
+            hasOnlyAspects = true;
+          }
+          if (hasTeamMembersAspects < 1 && hasTeamMembers > 0) {
+            hasOnlyTeamMembers = true;
+          }
+          if (hasTeamMembersAspects > 0) {
+            hasBothTeamMembersAndAspects = true;
+          }
+
+          // Has only Aspects
+          if (hasOnlyAspects) {
+            $('.aspects-score-input').each(function() {
+              const aspectId = $(this).attr('id');
+              var valueSet = $(this).val();
+              const aspectDoc = AspectsListItems.findOne({ _id: aspectId });
+              if (aspectDoc && aspectDoc._id) {
+                AspectsListItems.update(
+                  { _id: aspectDoc._id },
+                  { $set: {
+                    initialScore: valueSet,
+                  } }
+                );
+              }
+            });
+
+            const aspectsDocs = AspectsListItems.find({ cardId });
+            if (aspectsDocs.count() > 0) {
+              var aspectsTotalScore = 0;
+              aspectsDocs.forEach((doc) => {
+                const aspectInitialScore = parseFloat(doc.initialScore);
+                if (aspectInitialScore > 0) {
+                  aspectsTotalScore += aspectInitialScore;
                 }
               });
 
+              const composedScore = aspectsTotalScore;
+              if (receivedScoreComposeMethod === 'average') {
+                composedScore = aspectsTotalScore / aspectsDocs.count();
+              }
+
+              // If CurrentScore is not set yet, set it too
+              const currentScore = card.getCurrentScore();
+              if (!currentScore || currentScore.length < 1 || currentScore == '') {
+                card.setCurrentScore(composedScore.toFixed(2).toString());
+              }
+              card.setInitialScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardReceivedComposedScoreModal');
+            }
+          }
+
+          // Has only Team-Members
+          if (hasOnlyTeamMembers) {
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var valueSet = $(this).val();
               const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
               if (teamMemberScore && teamMemberScore._id) {
                 TeamMembersScores.update(
                   { _id: teamMemberScore._id },
                   { $set: {
-                    initialScore: teamMemberTotalAspectsInitialScores.toFixed(2).toString(),
+                    initialScore: valueSet,
                   } }
                 );
+              }
+            });
 
-                const teamMembersScores = TeamMembersScores.find({ cardId });
-                if (teamMembersScores.count() > 0) {
-                  var teamMembersTotalScore = 0;
-                  teamMembersScores.forEach((doc) => {
-                    const team_member_score = parseFloat(doc.initialScore);
-                    if (team_member_score > 0) {
-                      teamMembersTotalScore += team_member_score;
+            const teamMembersScores = TeamMembersScores.find({ cardId });
+            if (teamMembersScores.count() > 0) {
+              var teamMembersTotalScore = 0;
+              teamMembersScores.forEach((doc) => {
+                const team_member_score = parseFloat(doc.initialScore);
+                if (team_member_score > 0) {
+                  teamMembersTotalScore += team_member_score;
+                }
+              });
+
+              const composedScore = teamMembersTotalScore;
+              if (receivedScoreComposeMethod === 'average') {
+                composedScore = teamMembersTotalScore / teamMembersScores.count();
+              }
+
+              // If CurrentScore is not set yet, set it too
+              const currentScore = card.getCurrentScore();
+              if (!currentScore || currentScore.length < 1 || currentScore == '') {
+                card.setCurrentScore(composedScore.toFixed(2).toString());
+              }
+              card.setInitialScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardReceivedComposedScoreModal');
+            }
+          }
+
+          // Has both Team-Members & Aspects
+          if (hasBothTeamMembersAndAspects) {
+            $('.team-members-aspects-score-input').each(function() {
+              const teamMembersAspectsId = $(this).attr('id');
+              var valueSet = $(this).val();
+              TeamMembersAspects.update(
+                { _id: teamMembersAspectsId },
+                { $set: {
+                  initialScore: valueSet,
+                } }
+              );
+            });
+
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var teamMemberTotalAspectsInitialScores = 0;
+              const teamMemberAspects = TeamMembersAspects.find({ userId, cardId });
+              if (teamMemberAspects.count() > 0) {
+                teamMemberAspects.forEach((teamMemberAspect) => {
+                  var initialScore = parseFloat(teamMemberAspect.initialScore);
+                  if (initialScore > 0) {
+                    teamMemberTotalAspectsInitialScores += initialScore;
+                  }
+                });
+
+                const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
+                if (teamMemberScore && teamMemberScore._id) {
+                  TeamMembersScores.update(
+                    { _id: teamMemberScore._id },
+                    { $set: {
+                      initialScore: teamMemberTotalAspectsInitialScores.toFixed(2).toString(),
+                    } }
+                  );
+
+                  const teamMembersScores = TeamMembersScores.find({ cardId });
+                  if (teamMembersScores.count() > 0) {
+                    var teamMembersTotalScore = 0;
+                    teamMembersScores.forEach((doc) => {
+                      const team_member_score = parseFloat(doc.initialScore);
+                      if (team_member_score > 0) {
+                        teamMembersTotalScore += team_member_score;
+                      }
+                    });
+
+                    const composedScore = teamMembersTotalScore;
+                    if (receivedScoreComposeMethod === 'average') {
+                      composedScore = teamMembersTotalScore / teamMembersScores.count();
                     }
-                  });
 
-                  const card = Cards.findOne({ _id: cardId });
-                  if (card && card._id) {
                     // If CurrentScore is not set yet, set it too
                     const currentScore = card.getCurrentScore();
                     if (!currentScore || currentScore.length < 1 || currentScore == '') {
-                      card.setCurrentScore(teamMembersTotalScore);
+                      card.setCurrentScore(composedScore);
                     }
-                    card.setInitialScore(teamMembersTotalScore);
-                  	card.reloadHistoricScoreChart();
+                    card.setInitialScore(composedScore);
+                    card.reloadHistoricScoreChart();
                     Modal.close('editCardReceivedComposedScoreModal');
                   }
                 }
               }
-            }
-          });
+            });
+          }
         }
       },
     }];
@@ -792,6 +816,16 @@ BlazeComponent.extendComponent({
 }).register('editCardReceivedComposedScoreModal');
 
 Template.editCardReceivedComposedScoreModal.helpers({
+  choseAverage() {
+    const cardId = Session.get('composedReceivedScoreCardId');
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard._id && actualCard.choseAverageReceived && actualCard.choseAverageReceived === true) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
   hasOnlyAspects() {
     const cardId = Session.get('composedReceivedScoreCardId');
     var hasAspects = false;
@@ -911,172 +945,196 @@ BlazeComponent.extendComponent({
     	'click #submitDetailedCurrentScores'(e) {
         e.preventDefault();
 
-        const dateString = Session.get('dateString');
-        date = moment(dateString, 'L LT', true).toDate();
-
-        var hasOnlyAspects = false;
-        var hasOnlyTeamMembers = false;
-        var hasBothTeamMembersAndAspects = false;
-
-        const hasAspects = $('.aspects-score-input').length;
-        const hasTeamMembers = $('.team-members-score-input').length;
-        const hasTeamMembersAspects = $('.team-members-aspects-score-input').length;
-
-        if (hasAspects > 0) {
-          hasOnlyAspects = true;
-        }
-        if (hasTeamMembersAspects < 1 && hasTeamMembers > 0) {
-          hasOnlyTeamMembers = true;
-        }
-        if (hasTeamMembersAspects > 0) {
-          hasBothTeamMembersAndAspects = true;
-        }
-
-        // Has only Aspects
-        if (hasOnlyAspects) {
-          const cardId = Session.get('composedStartScoreCardId');
-          $('.aspects-score-input').each(function() {
-            const aspectId = $(this).attr('id');
-            var valueSet = $(this).val();
-            const aspectDoc = AspectsListItems.findOne({ _id: aspectId });
-            if (aspectDoc && aspectDoc._id) {
-              AspectsListItems.update(
-                { _id: aspectDoc._id },
-                { $set: {
-                  currentScore: valueSet,
-                } }
-              );
-            }
-          });
-
-          const aspectsDocs = AspectsListItems.find({ cardId });
-          if (aspectsDocs.count() > 0) {
-            var aspectsTotalScore = 0;
-            aspectsDocs.forEach((doc) => {
-              const aspectCurrentScore = parseFloat(doc.currentScore);
-              if (aspectCurrentScore > 0) {
-                aspectsTotalScore += aspectCurrentScore;
-              }
-            });
-
-            const card = Cards.findOne({ _id: cardId });
-            if (card && card._id) {
-              // If initial is not set yet, set it too
-              const initialScore = card.getInitialScore();
-              if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                card.setInitialScore(aspectsTotalScore.toFixed(2).toString());
-              }
-              card.setStart(date);
-              card.setCurrentScore(aspectsTotalScore.toFixed(2).toString());
-            	card.reloadHistoricScoreChart();
-              Modal.close('editCardStartComposedScoreModal');
-            }
-          }
-        }
-
-        // Has only Team-Members
-        if (hasOnlyTeamMembers) {
-          const cardId = Session.get('composedStartScoreCardId');
-          $('.team-members-score-input').each(function() {
-            const userId = $(this).attr('id');
-            var valueSet = $(this).val();
-            const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
-            if (teamMemberScore && teamMemberScore._id) {
-              TeamMembersScores.update(
-                { _id: teamMemberScore._id },
-                { $set: {
-                  currentScore: valueSet,
-                } }
-              );
-            }
-          });
-
-          const teamMembersScores = TeamMembersScores.find({ cardId });
-          if (teamMembersScores.count() > 0) {
-            var teamMembersTotalScore = 0;
-            teamMembersScores.forEach((doc) => {
-              const team_member_score = parseFloat(doc.currentScore);
-              if (team_member_score > 0) {
-                teamMembersTotalScore += team_member_score;
-              }
-            });
-
-            const card = Cards.findOne({ _id: cardId });
-            if (card && card._id) {
-              // If initial is not set yet, set it too
-              const initialScore = card.getInitialScore();
-              if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                card.setInitialScore(teamMembersTotalScore.toFixed(2).toString());
-              }
-              card.setStart(date);
-              card.setCurrentScore(teamMembersTotalScore.toFixed(2).toString());
-            	card.reloadHistoricScoreChart();
-              Modal.close('editCardStartComposedScoreModal');
-            }
-          }
-        }
-
-        // Has both Team-Members & Aspects
-        if (hasBothTeamMembersAndAspects) {
-          const cardId = Session.get('composedStartScoreCardId');
-          $('.team-members-aspects-score-input').each(function() {
-            const teamMembersAspectsId = $(this).attr('id');
-            var valueSet = $(this).val();
-            TeamMembersAspects.update(
-              { _id: teamMembersAspectsId },
+        const cardId = Session.get('composedStartScoreCardId');
+        const card = Cards.findOne({ _id: cardId });
+        if (card && card._id) {
+          const startScoreComposeMethod = $('.startScoreComposeMethod:checked').val();
+          if (startScoreComposeMethod === 'average') {
+            Cards.update(
+              { _id: cardId },
               { $set: {
-                currentScore: valueSet,
+                choseAverageStart: true
               } }
             );
-          });
+          } else if (startScoreComposeMethod === 'addition') {
+            Cards.update(
+              { _id: cardId },
+              { $set: {
+                choseAverageStart: false
+              } }
+            );
+          }
 
-          $('.team-members-score-input').each(function() {
-            const userId = $(this).attr('id');
-            var teamMemberTotalAspectsCurrentScores = 0;
-            const teamMemberAspects = TeamMembersAspects.find({ userId, cardId });
-            if (teamMemberAspects.count() > 0) {
-              teamMemberAspects.forEach((teamMemberAspect) => {
-                var currentScore = parseFloat(teamMemberAspect.currentScore);
-                if (currentScore > 0) {
-                  teamMemberTotalAspectsCurrentScores += currentScore;
+          const dateString = Session.get('dateString');
+          const date = moment(dateString, 'L LT', true).toDate();
+
+          var hasOnlyAspects = false;
+          var hasOnlyTeamMembers = false;
+          var hasBothTeamMembersAndAspects = false;
+
+          const hasAspects = $('.aspects-score-input').length;
+          const hasTeamMembers = $('.team-members-score-input').length;
+          const hasTeamMembersAspects = $('.team-members-aspects-score-input').length;
+
+          if (hasAspects > 0) {
+            hasOnlyAspects = true;
+          }
+          if (hasTeamMembersAspects < 1 && hasTeamMembers > 0) {
+            hasOnlyTeamMembers = true;
+          }
+          if (hasTeamMembersAspects > 0) {
+            hasBothTeamMembersAndAspects = true;
+          }
+
+          // Has only Aspects
+          if (hasOnlyAspects) {
+            $('.aspects-score-input').each(function() {
+              const aspectId = $(this).attr('id');
+              var valueSet = $(this).val();
+              const aspectDoc = AspectsListItems.findOne({ _id: aspectId });
+              if (aspectDoc && aspectDoc._id) {
+                AspectsListItems.update(
+                  { _id: aspectDoc._id },
+                  { $set: {
+                    currentScore: valueSet,
+                  } }
+                );
+              }
+            });
+
+            const aspectsDocs = AspectsListItems.find({ cardId });
+            if (aspectsDocs.count() > 0) {
+              var aspectsTotalScore = 0;
+              aspectsDocs.forEach((doc) => {
+                const aspectCurrentScore = parseFloat(doc.currentScore);
+                if (aspectCurrentScore > 0) {
+                  aspectsTotalScore += aspectCurrentScore;
                 }
               });
 
+              const composedScore = aspectsTotalScore;
+              if (startScoreComposeMethod === 'average') {
+                composedScore = aspectsTotalScore / aspectsDocs.count();
+              }
+
+              // If initial is not set yet, set it too
+              const initialScore = card.getInitialScore();
+              if (!initialScore || initialScore.length < 1 || initialScore == '') {
+                card.setInitialScore(composedScore.toFixed(2).toString());
+              }
+              card.setStart(date);
+              card.setCurrentScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardStartComposedScoreModal');
+            }
+          }
+
+          // Has only Team-Members
+          if (hasOnlyTeamMembers) {
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var valueSet = $(this).val();
               const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
               if (teamMemberScore && teamMemberScore._id) {
                 TeamMembersScores.update(
                   { _id: teamMemberScore._id },
                   { $set: {
-                    currentScore: teamMemberTotalAspectsCurrentScores.toFixed(2).toString(),
+                    currentScore: valueSet,
                   } }
                 );
+              }
+            });
 
-                const teamMembersScores = TeamMembersScores.find({ cardId });
-                if (teamMembersScores.count() > 0) {
-                  var teamMembersTotalScore = 0;
-                  teamMembersScores.forEach((doc) => {
-                    const team_member_score = parseFloat(doc.currentScore);
-                    if (team_member_score > 0) {
-                      teamMembersTotalScore += team_member_score;
+            const teamMembersScores = TeamMembersScores.find({ cardId });
+            if (teamMembersScores.count() > 0) {
+              var teamMembersTotalScore = 0;
+              teamMembersScores.forEach((doc) => {
+                const team_member_score = parseFloat(doc.currentScore);
+                if (team_member_score > 0) {
+                  teamMembersTotalScore += team_member_score;
+                }
+              });
+
+              const composedScore = teamMembersTotalScore;
+              if (startScoreComposeMethod === 'average') {
+                composedScore = teamMembersTotalScore / teamMembersScores.count();
+              }
+
+              // If initial is not set yet, set it too
+              const initialScore = card.getInitialScore();
+              if (!initialScore || initialScore.length < 1 || initialScore == '') {
+                card.setInitialScore(composedScore.toFixed(2).toString());
+              }
+              card.setStart(date);
+              card.setCurrentScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardStartComposedScoreModal');
+            }
+          }
+
+          // Has both Team-Members & Aspects
+          if (hasBothTeamMembersAndAspects) {
+            $('.team-members-aspects-score-input').each(function() {
+              const teamMembersAspectsId = $(this).attr('id');
+              var valueSet = $(this).val();
+              TeamMembersAspects.update(
+                { _id: teamMembersAspectsId },
+                { $set: {
+                  currentScore: valueSet,
+                } }
+              );
+            });
+
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var teamMemberTotalAspectsCurrentScores = 0;
+              const teamMemberAspects = TeamMembersAspects.find({ userId, cardId });
+              if (teamMemberAspects.count() > 0) {
+                teamMemberAspects.forEach((teamMemberAspect) => {
+                  var currentScore = parseFloat(teamMemberAspect.currentScore);
+                  if (currentScore > 0) {
+                    teamMemberTotalAspectsCurrentScores += currentScore;
+                  }
+                });
+
+                const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
+                if (teamMemberScore && teamMemberScore._id) {
+                  TeamMembersScores.update(
+                    { _id: teamMemberScore._id },
+                    { $set: {
+                      currentScore: teamMemberTotalAspectsCurrentScores.toFixed(2).toString(),
+                    } }
+                  );
+
+                  const teamMembersScores = TeamMembersScores.find({ cardId });
+                  if (teamMembersScores.count() > 0) {
+                    var teamMembersTotalScore = 0;
+                    teamMembersScores.forEach((doc) => {
+                      const team_member_score = parseFloat(doc.currentScore);
+                      if (team_member_score > 0) {
+                        teamMembersTotalScore += team_member_score;
+                      }
+                    });
+
+                    const composedScore = teamMembersTotalScore;
+                    if (startScoreComposeMethod === 'average') {
+                      composedScore = teamMembersTotalScore / teamMembersScores.count();
                     }
-                  });
 
-                  const card = Cards.findOne({ _id: cardId });
-                  if (card && card._id) {
                     // If initial is not set yet, set it too
                     const initialScore = card.getInitialScore();
                     if (!initialScore || initialScore.length < 1 || initialScore == '') {
-                      card.setInitialScore(teamMembersTotalScore);
+                      card.setInitialScore(composedScore);
                     }
                     card.setStart(date);
-                    card.setCurrentScore(teamMembersTotalScore);
-                  	card.reloadHistoricScoreChart();
+                    card.setCurrentScore(composedScore);
+                    card.reloadHistoricScoreChart();
                     Modal.close('editCardStartComposedScoreModal');
                   }
                 }
               }
-            }
-          });
+            });
+          }
         }
       },
     }];
@@ -1084,6 +1142,16 @@ BlazeComponent.extendComponent({
 }).register('editCardStartComposedScoreModal');
 
 Template.editCardStartComposedScoreModal.helpers({
+  choseAverage() {
+    const cardId = Session.get('composedStartScoreCardId');
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard._id && actualCard.choseAverageStart && actualCard.choseAverageStart === true) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
   hasOnlyAspects() {
     const cardId = Session.get('composedStartScoreCardId');
     var hasAspects = false;
@@ -1180,6 +1248,317 @@ Template.editCardStartComposedScoreModal.helpers({
     const teamMemberAspect = TeamMembersAspects.findOne({ _id: teamMembersAspectsId });
     if (teamMemberAspect && teamMemberAspect._id) {
       const cardId = Session.get('composedStartScoreCardId');
+      const aspect = AspectsListItems.findOne({ cardId, _id: teamMemberAspect.aspectsId });
+      if (aspect && aspect._id) {
+        return aspect.title;
+      }
+    }
+  },
+});
+
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    //
+  },
+
+  onRendered() {
+    //
+  },
+
+  events() {
+    return [{
+    	'click #submitDetailedTargetScores'(e) {
+        e.preventDefault();
+
+        const cardId = Session.get('composedDueScoreCardId');
+        const card = Cards.findOne({ _id: cardId });
+        if (card && card._id) {
+          const dueScoreComposeMethod = $('.dueScoreComposeMethod:checked').val();
+          if (dueScoreComposeMethod === 'average') {
+            Cards.update(
+              { _id: cardId },
+              { $set: {
+                choseAverageDue: true
+              } }
+            );
+          } else if (dueScoreComposeMethod === 'addition') {
+            Cards.update(
+              { _id: cardId },
+              { $set: {
+                choseAverageDue: false
+              } }
+            );
+          }
+
+          const dateString = Session.get('dateString');
+          const date = moment(dateString, 'L LT', true).toDate();
+
+          var hasOnlyAspects = false;
+          var hasOnlyTeamMembers = false;
+          var hasBothTeamMembersAndAspects = false;
+
+          const hasAspects = $('.aspects-score-input').length;
+          const hasTeamMembers = $('.team-members-score-input').length;
+          const hasTeamMembersAspects = $('.team-members-aspects-score-input').length;
+
+          if (hasAspects > 0) {
+            hasOnlyAspects = true;
+          }
+          if (hasTeamMembersAspects < 1 && hasTeamMembers > 0) {
+            hasOnlyTeamMembers = true;
+          }
+          if (hasTeamMembersAspects > 0) {
+            hasBothTeamMembersAndAspects = true;
+          }
+
+          // Has only Aspects
+          if (hasOnlyAspects) {
+            $('.aspects-score-input').each(function() {
+              const aspectId = $(this).attr('id');
+              var valueSet = $(this).val();
+              const aspectDoc = AspectsListItems.findOne({ _id: aspectId });
+              if (aspectDoc && aspectDoc._id) {
+                AspectsListItems.update(
+                  { _id: aspectDoc._id },
+                  { $set: {
+                    targetScore: valueSet,
+                  } }
+                );
+              }
+            });
+
+            const aspectsDocs = AspectsListItems.find({ cardId });
+            if (aspectsDocs.count() > 0) {
+              var aspectsTotalScore = 0;
+              aspectsDocs.forEach((doc) => {
+                const aspectTargetScore = parseFloat(doc.targetScore);
+                if (aspectTargetScore > 0) {
+                  aspectsTotalScore += aspectTargetScore;
+                }
+              });
+
+              const composedScore = aspectsTotalScore;
+              if (dueScoreComposeMethod === 'average') {
+                composedScore = aspectsTotalScore / aspectsDocs.count();
+              }
+
+              card.setDue(date);
+              card.setTargetScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardDueComposedScoreModal');
+            }
+          }
+
+          // Has only Team-Members
+          if (hasOnlyTeamMembers) {
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var valueSet = $(this).val();
+              const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
+              if (teamMemberScore && teamMemberScore._id) {
+                TeamMembersScores.update(
+                  { _id: teamMemberScore._id },
+                  { $set: {
+                    targetScore: valueSet,
+                  } }
+                );
+              }
+            });
+
+            const teamMembersScores = TeamMembersScores.find({ cardId });
+            if (teamMembersScores.count() > 0) {
+              var teamMembersTotalScore = 0;
+              teamMembersScores.forEach((doc) => {
+                const team_member_score = parseFloat(doc.targetScore);
+                if (team_member_score > 0) {
+                  teamMembersTotalScore += team_member_score;
+                }
+              });
+
+              const composedScore = teamMembersTotalScore;
+              if (dueScoreComposeMethod === 'average') {
+                composedScore = teamMembersTotalScore / teamMembersScores.count();
+              }
+
+              card.setDue(date);
+              card.setTargetScore(composedScore.toFixed(2).toString());
+              card.reloadHistoricScoreChart();
+              Modal.close('editCardDueComposedScoreModal');
+            }
+          }
+
+          // Has both Team-Members & Aspects
+          if (hasBothTeamMembersAndAspects) {
+            $('.team-members-aspects-score-input').each(function() {
+              const teamMembersAspectsId = $(this).attr('id');
+              var valueSet = $(this).val();
+              TeamMembersAspects.update(
+                { _id: teamMembersAspectsId },
+                { $set: {
+                  targetScore: valueSet,
+                } }
+              );
+            });
+
+            $('.team-members-score-input').each(function() {
+              const userId = $(this).attr('id');
+              var teamMemberTotalAspectsTargetScores = 0;
+              const teamMemberAspects = TeamMembersAspects.find({ userId, cardId });
+              if (teamMemberAspects.count() > 0) {
+                teamMemberAspects.forEach((teamMemberAspect) => {
+                  var targetScore = parseFloat(teamMemberAspect.targetScore);
+                  if (targetScore > 0) {
+                    teamMemberTotalAspectsTargetScores += targetScore;
+                  }
+                });
+
+                const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
+                if (teamMemberScore && teamMemberScore._id) {
+                  TeamMembersScores.update(
+                    { _id: teamMemberScore._id },
+                    { $set: {
+                      targetScore: teamMemberTotalAspectsTargetScores.toFixed(2).toString(),
+                    } }
+                  );
+
+                  const teamMembersScores = TeamMembersScores.find({ cardId });
+                  if (teamMembersScores.count() > 0) {
+                    var teamMembersTotalScore = 0;
+                    teamMembersScores.forEach((doc) => {
+                      const team_member_score = parseFloat(doc.targetScore);
+                      if (team_member_score > 0) {
+                        teamMembersTotalScore += team_member_score;
+                      }
+                    });
+
+                    const composedScore = teamMembersTotalScore;
+                    if (dueScoreComposeMethod === 'average') {
+                      composedScore = teamMembersTotalScore / teamMembersScores.count();
+                    }
+
+                    card.setDue(date);
+                    card.setTargetScore(composedScore);
+                    card.reloadHistoricScoreChart();
+                    Modal.close('editCardDueComposedScoreModal');
+                  }
+                }
+              }
+            });
+          }
+        }
+      },
+    }];
+  },
+}).register('editCardDueComposedScoreModal');
+
+Template.editCardDueComposedScoreModal.helpers({
+  choseAverage() {
+    const cardId = Session.get('composedDueScoreCardId');
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard._id && actualCard.choseAverageDue && actualCard.choseAverageDue === true) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  hasOnlyAspects() {
+    const cardId = Session.get('composedDueScoreCardId');
+    var hasAspects = false;
+    var hasTeamMembers = false;
+
+    const aspects = AspectsListItems.find({ cardId });
+    if (aspects.count() > 0) {
+      hasAspects = true;
+    }
+
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+      hasTeamMembers = true;
+    }
+
+    if (hasAspects && !hasTeamMembers) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  hasOnlyTeamMembers() {
+    const cardId = Session.get('composedDueScoreCardId');
+    var hasAspects = false;
+    var hasTeamMembers = false;
+
+    const aspects = AspectsListItems.find({ cardId });
+    if (aspects.count() > 0) {
+      hasAspects = true;
+    }
+
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+      hasTeamMembers = true;
+    }
+
+    if (hasTeamMembers && !hasAspects) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  hasBothTeamMembersAndAspects() {
+    const cardId = Session.get('composedDueScoreCardId');
+    var hasAspects = false;
+    var hasTeamMembers = false;
+
+    const aspects = AspectsListItems.find({ cardId });
+    if (aspects.count() > 0) {
+      hasAspects = true;
+    }
+
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+      hasTeamMembers = true;
+    }
+
+    if (hasAspects && hasTeamMembers) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  aspects() {
+    const cardId = Session.get('composedDueScoreCardId');
+    return AspectsListItems.find({ cardId });
+  },
+
+  teamMembers() {
+    const cardId = Session.get('composedDueScoreCardId');
+    const actualCard = Cards.findOne({ _id: cardId });
+    if (actualCard && actualCard.team_members && actualCard.team_members.length > 0) {
+      return Users.find({_id: {$in: actualCard.team_members}});
+    }
+  },
+
+  teamMemberScore(userId) {
+    const cardId = Session.get('composedDueScoreCardId');
+    const teamMemberScore = TeamMembersScores.findOne({ cardId, userId });
+    if (teamMemberScore && teamMemberScore._id) {
+      return teamMemberScore.targetScore;
+    }
+  },
+
+  teamMemberAspects(userId) {
+    const cardId = Session.get('composedDueScoreCardId');
+    return TeamMembersAspects.find({ cardId, userId });
+  },
+
+  teamMemberAspectTitle(teamMembersAspectsId) {
+    const teamMemberAspect = TeamMembersAspects.findOne({ _id: teamMembersAspectsId });
+    if (teamMemberAspect && teamMemberAspect._id) {
+      const cardId = Session.get('composedDueScoreCardId');
       const aspect = AspectsListItems.findOne({ cardId, _id: teamMemberAspect.aspectsId });
       if (aspect && aspect._id) {
         return aspect.title;
