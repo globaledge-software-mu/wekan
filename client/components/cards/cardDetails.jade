@@ -205,9 +205,16 @@ template(name="cardDetails")
         h3.card-details-item-title {{getPropertyAlias 'aspectsList'}}
         .aspects-list-items
           each aspectsListItems
-            .aspectItem
-              p.generalFont(data-aspect-id="{{_id}}" data-title="{{title}}") {{title}}
-                span.fa.fa-trash.pull-right.removeAspect(title="Remove {{title}}")
+            .aspectItem(id="{{_id}}")
+               a.generalFont.editAspect(data-aspect-id="{{_id}}" data-title="{{title}}") {{title}}
+                 span.fa.fa-trash.pull-right.removeAspect(title="Remove {{title}}")
+                 
+               form.inlined-form.js-inlined-form.edit-aspects-list-item-form(id="edit-aspects-list-item-form-{{_id}}")
+                 textarea(class="js-edit-aspects-list-item" id="js-edit-aspects-list-item-{{_id}}" rows='1')
+                 #edit-aspects-list-item-controls.edit-controls.clearfix
+                   button(type="button" id="js-submit-aspects-list-item-form-{{_id}}" class="primary") {{_ 'save'}}
+                   a.js-close-edit-aspects-list-form(id="{{_id}}").fa.fa-times-thin
+            
         form.inlined-form.js-inlined-form#add-aspects-list-item-form
           textarea#js-add-aspects-list-item(rows='1')
           #add-aspects-list-item-controls.edit-controls.clearfix

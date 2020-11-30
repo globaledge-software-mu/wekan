@@ -607,6 +607,20 @@ BlazeComponent.extendComponent({
         inputSelector.focus();
       },
 
+      
+      'click .aspectItem a.editAspect' (evt) {
+        evt.preventDefault();
+        const parentId = $(evt.target).parent().attr('id');
+        const aspectId = $(evt.target).attr('data-aspect-id');
+        const title = $(evt.target).attr('data-title') ;
+        
+        $('#'+parentId+' a.editAspect').css('display', 'none');
+        $('#edit-aspects-list-item-form-'+aspectId).css('display', 'block');
+        const inputSelector = $('textarea#js-edit-aspects-list-item-'+aspectId);
+        inputSelector.val(title);
+        inputSelector.focus();
+      },
+      
       'click .removeAspect' (evt) {
 
         const aspectId = $(evt.target).closest('p').data('aspect-id');
@@ -800,6 +814,12 @@ BlazeComponent.extendComponent({
         $('#addAspect').css('display', 'block');
       },
 
+      
+      'click .js-close-edit-aspects-list-form' (evt) {
+         const aspectId = $(evt.target).attr('id');
+         $('.aspectItem#'+aspectId+' #edit-aspects-list-item-form-'+aspectId).css('display','none');
+         $('.aspectItem#'+aspectId+' a.editAspect').css('display','block');
+      },
       // Pressing Enter should click the submit button
       'keydown textarea#js-add-aspects-list-item'(evt) {
         if (evt.keyCode === 13) {
