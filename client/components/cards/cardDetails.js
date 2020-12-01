@@ -826,7 +826,15 @@ BlazeComponent.extendComponent({
           $('#js-close-aspects-list-item-form').click();
         }
       },
-
+      
+      'keydown textarea.js-edit-aspects-list-item' (evt) {
+      	const aspectId = $(evt.target).attr('id');
+      	if (evt.keyCode == 13) {
+      		$('button#'+aspectId).click();
+          $('a#'+aspectId).click();
+      	}
+      },
+      
       'click #js-submit-aspects-list-item-form'(evt) {
         evt.preventDefault();
         const title = $(evt.target).closest('#add-aspects-list-item-controls').siblings('#js-add-aspects-list-item').val();
