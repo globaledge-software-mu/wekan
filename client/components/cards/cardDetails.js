@@ -622,9 +622,8 @@ BlazeComponent.extendComponent({
       },
       
       'click .removeAspect' (evt) {
-
-        const aspectId = $(evt.target).closest('p').data('aspect-id');
-        const aspectTitle = $(evt.target).closest('p').data('title');
+        const aspectId = $(evt.target).closest('a').data('aspect-id');
+        const aspectTitle = $(evt.target).closest('a').data('title');
         var cardId = '';
         const teamMemberAspect = TeamMembersAspects.findOne({ aspectsId: aspectId});
         if (teamMemberAspect && teamMemberAspect._id) {
