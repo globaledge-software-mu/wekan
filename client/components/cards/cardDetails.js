@@ -616,7 +616,7 @@ BlazeComponent.extendComponent({
         
         $('#'+parentId+' a.editAspect').css('display', 'none');
         $('#edit-aspects-list-item-form-'+aspectId).css('display', 'block');
-        const inputSelector = $('textarea#js-edit-aspects-list-item-'+aspectId);
+        const inputSelector = $('textarea#'+aspectId);
         inputSelector.val(title);
         inputSelector.focus();
       },
@@ -868,7 +868,21 @@ BlazeComponent.extendComponent({
         }
         $('#js-close-aspects-list-item-form').click();
       },
-
+      
+      'click .js-submit-edit-aspects-list-item-form' (evt) {
+        evt.preventDefault();
+        const aspectId = $(evt.target).attr('id');
+        const title = $(evt.target).parent().parent().find('textarea#'+aspectId).val();
+        
+        if (title.length > 0) {
+        	AspectsListItems.update({_id:aspectId},
+        			                   {$set:{title:title}
+        	                    });
+        }
+        $('#edit-aspects-list-item-form-'+aspectId).css('display','none');
+        $('.aspectItem#'+aspectId+' .editAspect').css('display', 'block');
+      },
+      
       // chart's data-points click event
       'click canvas.card-details-item.score-line.chartjs-render-monitor': function(evt) {
         evt.preventDefault();
