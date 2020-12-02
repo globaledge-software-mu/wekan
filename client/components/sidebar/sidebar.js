@@ -228,8 +228,9 @@ Template.memberPopup.events({
   }),
   
   'click .js-reinvite'() {
-	  const userId = this.userId;
-	  Meteor.call('resendInviteToUser', userId, (err, res) => {
+	  const user = Users.findOne({_id:this.userId});
+	  Meteor.call('resendInviteToUser', user , (err, res) => {
+	  	console.log(err);
 		  if (err) {
 			 $('.danger').removeClass('hide');
 		  } else if(res.email) {
@@ -568,7 +569,7 @@ BlazeComponent.extendComponent({
         this.setLoading(false);
       }
       if (err) {
-      	self.setError(err.error);
+      	self.setError(err.message);
       	return false;
       } else if (ret.email) {
       	self.setError('email-sent');

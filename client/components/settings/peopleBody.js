@@ -444,23 +444,24 @@ BlazeComponent.extendComponent({
     return [{
       'click a.edit-invitee': Popup.open('editInvitee'),
       'click a.resend-invite': function () {
-    	  const user = Template.instance().data.userId;
+      	  const user = Users.findOne({_id:Template.instance().data.userId});
           Meteor.call('resendInviteToUser', user , (err, ret) => {
-        	  if (err) {
-                  var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
-                  $('#header-main-bar').before($message);
-                  $message.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-              } else if (ret.email) {
-            	  var message = TAPi18n.__('email-sent');
-                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                  $('#header-main-bar').before($successMessage);
-                  $successMessage.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-             }
-         });
+          if (err) {
+          	console.log(err);
+          	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
+          	$('#header-main-bar').before($message);
+            $message.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          } else if (ret.email) {
+          	var message = TAPi18n.__('email-sent');
+          	var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($successMessage);
+            $successMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          }
+        });
       },
     }]
   }
@@ -521,9 +522,9 @@ Template.invitationRow.helpers({
     let user = userCollection.findOne(this.userId);
     if (!user.roleId) {
 	      return '-';
-	}
+	  }
     let role = Roles.findOne(user.roleId);
-      return role.name;
+    return role.name;
 	}
   
   
