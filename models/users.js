@@ -1424,13 +1424,13 @@ if (Meteor.isServer) {
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
     
-    resendInviteToUser(emailAddress) {
-      check(emailAddress, String);
-      const user = Users.findOne({'emails.address': emailAddress});
+    resendInviteToUser(user) {
+      check(user, Object);
+      const users = Users.findOne({_id: user._id});
       const inviter = Meteor.user();
       
       //
-      if (user && user._id !== inviter._id) {
+      if (user._id !== inviter._id) {
     	  //if user is invited to a board, resend  invite to board
     	  if (user.profile.invitedBoards && user.profile.invitedBoards.length > 0 && user.emails[0].verified == true) {
     		  const boardId = user.profile.invitedBoards[0];
@@ -1461,7 +1461,7 @@ if (Meteor.isServer) {
                   url: board.absoluteUrl(),
                   logoUrl: logoUrl
                 };
-                const lang = user.getLanguage();
+                const lang = users.getLanguage();
                 Email.send({
                   to: user.emails[0].address.toLowerCase(),
                   from: Accounts.emailTemplates.from,
@@ -1495,14 +1495,18 @@ if (Meteor.isServer) {
     	          enrollUrl: enrollLink,
     	          logoUrl: logoUrl
     	        };
-    	      const lang = user.getLanguage();
-    	      const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
-    	      Email.send({
-    	    	  to: user.emails[0].address.toLowerCase(),
+    	      const lang = users.getLanguage();
+    	      try {
+    	      	const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+    	      	Email.send({
+    	    	    to: user.emails[0].address.toLowerCase(),
     	          from: Accounts.emailTemplates.from,
     	          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
     	          html: message,
-    	      });
+    	        });
+    	     } catch (e) {
+    	      	throw new Meteor.Error('email-fail', e.message);
+    	     }
     	}
         
       } else {
