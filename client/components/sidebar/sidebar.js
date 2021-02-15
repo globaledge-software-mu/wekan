@@ -238,6 +238,12 @@ Template.memberPopup.events({
 		  }
 	  });
    },
+   
+  'click .js-viewemail'() {
+     Modal.open('viewEmail');
+     Session.set('manageUserId', this.userId);
+     Session.set('boardId', Session.get('currentBoard'));
+   }
 });
 
 Template.removeMemberPopup.helpers({
@@ -247,6 +253,7 @@ Template.removeMemberPopup.helpers({
   board() {
     return Boards.findOne(Session.get('currentBoard'));
   },
+  
 });
 
 Template.leaveBoardPopup.helpers({

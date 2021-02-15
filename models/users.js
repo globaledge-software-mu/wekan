@@ -1276,6 +1276,11 @@ if (Meteor.isServer) {
         // Set in lowercase email before creating account
         const email = username.toLowerCase();
         username = email.substring(0, posAt);
+        const userExists = Users.findOne({username: {$regex: username, $options:'i'} });
+        
+        if (userExists) {
+           username = username + '_' + Math.random().toString(16).substr(2, 2);
+        }
         // Create user doc
         const newUserId = Accounts.createUser({username, email});
         if (!newUserId) {

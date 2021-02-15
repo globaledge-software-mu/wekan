@@ -463,6 +463,12 @@ BlazeComponent.extendComponent({
           }
         });
       },
+     'click a.view-email': function(e)  {
+    	  const userId = $(e.target).data('userid');
+    	  Modal.open('viewEmail');
+    	  Session.set('manageUserId', userId);
+     }
+     
     }]
   }
 }).register('invitationRow');
@@ -2238,7 +2244,52 @@ Template.editUserGroup.helpers({
     return '#2980B9';
   }
 });
+BlazeComponent.extendComponent({
 
+  events() {
+    return [{
+    	'click #openMailClient': function(e) {
+    		const userId = $(e.target).data('userid');
+    		const user = Users.findOne({_id: userId});
+    		let email = user.emails[0].address;
+        
+    		window.location.href='mailto:'+email;
+    		
+    	}
+    }];
+  }
+}).register('viewEmail');
+
+Template.viewEmail.helpers({
+  emailContents() {
+    const userid = Session.get('manageUserId');
+	  const user = Users.findOne({_id: userid });
+	  const contents = {};
+	  const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+	  const board = Boards.findOne({_id: Session.get('currentBoard')});
+	  
+	  if (user && user._id) {
+	    contents.user = user ;
+	  }
+	  
+	  if (user && user.services && user.services.password && user.services.password.bcrypt) {
+	  	const inviter = Meteor.user();
+	  	const params = {user: user.username,
+	  			            inviter: inviter.username,
+	  			            board: board.title,
+	  			            url: board.absoluteUrl(),
+	  	                logoUrl: logoUrl
+	  		             }
+	                                   
+	  	contents.email = TAPi18n.__('email-invite-text', params, user.profile.language);
+	  } else {
+	  	const token = user.services.password.reset.token;
+	  	const enrollLink = Meteor.absoluteUrl()+'enroll-account/'+token;
+		  contents.email = TAPi18n.__('email-enroll-text',{user: user.username, enrollUrl:enrollLink, logoUrl: logoUrl}, user.profile.language);
+	  }
+	  return contents;
+	 }
+});
 BlazeComponent.extendComponent({
   plans() {
     return Plans.find();
@@ -2432,7 +2483,7 @@ Template.subscriptionRow.events({
     	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
     	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
     	    	                $('#header-main-bar').before($errorMessage);
-    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+-    	    	                $errorMessage.delay(10000).slideUp(500, function() {
     	    	                  $(this).remove();
     	    	                });
     	    		            } else if (ret.output && ret.output == 'success') {

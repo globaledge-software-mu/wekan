@@ -262,7 +262,10 @@ template(name="invitationRow")
       a.edit-invitee.renewSubscription
         | {{_ 'edit'}}
       a.resend-invite.upgradeSubscription
-        | {{_ 'Resend'}}
+        | {{_ 'resend'}}
+        
+      a.view-email.archiveSubscription(data-userId=userData._id)
+        | {{_ 'view-email' }}
 
 template(name="editInviteePopup")
   if loading.get
@@ -1192,4 +1195,19 @@ template(name="upgradeSubscriptionPopup")
         input#upgradeSubscription.primary.wide(type="submit" value="{{_ 'save'}}")
         div
         input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="viewEmail")
+   #viewEmailContent
+     .modalBanner
+       h4.modalLabel
+        | {{_ 'view-email'}}
+       p.description
+        | {{_ 'view_email_description'}}
+     hr.hrEditUserGroupForm
+     #emailContent
+       |  {{{emailContents.email}}}
+     hr.hrEditUserGroupForm
+     .btnContainer
+       button#openMailClient.btn.btn-primary(data-userId=emailContents.user._id) {{_ 'open-mail-client'}}
+
 
