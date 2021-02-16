@@ -240,6 +240,7 @@ Template.memberPopup.events({
    },
    
   'click .js-viewemail'() {
+  	 Popup.close('member');
      Modal.open('viewEmail');
      Session.set('manageUserId', this.userId);
      Session.set('boardId', Session.get('currentBoard'));

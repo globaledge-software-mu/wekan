@@ -2287,6 +2287,7 @@ Template.viewEmail.helpers({
 	  	const enrollLink = Meteor.absoluteUrl()+'enroll-account/'+token;
 		  contents.email = TAPi18n.__('email-enroll-text',{user: user.username, enrollUrl:enrollLink, logoUrl: logoUrl}, user.profile.language);
 	  }
+	  console.log(contents.email.replace(/(<([^>]+)>)/gi, ""));
 	  return contents;
 	 }
 });

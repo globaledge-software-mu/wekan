@@ -1253,7 +1253,8 @@ if (Meteor.isServer) {
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
                 subject: TAPi18n.__('email-invite-subject', params, lang),
-                html: TAPi18n.__('email-invite-text', params, lang),
+                text: TAPi18n._('email-invite-text', parameters, lang).replace(/(<([^>]+)>)/gi, ""),
+                html: TAPi18n.__('email-invite-text', params, lang)
               });
             } catch (e) {
               throw new Meteor.Error('email-fail', e.message);
@@ -1404,7 +1405,8 @@ if (Meteor.isServer) {
           to: user.emails[0].address.toLowerCase(),
           from: Accounts.emailTemplates.from,
           subject: TAPi18n.__('email-enroll-subject', parameters, lang),
-          html: message,
+          text: TAPi18n._('email-enroll-subject', parameters, lang).replace(/(<([^>]+)>)/gi, ""),
+          html: message
         });
 
         board.addMember(user._id);
@@ -1471,7 +1473,8 @@ if (Meteor.isServer) {
                   to: user.emails[0].address.toLowerCase(),
                   from: Accounts.emailTemplates.from,
                   subject: TAPi18n.__('email-invite-subject', params, lang),
-                  html: TAPi18n.__('email-invite-text', params, lang),
+                  text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
+                  html: '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang),
                 });
               } catch (e) {
                 throw new Meteor.Error('email-fail', e.message);
@@ -1502,12 +1505,13 @@ if (Meteor.isServer) {
     	        };
     	      const lang = users.getLanguage();
     	      try {
-    	      	const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+    	      	const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="multipart/mixed; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
     	      	Email.send({
     	    	    to: user.emails[0].address.toLowerCase(),
     	          from: Accounts.emailTemplates.from,
     	          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
     	          html: message,
+    	          text: message
     	        });
     	     } catch (e) {
     	      	throw new Meteor.Error('email-fail', e.message);
