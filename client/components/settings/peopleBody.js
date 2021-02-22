@@ -3054,7 +3054,7 @@ BlazeComponent.extendComponent({
   		            });
   		  	      }
   		  	      
-  		  	      if (!err && Meteor._localStorage.getItem(impersonate.FROM_USER_KEY) == null) {
+  		  	      if (!err && Meteor._localStorage.getItem('impersonate.loginToken') == null) {
   		  	        // Store initial user in local storage allowing us to return to this user
   		  	        Meteor._localStorage.setItem('impersonate.userId', fromUser);
   		  	        Meteor._localStorage.setItem('impersonate.loginToken', fromToken);
