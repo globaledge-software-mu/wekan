@@ -147,7 +147,7 @@
     "boards-quota": "Boards Quota",
     "users-quota": "Users Quota",
     "choose-specific-quota-to-use": "Select which quota to use (optional)",
-    "bucket-example": "Like â€œBucket Listâ€� for example",
+    "bucket-example": "Like Bucket List for example",
     "cancel": "Cancel",
     "card-archived": "This card is moved to Archive.",
     "board-archived": "This board is moved to Archive.",
@@ -827,5 +827,6 @@
     "view-email": "View E-mail",
     "view_email_description": "Copy the below E-mail content and send it to  send with your own email client. Click the below button to open your default email client.",
     "open-mail-client": "Open E-Mail Client",
-    "view_invite_email": "View Invitation Email"
+    "view_invite_email": "View Invitation Email", 
+    "impersonate-user": "Login As User"
 }

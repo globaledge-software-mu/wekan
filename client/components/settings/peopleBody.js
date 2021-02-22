@@ -551,6 +551,7 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click a.edit-user': Popup.open('editUser'),
+      'click a.more-settings': Popup.open('settingsUser')
     }];
   },
 }).register('peopleRow');
@@ -2267,6 +2268,7 @@ Template.viewEmail.helpers({
 	  const contents = {};
 	  const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
 	  const board = Boards.findOne({_id: Session.get('currentBoard')});
+	  const lang = user.profile.language == undefined ? 'nl' : user.profile.lang;
 	  
 	  if (user && user._id) {
 	    contents.user = user ;
@@ -2281,13 +2283,12 @@ Template.viewEmail.helpers({
 	  	                logoUrl: logoUrl
 	  		             }
 	                                   
-	  	contents.email = TAPi18n.__('email-invite-text', params, user.profile.language);
+	  	contents.email = TAPi18n.__('email-invite-text', params, lang);
 	  } else {
 	  	const token = user.services.password.reset.token;
 	  	const enrollLink = Meteor.absoluteUrl()+'enroll-account/'+token;
-		  contents.email = TAPi18n.__('email-enroll-text',{user: user.username, enrollUrl:enrollLink, logoUrl: logoUrl}, user.profile.language);
+		  contents.email = TAPi18n.__('email-enroll-text',{user: user.username, enrollUrl:enrollLink, logoUrl: logoUrl}, lang);
 	  }
-	  console.log(contents.email.replace(/(<([^>]+)>)/gi, ""));
 	  return contents;
 	 }
 });
@@ -3021,5 +3022,51 @@ BlazeComponent.extendComponent({
     }];
   },
 }).register('addSubscriptionPopup');
+
+BlazeComponent.extendComponent({
+	  onCreated() {
+	   this.loading = new ReactiveVar(false);
+	  },
+	  
+	 onRendered() {
+	  	
+	 },
+	  
+  events() {
+     return[{
+    		'click a.impersonate-user' : function() {
+    			  var userId = Template.instance().data.userId;
+    			  
+    			  cb = function() {};
+    		    var fromUser = Meteor.userId();
+    		  	if (!fromUser) throw new Error("Permission denied. You need to be logged in to impersonate users.");
+    		  	var fromToken = Accounts._storedLoginToken();
+    		    Accounts.callLoginMethod({
+    		  	  methodArguments: [{
+    		  	    impersonateUser: userId,
+    		  	  }],
+    		  	  userCallback: function(err) {
+  		  	      if (err) {
+  		  	      	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err+'</b></p></div>');
+  		          	$('#header-main-bar').before($message);
+  		            $message.delay(10000).slideUp(500, function() {
+  		              $(this).remove();
+  		            });
+  		  	      }
+  		  	      
+  		  	      if (!err && Meteor._localStorage.getItem(impersonate.FROM_USER_KEY) == null) {
+  		  	        // Store initial user in local storage allowing us to return to this user
+  		  	        Meteor._localStorage.setItem('impersonate.userId', fromUser);
+  		  	        Meteor._localStorage.setItem('impersonate.loginToken', fromToken);
+  		  	        FlowRouter.go('/');
+  		  	      }
+  		  	      cb.apply(this, [err, userId]);
+    		  	  }
+    		  });
+    		
+    		}
+    	}]
+  }
+}).register('settingsUserPopup');
 
 

@@ -21,7 +21,7 @@ Activities.helpers({
     return Users.findOne(this.userId);
   },
   member() {
-    return Users.findOne(this.memberId);
+    return Users.findOne(this.memberId) || {};
   },
   list() {
     return Lists.findOne(this.listId);
@@ -121,7 +121,11 @@ if (Meteor.isServer) {
     }
     if (activity.memberId) {
       participants = _.union(participants, [activity.memberId]);
-      params.member = activity.member().getName();
+      const member = activity.member();
+      if (member) {
+      	params.member = member.getName();
+      }
+      
     }
     if (activity.listId) {
       const list = activity.list();

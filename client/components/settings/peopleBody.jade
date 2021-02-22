@@ -154,6 +154,8 @@ template(name="peopleRow")
     td
       a.edit-user
         | {{_ 'edit'}}
+      a.more-settings
+        i.fa.fa-ellipsis-h
 
 template(name="editUserPopup")
   if loading.get
@@ -1210,4 +1212,11 @@ template(name="viewEmail")
      .btnContainer
        button#openMailClient.btn.btn-primary(data-userId=emailContents.user._id) {{_ 'open-mail-client'}}
 
+
+template(name="settingsUserPopup")
+  ul.pop-over-list
+    li
+      a.impersonate-user
+        i.fa.fa-user
+        | {{_ 'impersonate-user'}}
 

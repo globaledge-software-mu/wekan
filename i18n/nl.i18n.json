@@ -867,5 +867,6 @@
     "view-email": "E-mail bekijken",
     "view_email_description": "Kopieer de onderstaande e-mailinhoud en verstuur deze om met uw eigen e-mailclient te verzenden. Klik op de onderstaande knop om uw standaard e-mailclient te openen.",
     "open-mail-client": "Open e-mailclient",
-    "view_invite_email": "Bekijk uitnodigingsmail"
+    "view_invite_email": "Bekijk uitnodigingsmail",
+    "impersonate-user":"Log in als gebruiker"
 }

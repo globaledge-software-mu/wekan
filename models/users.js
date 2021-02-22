@@ -1405,7 +1405,7 @@ if (Meteor.isServer) {
           to: user.emails[0].address.toLowerCase(),
           from: Accounts.emailTemplates.from,
           subject: TAPi18n.__('email-enroll-subject', parameters, lang),
-          text: TAPi18n._('email-enroll-subject', parameters, lang).replace(/(<([^>]+)>)/gi, ""),
+          text: message,
           html: message
         });
 
@@ -1523,9 +1523,33 @@ if (Meteor.isServer) {
       }
       
       return {userID: user._id, username: user.username, email: user.emails[0].address};
-    }
+    },
+    
   });
+  
+  Accounts.registerLoginHandler("impersonate", function ({impersonateUser}) {
+    if (!impersonateUser) return undefined; // don't handle
 
+    check(this.userId, String);
+    check(impersonateUser, String);
+
+    if (impersonateUser === this.userId) {
+      return {error: Meteor.Error(400, "Bad request. You already are yourself.")};
+    }
+
+    if (!Meteor.user().isAdmin) {
+      throw new Meteor.Error(403, "Permission Denied");
+    }
+
+    if (!Meteor.users.findOne({_id: impersonateUser})) {
+      return {error: Meteor.Error(404, "User not found. Can't impersonate it.")};
+    }
+
+    return {
+      userId: impersonateUser,
+    };
+  });
+  
   Accounts.onCreateUser((options, user) => {
     const userCount = Users.find().count();
     if (userCount === 0) {
