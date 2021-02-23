@@ -186,6 +186,24 @@ Template.boardMenuPopup.events({
   'click .js-clone-board': Popup.open('cloneBoard'),
   'click .js-import-board': Popup.open('chooseBoardSource'),
   'click .js-subtask-settings': Popup.open('boardSubtaskSettings'),
+  'click .js-exportas-template': function () {
+    const boardId = Session.get('currentBoard');
+    const board = Boards.findOne({_id: boardId});
+    
+    if (board) {
+    	 Meteor.call('cloneBoard', board._id, Session.get('currentBoard'),{type:'template-board'},
+    	  (err, res)  =>  {
+    	    if (err) {
+            this.setError(err.error);
+          } else {
+             Session.set('fromBoard', null);
+             Utils.goBoardId(res);
+          }
+    	  }
+      ); 
+   }
+    
+  }
 });
 
 Template.boardMenuPopup.helpers({

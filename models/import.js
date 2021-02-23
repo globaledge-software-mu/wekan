@@ -46,6 +46,9 @@ Meteor.methods({
       if (options.hasOwnProperty('title')) {
         data.title = options.title;
       }
+      if (options.hasOwnProperty('type')) {
+      	data.type = options.type
+      }
     }
     return creator.create(data, currentBoardId);
   },

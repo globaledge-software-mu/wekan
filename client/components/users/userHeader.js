@@ -37,6 +37,8 @@ BlazeComponent.extendComponent({
         	var toToken = Meteor._localStorage.getItem('impersonate.loginToken');
           Accounts.loginWithToken(toToken, function(err) {
             cb.apply(this, [err, toUser]);
+            Popup.close();
+            FlowRouter.go('/')
           });
           Meteor._localStorage.removeItem('impersonate.userId');
           Meteor._localStorage.removeItem('impersonate.loginToken');

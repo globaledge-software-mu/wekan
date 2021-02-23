@@ -875,5 +875,6 @@
     "view_email_description": "Copy the below E-mail content and send it to  send with your own email client. Click the below button to open your default email client.",
     "open-mail-client": "Open E-Mail Client",
     "view_invite_email" : "View Invitation Email",
-    "impersonate-user": "Login As User"
+    "impersonate-user": "Login As User",
+    "export-as-template": "Export As Template"
 }
