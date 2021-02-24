@@ -191,10 +191,14 @@ Template.boardMenuPopup.events({
     const board = Boards.findOne({_id: boardId});
     
     if (board) {
+    	 $('.sk-spinner-wave').removeClass('hide');
+    	 $('ul.pop-over-list').addClass('hide');
     	 Meteor.call('cloneBoard', board._id, Session.get('currentBoard'),{type:'template-board'},
     	  (err, res)  =>  {
     	    if (err) {
             this.setError(err.error);
+            $('.sk-spinner-wave').addClass('hide');
+         	  $('ul.pop-over-list').removeClass('hide');
           } else {
              Session.set('fromBoard', null);
              Utils.goBoardId(res);

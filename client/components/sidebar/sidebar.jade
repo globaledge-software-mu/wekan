@@ -154,6 +154,15 @@ template(name="outgoingWebhooksPopup")
     input.primary.wide(type="submit" value="{{_ 'save'}}")
 
 template(name="boardMenuPopup")
+  .sk-spinner.sk-spinner-wave.sk-spinner-list.hide(
+    class=currentBoard.colorClass
+    id="showMoreResults")
+    .sk-rect1
+    .sk-rect2
+    .sk-rect3
+    .sk-rect4
+    .sk-rect5
+    
   ul.pop-over-list
     if currentUser.canCustomiseFields
       li: a.js-custom-fields {{_ 'custom-fields'}}

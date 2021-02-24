@@ -122,7 +122,8 @@ if (Meteor.isServer) {
     if (activity.memberId) {
       participants = _.union(participants, [activity.memberId]);
       const member = activity.member();
-      if (member) {
+      
+      if (!_.isEmpty(member)) {
       	params.member = member.getName();
       }
       
