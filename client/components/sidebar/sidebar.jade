@@ -154,15 +154,6 @@ template(name="outgoingWebhooksPopup")
     input.primary.wide(type="submit" value="{{_ 'save'}}")
 
 template(name="boardMenuPopup")
-  .sk-spinner.sk-spinner-wave.sk-spinner-list.hide(
-    class=currentBoard.colorClass
-    id="showMoreResults")
-    .sk-rect1
-    .sk-rect2
-    .sk-rect3
-    .sk-rect4
-    .sk-rect5
-    
   ul.pop-over-list
     if currentUser.canCustomiseFields
       li: a.js-custom-fields {{_ 'custom-fields'}}
@@ -346,3 +337,21 @@ template(name="changePermissionsPopup")
   if isLastAdmin
     hr
     p.quiet.bottom {{_ 'last-admin-desc'}}
+    
+template(name="exportTemplatePopup")
+  .sk-spinner.sk-spinner-wave.sk-spinner-list.hide(
+    class=currentBoard.colorClass
+    id="showMoreResults")
+    .sk-rect1
+    .sk-rect2
+    .sk-rect3
+    .sk-rect4
+    .sk-rect5
+    
+  div#form-container
+      label
+        | {{_'export-template-name'}}
+      input.js-template-name(type="text" name="template-name"  autofocus)
+      .enter-valid-email.hide {{_ 'error-templatenamerequired'}}
+      button.js-template-name-save.primary.wide {{_ 'save'}}
+    

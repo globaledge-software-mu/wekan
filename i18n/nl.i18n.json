@@ -869,5 +869,7 @@
     "open-mail-client": "Open e-mailclient",
     "view_invite_email": "Bekijk uitnodigingsmail",
     "impersonate-user":"Log in als gebruiker",
-    "export-as-template": "Exporteren als sjabloon"
+    "export-as-template": "Exporteren als sjabloon",
+    "export-template-name": "Sjabloonnaam",
+    "error-templatenamerequired": "Voer sjabloonnaam in"
 }

@@ -876,5 +876,7 @@
     "open-mail-client": "Open E-Mail Client",
     "view_invite_email" : "View Invitation Email",
     "impersonate-user": "Login As User",
-    "export-as-template": "Export As Template"
+    "export-as-template": "Export As Template",
+    "export-template-name": "Template Name",
+    "error-templatenamerequired": "Please enter template name"
 }

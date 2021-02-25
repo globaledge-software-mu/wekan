@@ -186,28 +186,7 @@ Template.boardMenuPopup.events({
   'click .js-clone-board': Popup.open('cloneBoard'),
   'click .js-import-board': Popup.open('chooseBoardSource'),
   'click .js-subtask-settings': Popup.open('boardSubtaskSettings'),
-  'click .js-exportas-template': function () {
-    const boardId = Session.get('currentBoard');
-    const board = Boards.findOne({_id: boardId});
-    
-    if (board) {
-    	 $('.sk-spinner-wave').removeClass('hide');
-    	 $('ul.pop-over-list').addClass('hide');
-    	 Meteor.call('cloneBoard', board._id, Session.get('currentBoard'),{type:'template-board'},
-    	  (err, res)  =>  {
-    	    if (err) {
-            this.setError(err.error);
-            $('.sk-spinner-wave').addClass('hide');
-         	  $('ul.pop-over-list').removeClass('hide');
-          } else {
-             Session.set('fromBoard', null);
-             Utils.goBoardId(res);
-          }
-    	  }
-      ); 
-   }
-    
-  }
+  'click .js-exportas-template': Popup.open('exportTemplate') ,
 });
 
 Template.boardMenuPopup.helpers({
@@ -702,3 +681,35 @@ Template.changePermissionsPopup.helpers({
     return currentBoard.hasAdmin(this.userId) && (currentBoard.activeAdmins() === 1);
   },
 });
+
+BlazeComponent.extendComponent({
+  events() {
+  	return [{
+  	  'click .js-template-name-save':function() {
+  	  	$('.enter-valid-email').hide();
+  	  	const boardId = Session.get('currentBoard');
+  	    const board = Boards.findOne({_id: boardId});
+  	    const templateName = $('input[name=template-name]').val();
+  	    if (templateName == '') {
+  	    	$('.enter-valid-email').show();
+  	    	return false;
+  	    } else{
+  	    	$('.sk-spinner-wave').removeClass('hide');
+  	    	Meteor.call('cloneBoard', board._id, Session.get('currentBoard'),{type:'template-board', title: templateName},
+  	  	      (err, res)  =>  {
+  	  	    	  if (err) {
+  	              this.setError(err.error);
+  	              $('.sk-spinner-wave').addClass('hide');
+  	         	    $('#form-container').removeClass('hide');
+  	             } else {
+  	               Session.set('fromBoard', null);
+  	               Utils.goBoardId(res);
+  	              }
+  	  	    	  }
+  	  	      );
+  	    }
+  	    /**/
+  	   }
+   }]
+ }
+}).register('exportTemplatePopup')
