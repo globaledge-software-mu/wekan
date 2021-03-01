@@ -48,22 +48,46 @@ Template.boardListHeaderBar.helpers({
 });
 
 BlazeComponent.extendComponent({
+	
+}).register('boardItem')
+BlazeComponent.extendComponent({
   onCreated() {
-    Meteor.subscribe('setting');
-    Meteor.subscribe('userFolders');
-    Meteor.subscribe('templateBoards');
-    Meteor.subscribe('userCards');
+  	this.isBoardReady = new ReactiveVar(false);    
+    this.autorun(() => {
+    	const handles = [
+    	  Meteor.subscribe('setting'),
+        Meteor.subscribe('userFolders'),
+        Meteor.subscribe('templateBoards'),
+        Meteor.subscribe('userCards')
+      ];
+     
+      Tracker.nonreactive(() => {
+        Tracker.autorun(() => {
+          this.isBoardReady.set(handles.every(handle => handle.ready()));
+        });
+      });
+    });
+    
+    
   },
 
   showBoards() {
   	const selector = $('.board-list > .sk-spinner.sk-spinner-wave');
   	if (selector.length > 0) {
-  		selector.remove();
+  		selector.hide();
   		$('.addBoardContainer').show();
 	  }
   },
 
   onRendered() {
+    Tracker.autorun(() =>{
+    	if (this.isBoardReady.get()) {
+    		Tracker.afterFlush(() => {
+    		  $('a#uncategorisedBoardsFolder').trigger('click');
+    		});
+    		
+    	}
+    });
   	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
   	const folder = Session.get('folder');
