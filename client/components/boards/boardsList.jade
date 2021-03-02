@@ -5,6 +5,9 @@ template(name="boardList")
       ul.col-md-8.board-list.clearfix
         a.sidebar-folder-tongue.js-toggle-sidebar(title='Close Sidebar')
           i.fa.fa-angle-left
+        if showOverlay.get
+          .board-overlay
+            +spinner
         if currentUser.hasBoardOrIsBoardMember
           
           .addBoardContainer

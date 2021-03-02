@@ -48,14 +48,12 @@ Template.boardListHeaderBar.helpers({
 });
 
 BlazeComponent.extendComponent({
-	
-}).register('boardItem')
-BlazeComponent.extendComponent({
   onCreated() {
+  	Meteor.subscribe('setting'),
   	this.isBoardReady = new ReactiveVar(false);    
+  	this.showOverlay = new ReactiveVar(false);
     this.autorun(() => {
     	const handles = [
-    	  Meteor.subscribe('setting'),
         Meteor.subscribe('userFolders'),
         Meteor.subscribe('templateBoards'),
         Meteor.subscribe('userCards')
@@ -84,11 +82,11 @@ BlazeComponent.extendComponent({
     	if (this.isBoardReady.get()) {
     		Tracker.afterFlush(() => {
     		  $('a#uncategorisedBoardsFolder').trigger('click');
+    		  $('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
     		});
     		
     	}
     });
-  	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
 
   	const folder = Session.get('folder');
 
@@ -523,14 +521,19 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
       },
       'click .js-clone-board'(evt) {
+      	this.showOverlay.set(true);
+      	console.log(this.showOverlay);
+      	
         Meteor.call('cloneBoard',
           this.currentData()._id,
           Session.get('fromBoard'),
           {},
           (err, res) => {
             if (err) {
+            	$('.board-overlay').addClass('hide');
               this.setError(err.error);
             } else {
+            	$('.board-overlay').addClass('hide');
               Session.set('fromBoard', null);
               Utils.goBoardId(res);
             }
