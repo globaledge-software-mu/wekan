@@ -286,12 +286,29 @@ BlazeComponent.extendComponent({
 }).register('boardChangeVisibilityPopup');
 
 BlazeComponent.extendComponent({
+	onCreated() {
+		this.loading = new ReactiveVar(false);
+	},
+	
+	onRendered() {
+		this.setLoading(false);
+	},
+	
+	setLoading(w) {
+    this.loading.set(w);
+  },
+  
+  isLoading() {
+    return this.loading.get();
+  },
+  
   template() {
     return 'cloneBoardPopup';
   },
 
   onSubmit(evt) {
     evt.preventDefault();
+    this.setLoading(true);
     const title = this.find('.js-new-board-title').value;
 
     Meteor.call('cloneBoard', Session.get('currentBoard'), null, {title: title}, (err, res) => {

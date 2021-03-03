@@ -199,7 +199,9 @@ template(name="createBoard")
       input.primary.wide.js-board-template(type="button" value="{{_ 'orCreateFromTemplate'}}")
 
 template(name="cloneBoardPopup")
-  form
+  if loading.get
+    +spinner
+  form.cloneBoard
     label
       | {{_ 'title'}}
       input.js-new-board-title(type="text" placeholder="{{_ 'bucket-example'}}" autofocus required)
