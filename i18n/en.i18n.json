@@ -878,5 +878,7 @@
     "impersonate-user": "Login As User",
     "export-as-template": "Export As Template",
     "export-template-name": "Template Name",
-    "error-templatenamerequired": "Please enter template name"
+    "error-templatenamerequired": "Please enter template name",
+    "invitations":"Invitations",
+    "roles":"Roles"
 }

@@ -871,5 +871,7 @@
     "impersonate-user":"Log in als gebruiker",
     "export-as-template": "Exporteren als sjabloon",
     "export-template-name": "Sjabloonnaam",
-    "error-templatenamerequired": "Voer sjabloonnaam in"
+    "error-templatenamerequired": "Voer sjabloonnaam in",
+    "invitations":"Uitnodigingen",
+    "roles":"Rollen"
 }
