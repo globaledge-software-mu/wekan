@@ -18,6 +18,7 @@ BlazeComponent.extendComponent({
     this.findRolesOptions = new ReactiveVar({});
     this.invitations = new ReactiveVar(false);
     this.number = new ReactiveVar(0);
+    this.findInvitations = new ReactiveVar({});
 
     this.page = new ReactiveVar(1);
     this.loadNextPageLocked = false;
@@ -43,18 +44,6 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('subscriptions');
     });
   },
-  events() {
-    return [{
-      'click #searchButton'() {
-        this.filterPeople();
-      },
-      'keydown #searchInput'(event) {
-        if (event.keyCode === 13 && !event.shiftKey) {
-          this.filterPeople();
-        }
-      },
-    }];
-  },
   filterPeople() {
     const value = $('#searchInput').first().val();
     if (value === '') {
@@ -66,10 +55,29 @@ BlazeComponent.extendComponent({
           { username: regex },
           { 'profile.fullname': regex },
           { 'emails.address': regex },
+          { 'roleName': regex },
         ],
       });
     }
   },
+  
+  filterInvitations() {
+  	const value = $('#searchInvitationInput').first().val();
+    if (value === '') {
+      this.findInvitations.set({});
+    } else {
+      const regex = new RegExp(value, 'i');
+      this.findInvitations.set({
+        $or: [
+          { username: regex },
+          { 'profile.fullname': regex },
+          { 'emails.address': regex },
+          { 'roleName': regex },
+        ],
+      });
+    }
+  },
+  
   loadNextPage() {
     if (this.loadNextPageLocked === false) {
       this.page.set(this.page.get() + 1);
@@ -93,10 +101,11 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-    const users = Users.find({
-    	'emails.verified':true
+  	const condition =  {$and:[this.findUsersOptions.get(), {'emails.verified':true}]};
+  	const users = Users.find(condition, {
+      fields: { _id: true },
     });
-    this.number.set(users.count());
+    this.number.set(users.count(false));
     return users;
   },
   
@@ -108,10 +117,12 @@ BlazeComponent.extendComponent({
       sameUserGroupsUserIds.push(invitee._id)
 	  });
 	  
-	  const invitees = Users.find({
-      _id: { $in: sameUserGroupsUserIds },
-      'emails.verified': false,
-      }, {sort :{ createdAt: -1 }});
+	  const condition =  {$and:[this.findInvitations.get(), 
+	  	                 {'emails.verified':false,
+	  	                 _id: { $in: sameUserGroupsUserIds } 
+	                     }]
+	                     };
+	  const invitees = Users.find(condition , {sort :{ createdAt: -1 }});
 	  this.number.set(invitees.count());
 	  return invitees;
   },
@@ -284,6 +295,22 @@ BlazeComponent.extendComponent({
   },
   events() {
     return [{
+    	'click #searchButton'() {
+       this.filterPeople();
+      },
+      'keydown #searchInput'(event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+          this.filterPeople();
+        }
+      },
+      'click #searchInvitationButton'() {
+        this.filterInvitations();
+      },
+      'keydown #searchInvitationButton'(event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+          this.filterInvitations();
+        }
+      },
       'click a.js-setting-menu'(e) {
       	Popup.close();
       	this.switchMenu(e);

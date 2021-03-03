@@ -5,6 +5,25 @@ template(name="people")
     else
       .content-title.ext-box
         .ext-box-left
+          if people.get
+            span
+              i.fa.fa-users
+              unless isMiniScreen
+                | {{_ 'people'}}
+            input#searchInput(placeholder="{{_ 'search'}}")
+            button#searchButton
+              i.fa.fa-search
+              | {{_ 'search'}}
+          else if invitations.get
+            span
+              i.fa.fa-user-plus
+              unless isMiniScreen
+                | {{_ 'invitations'}}
+            input#searchInvitationInput(placeholder="{{_ 'search'}}")
+            button#searchInvitationButton
+              i.fa.fa-search
+              | {{_ 'search'}}
+            
         .ext-box-right
           span {{_ 'people-number'}} #{peopleNumber}
       .content-body
@@ -98,7 +117,14 @@ template(name="peopleGeneral")
         th {{_ 'username'}}
         th {{_ 'fullname'}}
         th {{_ 'admin'}}
-        th {{_ 'role'}}
+        th 
+          |  {{_ 'role'}}
+          div.dropdown
+            a.board-header-btn.js-btn-dropdown
+              i.fa.fa-filter
+              div.roles
+                a {{_ 'Coach' }}
+                a {{_ 'Manager' }}
         th {{_ 'email'}}
         th {{_ 'verified'}}
         th {{_ 'createdAt'}}
