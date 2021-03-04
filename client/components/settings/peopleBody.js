@@ -44,7 +44,7 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('subscriptions');
     });
   },
-  filterPeople() {
+  filterPeople(role) {
     const value = $('#searchInput').first().val();
     if (value === '') {
       this.findUsersOptions.set({});
@@ -56,6 +56,16 @@ BlazeComponent.extendComponent({
           { 'profile.fullname': regex },
           { 'emails.address': regex },
           { 'roleName': regex },
+        ],
+      });
+    }
+    
+    if (role === '') {
+    	this.findUserOptions.set({});
+    } else {
+    	 this.findUsersOptions.set({
+        $or: [
+          { 'roleName': role },
         ],
       });
     }
@@ -298,6 +308,9 @@ BlazeComponent.extendComponent({
     	'click #searchButton'() {
        this.filterPeople();
       },
+      'keyup #searchInput' (event) {
+        this.filterPeople();
+      },
       'keydown #searchInput'(event) {
         if (event.keyCode === 13 && !event.shiftKey) {
           this.filterPeople();
@@ -311,11 +324,24 @@ BlazeComponent.extendComponent({
           this.filterInvitations();
         }
       },
+      'keyup #searchInvitationButton'(event) {
+      	this.filterInvitations();
+      },
       'click a.js-setting-menu'(e) {
       	Popup.close();
       	this.switchMenu(e);
       },
       'click #create-user': Popup.open('createNewUser'),
+      'click .js-btn-dropdown': function() {
+         $('.roles').toggle('show');
+      },
+      'click .role': function(event) {
+      	const role = $(event.target).text()
+      	event.stopPropagation();
+      	this.filterPeople(role);
+      	Session.set('roleFilter', role);
+      	$('.roles').css('display','none');
+      },
     }];
   },
 }).register('people');
@@ -474,7 +500,6 @@ BlazeComponent.extendComponent({
       	  const user = Users.findOne({_id:Template.instance().data.userId});
           Meteor.call('resendInviteToUser', user , (err, ret) => {
           if (err) {
-          	console.log(err);
           	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
           	$('#header-main-bar').before($message);
             $message.delay(10000).slideUp(500, function() {
@@ -3097,3 +3122,23 @@ BlazeComponent.extendComponent({
 }).register('settingsUserPopup');
 
 
+Template.roleFilter.helpers({
+  currentRole() {
+  	  const selected = Session.get('roleFilter');
+  	  if (selected) {
+  	  	return selected
+  	  }
+      return false;
+  },
+  roles() {
+    return Roles.find({});
+  },
+  coachOrCoacheeRoles() {
+    return Roles.find({
+      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
+    });
+  },
+  coacheeRole() {
+    return Roles.findOne({ name: 'Coachee' });
+  },
+});
