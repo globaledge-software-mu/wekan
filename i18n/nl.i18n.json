@@ -873,5 +873,7 @@
     "export-template-name": "Sjabloonnaam",
     "error-templatenamerequired": "Voer sjabloonnaam in",
     "invitations":"Uitnodigingen",
-    "roles":"Rollen"
+    "role":"Rollen",
+    "clear-filters": "Filters wissen",
+    "authentication-method": "Verificatiemethode"
 }

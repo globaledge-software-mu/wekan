@@ -55,14 +55,11 @@ BlazeComponent.extendComponent({
           { username: regex },
           { 'profile.fullname': regex },
           { 'emails.address': regex },
-          { 'roleName': regex },
         ],
       });
     }
     
-    if (role === '') {
-    	this.findUserOptions.set({});
-    } else {
+    if (role !== '' && value === '') {
     	 this.findUsersOptions.set({
         $or: [
           { 'roleName': role },
@@ -190,25 +187,16 @@ BlazeComponent.extendComponent({
       // Query the users using the ids pushed in sameUserGroupsUserIds
       // and the users can't be admins nor have the role manager
       let users;
-      users = Users.find({
-      	_id: { $in: sameUserGroupsUserIds },
-      	'emails.verified': true,
-        $nor: [
-          { isAdmin: true },
-          { roleId: role._id }
-        ]
-      });
+      let condition;
+      condition = { $and:[this.findUsersOptions.get(),{_id: { $in: sameUserGroupsUserIds }, 'emails.verified':true } ], 
+      		          $nor: [{ isAdmin: true },{ roleId: role._id }]
+                  };
+      users = Users.find(condition);
       
       if (this.invitations.get()) {
-          users = Users.find({
-              _id: { $in: sameUserGroupsUserIds },
-              'emails.verified': false,
-              $nor: [
-                { isAdmin: true },
-                { roleId: role._id }
-              ],
-            }, {sort: {createdAt:-1 }});
-          
+      	condition = { $and:[ this.findUsersOptions.get(),{_id: { $in: sameUserGroupsUserIds }, 'emails.verified': false } ], 
+	                   $nor: [{ isAdmin: true },{ roleId: role._id }] };
+          users = Users.find(condition , {sort: {createdAt:-1 }});
       }
       this.number.set(users.count());
       return users;
@@ -253,6 +241,8 @@ BlazeComponent.extendComponent({
       users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
       	'emails.verified': true,
+      	
+      	$and:[this.findUsersOptions.get()],
         $nor: [
           { isAdmin: true },
           { roleId: managerRole._id },
@@ -264,6 +254,7 @@ BlazeComponent.extendComponent({
     	  users = Users.find({
                _id: { $in: sameUserGroupsUserIds },
                'emails.verified': false,
+               $and:[this.findUsersOptions.get()],
               $nor: [
                 { isAdmin: true },
                 { roleId: managerRole._id },

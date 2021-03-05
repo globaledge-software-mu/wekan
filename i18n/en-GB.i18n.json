@@ -833,5 +833,7 @@
     "export-template-name": "Template Name",
     "error-templatenamerequired": "Please enter template name",
     "invitations":"Invitations",
-    "roles":"Roles"
+    "role":"Roles",
+    "clear-filters": "Clear Filters",
+    "authentication-method": "Authentication Method"
 }

@@ -178,9 +178,11 @@ template(name="peopleRow")
     td {{_ userData.authenticationMethod }}
     td
       a.edit-user
+        i.fa.fa-edit
         | {{_ 'edit'}}
-      a.more-settings
-        i.fa.fa-ellipsis-h
+      if currentUser.isAdmin
+        a.more-settings
+          i.fa.fa-ellipsis-h
 
 template(name="editUserPopup")
   if loading.get
@@ -1256,7 +1258,7 @@ template(name="roleFilter")
     each role in coachOrCoacheeRoles
         a(class="role") {{role.name}}
   // if isCoachAndNotAdmin, user gets to choose 'coachee'
-  if currentUser.isCoachAndNotAdminid
-      a(class="role") {{role.name}}
+  if currentUser.isCoachAndNotAdmin
+    a(class="role") {{coacheeRole.name}}
   hr
-  a.clear {{_ 'Clear Filters'}}
+  a.clearFilters {{_ 'Clear Filters'}}
