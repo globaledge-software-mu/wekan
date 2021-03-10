@@ -60,7 +60,7 @@ Template.boardChangeTitlePopup.events({
 
 BlazeComponent.extendComponent({
   watchLevel() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Boards.findOne(Session.get('currentBoard'))
     return currentBoard && currentBoard.getWatchLevel(Meteor.userId());
   },
 
@@ -68,6 +68,11 @@ BlazeComponent.extendComponent({
     const boardId = Session.get('currentBoard');
     const user = Meteor.user();
     return user && user.hasStarred(boardId);
+  },
+  
+  isTemplate() {
+  	const board = Boards.findOne(Session.get('currentBoard'));
+  	return board && board.isTemplateBoard();
   },
 
   // Only show the star counter if the number of star is greater than 2
