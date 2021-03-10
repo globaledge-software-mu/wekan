@@ -1253,7 +1253,7 @@ if (Meteor.isServer) {
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
                 subject: TAPi18n.__('email-invite-subject', params, lang),
-                text: TAPi18n._('email-invite-text', parameters, lang).replace(/(<([^>]+)>)/gi, ""),
+                text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
                 html: TAPi18n.__('email-invite-text', params, lang)
               });
             } catch (e) {
