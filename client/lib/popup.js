@@ -145,6 +145,10 @@ window.Popup = new class {
 
       this._stack = [];
     }
+    
+    if (Session.get('selectedUser') !== null || Session.get('selectedUser') !== 'undefined' || Session.get('selectedUser') !== '') {
+      Session.set('selectedUser', null);
+    }
   }
 
   getOpenerComponent() {

@@ -44,7 +44,12 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('subscriptions');
     });
   },
-  filterPeople(role) {
+  
+  onRendered() {
+  	
+  },
+  
+  filterPeople() {
     const value = $('#searchInput').first().val();
     if (value === '') {
       this.findUsersOptions.set({});
@@ -59,13 +64,6 @@ BlazeComponent.extendComponent({
       });
     }
     
-    if (role !== '' && value === '') {
-    	 this.findUsersOptions.set({
-        $or: [
-          { 'roleName': role },
-        ],
-      });
-    }
   },
   
   filterInvitations() {
@@ -294,6 +292,11 @@ BlazeComponent.extendComponent({
       this.invitations.set('invitation-setting' === targetID);
     }
   },
+  
+  filterByRole(role) {
+    this.filterPeople();
+    console.log(this.filterPeople());
+  },
   events() {
     return [{
     	'click #searchButton'() {
@@ -326,10 +329,11 @@ BlazeComponent.extendComponent({
       'click .js-btn-dropdown': function() {
          $('.roles').toggle('show');
       },
+      'click .edit-user':Popup.open('editUser'),
       'click .role': function(event) {
       	const role = $(event.target).text()
       	event.stopPropagation();
-      	this.filterPeople(role);
+      	this.filterByRole();
       	Session.set('roleFilter', role);
       	$('.roles').css('display','none');
       },
@@ -621,7 +625,7 @@ BlazeComponent.extendComponent({
       submit(evt) {
         evt.preventDefault();
       	$('#editUserPopup').find('.errorStatus').remove();
-        const user_id = Template.instance().data.userId;
+        const user_id = this.find('.userId').value.trim();
         const user = Users.findOne(user_id);
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
@@ -1266,17 +1270,17 @@ Template.editInviteePopup.helpers({
 
 Template.editUserPopup.helpers({
 	user() {
-	  return Users.findOne(this.userId);
+	  return Users.findOne(Session.get('selectedUser'));
 	},
 
 	isSelected(match) {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === match;
 	},
 
 	isLdap() {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === 'ldap';
 	},
@@ -3112,24 +3116,127 @@ BlazeComponent.extendComponent({
   }
 }).register('settingsUserPopup');
 
+Template.peopleGeneral.events({
+  'click .edit-user':function(evt) {
+    const userId = $(evt.target).data('id');
+    Session.set('selectedUser', userId);
+  }
+});
 
-Template.roleFilter.helpers({
-  currentRole() {
-  	  const selected = Session.get('roleFilter');
-  	  if (selected) {
-  	  	return selected
-  	  }
-      return false;
+Template.peopleGeneral.helpers({
+	users() {
+		const isAdmin = Meteor.user().isAdmin;
+		if (isAdmin) {
+			return Users.find({'emails.verified':true});
+		}
+		
+		if (!isAdmin && Meteor.user().roleName === 'Manager') {
+		  const role = Roles.findOne({name: 'Manager'});
+	    if (role && role._id) {
+	    	const userId = Meteor.user()._id;
+	    	var userUserGroupsIds = new Array();
+	  		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+	  			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+	    			userUserGroupsIds.push(assignedUserGroup.userGroupId);
+	  			}
+	    	});
+	    	var sameUserGroupsUserIds = new Array();
+
+	      // First push the users created by the logged in user, its invitees
+	      Users.find({
+	        createdBy: Meteor.user()._id,
+	      }).forEach((invitee) => {
+	        sameUserGroupsUserIds.push(invitee._id)
+	      });
+
+	      // Then push the users of the same user groups as of the logged in user
+	    	AssignedUserGroups.find({
+	    		userGroupId: { $in: userUserGroupsIds }
+	    	}).forEach((assignedUserGroup) => {
+	        // Filter out the userIds already pushed earlier
+	  			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+	      		sameUserGroupsUserIds.push(assignedUserGroup.userId);
+	  			}
+	    	});
+
+	      return Users.find({
+	      	_id: { $in: sameUserGroupsUserIds },
+	      	'emails.verified': true,
+	        $nor: [
+	          { isAdmin: true },
+	          { roleId: role._id }
+	        ]
+	      });
+	    }
+	}
+	
+	if (!isAdmin && Meteor.user().roleName === 'Coach') {
+		 const managerRole = Roles.findOne({name: 'Manager'});
+	   const coachRole = Roles.findOne({name: 'Coach'});
+	   if (managerRole && managerRole._id && coachRole && coachRole._id) {
+	     const userId = Meteor.user()._id;
+	     var userUserGroupsIds = new Array();
+  		 AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+  		  if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+    	    userUserGroupsIds.push(assignedUserGroup.userGroupId);
+  			}
+    	 });
+  		 
+	    var sameUserGroupsUserIds = new Array();
+	    
+	    // First push the users created by the logged in user, its invitees
+	    Users.find({
+	      createdBy: Meteor.user()._id,
+	    }).forEach((invitee) => {
+	        sameUserGroupsUserIds.push(invitee._id)
+	    });
+	    
+	    // Then push the users of the same user groups as of the logged in user
+	   AssignedUserGroups.find({
+	     userGroupId: { $in: userUserGroupsIds }
+	   }).forEach((assignedUserGroup) => {
+	   // Filter out the userIds already pushed earlier
+	   if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+	  	   sameUserGroupsUserIds.push(assignedUserGroup.userId);
+	  	}
+	  });
+	   
+	 return Users.find({
+	  _id: { $in: sameUserGroupsUserIds },
+	    'emails.verified': true,
+	     $nor: [
+	       { isAdmin: true },
+	       { roleId: managerRole._id },
+	       { roleId: coachRole._id }
+	     ]
+	 });
+	}
+ }
+},
+	tableSettings : function () {
+    return {
+        currentPage: Template.instance().currentPage,
+        fields: [
+          { key: 'username', label: 'UserName' },
+          { key: 'profile.fullname', label: 'Full Name'},
+          { key: 'isAdmin',  label: 'Admin' , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: 'Role' },
+          { key: 'emails.0.address', label: 'Email Address'},
+          { key: 'emails.0.verified', label: 'Verified', fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: 'loginDisabled', 'label': 'Active', fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
+          { key: 'userGroups', label: 'UserGroups',
+           fn: function () { return ''; }
+          },
+          { key: 'authenticationMethod', 'label':'AuthenticationMethod'},
+          { key: '_id', 'label':'Actions', 
+          	fn: function (_id) {
+          		return new Spacebars.SafeString("<a class='edit-user' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>");
+          	} 
+          },
+          
+        ]
+    };
   },
-  roles() {
-    return Roles.find({});
-  },
-  coachOrCoacheeRoles() {
-    return Roles.find({
-      $or: [{ name: 'Coach' }, { name: 'Coachee' }]
-    });
-  },
-  coacheeRole() {
-    return Roles.findOne({ name: 'Coachee' });
-  },
+
 });
