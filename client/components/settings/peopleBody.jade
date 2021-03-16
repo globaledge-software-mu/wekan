@@ -5,25 +5,6 @@ template(name="people")
     else
       .content-title.ext-box
         .ext-box-left
-          if people.get
-            span
-              i.fa.fa-users
-              unless isMiniScreen
-                | {{_ 'people'}}
-            input#searchInput(placeholder="{{_ 'search'}}")
-            button#searchButton
-              i.fa.fa-search
-              | {{_ 'search'}}
-          else if invitations.get
-            span
-              i.fa.fa-user-plus
-              unless isMiniScreen
-                | {{_ 'invitations'}}
-            input#searchInvitationInput(placeholder="{{_ 'search'}}")
-            button#searchInvitationButton
-              i.fa.fa-search
-              | {{_ 'search'}}
-            
         .ext-box-right
           span {{_ 'people-number'}} #{peopleNumber}
       .content-body
@@ -1210,7 +1191,7 @@ template(name="viewEmail")
 template(name="settingsUserPopup")
   ul.pop-over-list
     li
-      a.impersonate-user
+      a.impersonate-user(data-id=user._id)
         i.fa.fa-user
         | {{_ 'impersonate-user'}}
 

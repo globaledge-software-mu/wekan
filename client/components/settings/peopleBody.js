@@ -330,6 +330,7 @@ BlazeComponent.extendComponent({
          $('.roles').toggle('show');
       },
       'click .edit-user':Popup.open('editUser'),
+      'click a.more-settings': Popup.open('settingsUser'),
       'click .role': function(event) {
       	const role = $(event.target).text()
       	event.stopPropagation();
@@ -3082,8 +3083,7 @@ BlazeComponent.extendComponent({
   events() {
      return[{
     		'click a.impersonate-user' : function() {
-    			  var userId = Template.instance().data.userId;
-    			  
+    			  var userId = Session.get('impersonatedUser');
     			  cb = function() {};
     		    var fromUser = Meteor.userId();
     		  	if (!fromUser) throw new Error("Permission denied. You need to be logged in to impersonate users.");
@@ -3116,11 +3116,16 @@ BlazeComponent.extendComponent({
   }
 }).register('settingsUserPopup');
 
+
 Template.peopleGeneral.events({
   'click .edit-user':function(evt) {
     const userId = $(evt.target).data('id');
     Session.set('selectedUser', userId);
-  }
+  },
+  'click .more-settings':function(evt) {
+    const userId = $(evt.target).parent().data('id');
+    Session.set('impersonatedUser', userId);
+  },
 });
 
 Template.peopleGeneral.helpers({
@@ -3225,13 +3230,33 @@ Template.peopleGeneral.helpers({
           { key: 'emails.0.verified', label: 'Verified', fn: function(verified) {return verified ? 'Yes' : 'No'; } },
           { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
           { key: 'loginDisabled', 'label': 'Active', fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
-          { key: 'userGroups', label: 'UserGroups',
-           fn: function () { return ''; }
+          { key: '_id', label: 'UserGroups',
+            fn: function (_id) { 
+                var userGroupsIds = new Array();
+                AssignedUserGroups.find({
+                  userId: _id
+                }).forEach((assignedUserGroup) => {
+                  userGroupsIds.push(assignedUserGroup.userGroupId);
+                });
+                
+                var html = '<ul>';
+                UserGroups.find({ _id: { $in: userGroupsIds } }).
+                           forEach((userGroup) => {
+                             html += '<li>'+userGroup.title+'</li>';
+                           });
+                html += '</ul>';
+                
+                return new Spacebars.SafeString(html);
+            }
           },
           { key: 'authenticationMethod', 'label':'AuthenticationMethod'},
           { key: '_id', 'label':'Actions', 
           	fn: function (_id) {
-          		return new Spacebars.SafeString("<a class='edit-user' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>");
+          		var html = "<a class='edit-user' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>  ";
+          		if (Meteor.user().isAdmin) {
+          			html += "<a class='more-settings' data-id='"+_id+"' href='#'><i class='fa fa-ellipsis-h'></i></a>";
+          		}
+          		return new Spacebars.SafeString(html);
           	} 
           },
           
