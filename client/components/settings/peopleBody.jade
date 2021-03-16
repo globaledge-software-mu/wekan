@@ -183,35 +183,7 @@ template(name="editUserPopup")
 
 template(name="invitationsGeneral")
   button#create-user.btn.btn-primary {{_ 'add-user'}}
-  table#subscriptionsDataTable
-    tbody
-      tr
-        th {{_ 'username'}}
-        th {{_ 'fullname'}}
-        th {{_ 'admin'}}
-        th {{_ 'role'}}
-        th {{_ 'email'}}
-        th {{_ 'verified'}}
-        th {{_ 'createdAt'}}
-        th {{_ 'user-groups'}}
-
-        th
-      // If isAdmin
-      if currentUser.isAdmin
-        // List all the users
-        each user in inviteesList
-          +invitationRow(userId=user._id)
-      // If isManagerAndNotAdmin
-      if currentUser.isManagerAndNotAdmin
-        // List users from his own groups which have either the role 'Coach' or 'Coachee'
-        each user in managerUserGroupsUsersAndInviteesList
-          +invitationRow(userId=user._id)
-
-      // If isCoachAndNotAdmin
-      if currentUser.isCoachAndNotAdmin
-        // List users from his own groups which have the role 'Coachee'
-        each user in coachUserGroupsUsersAndInviteesList
-          +invitationRow(userId=user._id)
+  +reactiveTable(collection=inviteesList settings=tableSettings)
 
 template(name="invitationRow")
   tr

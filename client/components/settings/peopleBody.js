@@ -106,32 +106,14 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-  	const condition =  {$and:[this.findUsersOptions.get(), {'emails.verified':true}]};
+  	const condition =  {'emails.verified':true};
   	const users = Users.find(condition, {
       fields: { _id: true },
     });
     this.number.set(users.count(false));
     return users;
   },
-  
-  inviteesList() {
-	  var sameUserGroupsUserIds = new Array();
-	  const user = Users.find({
-      createdBy: Meteor.user()._id
-    }).forEach((invitee) => {
-      sameUserGroupsUserIds.push(invitee._id)
-	  });
-	  
-	  const condition =  {$and:[this.findInvitations.get(), 
-	  	                 {'emails.verified':false,
-	  	                 _id: { $in: sameUserGroupsUserIds } 
-	                     }]
-	                     };
-	  const invitees = Users.find(condition , {sort :{ createdAt: -1 }});
-	  this.number.set(invitees.count());
-	  return invitees;
-  },
-  
+   
   hasExpiredSubscriptions() {
   	const expiredSubscription = Subscriptions.findOne({
   		archived: { $ne: true },
@@ -1289,7 +1271,7 @@ Template.editUserPopup.helpers({
 
 Template.roleOptions.helpers({
   currentRole(match) {
-    const userId = Template.instance().data.userId;
+    const userId = Session.get('selectedUser');
     if (userId) {
       const selected = Users.findOne(userId).roleId;
       return selected === match;
@@ -3264,4 +3246,39 @@ Template.peopleGeneral.helpers({
     };
   },
 
+});
+
+Template.invitationsGeneral.helpers({
+	 inviteesList() {
+		  var sameUserGroupsUserIds = new Array();
+		  const user = Users.find({
+	      createdBy: Meteor.user()._id
+	    }).forEach((invitee) => {
+	      sameUserGroupsUserIds.push(invitee._id)
+		  });
+		  
+		  return Users.find({'emails.verified':false,_id: { $in: sameUserGroupsUserIds }}, {sort :{ createdAt: -1 }});
+	  },
+	  
+	  tableSettings: function() {
+	  	return{
+	  		fields:[
+	  			{ key: 'username', label: 'UserName' },
+	  			{ key: 'profile.fullname', label: 'Full Name'},
+	  			{ key: 'isAdmin',  label: 'Admin' , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: 'Role' },
+          { key: 'emails.0.address', label: 'Email Address'},
+          { key: 'emails.0.verified', label: 'Verified', fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: '_id', 'label':'Actions', 
+          	fn: function (_id) {
+          		var html = "<a class='edit-invitee' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>  ";
+          			  html += "<a class='resend-invite' data-id='"+_id+"' href='#'><i class='fa fa-send'></i>Resend Invitation</a>  ";
+          			  html += "<a class='view-email' data-id='"+_id+"' href='#'><i class='fa fa-eye'></i>View Email</a>";
+          		return new Spacebars.SafeString(html);
+          	} 
+          },
+	  		]
+	  	}
+	  }
 });
