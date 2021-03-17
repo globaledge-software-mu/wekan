@@ -312,6 +312,7 @@ BlazeComponent.extendComponent({
          $('.roles').toggle('show');
       },
       'click .edit-user':Popup.open('editUser'),
+      'click a.edit-invitee': Popup.open('editInvitee'),
       'click a.more-settings': Popup.open('settingsUser'),
       'click .role': function(event) {
       	const role = $(event.target).text()
@@ -473,10 +474,13 @@ BlazeComponent.extendComponent({
   
   events() {
     return [{
-      'click a.edit-invitee': Popup.open('editInvitee'),
-      'click a.resend-invite': function () {
-      	  const user = Users.findOne({_id:Template.instance().data.userId});
-          Meteor.call('resendInviteToUser', user , (err, ret) => {
+    	'click a.edit-invitee': function(evt) {
+    		const userId = $(evt.target).data('id');
+    		Session.set('selectedUser', userId);
+    	 }, 
+      'click a.resend-invite': function (evt) {
+        const user = Users.findOne({_id:$(evt.target).data('id')});
+        Meteor.call('resendInviteToUser', user , (err, ret) => {
           if (err) {
           	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
           	$('#header-main-bar').before($message);
@@ -494,17 +498,17 @@ BlazeComponent.extendComponent({
         });
       },
      'click a.view-email': function(e)  {
-    	  const userId = $(e.target).data('userid');
+    	  const userId = $(e.target).data('id');
     	  Modal.open('viewEmail');
     	  Session.set('manageUserId', userId);
      }
      
     }]
   }
-}).register('invitationRow');
+}).register('invitationsGeneral');
 
 
-Template.peopleRow.helpers({
+/*Template.peopleRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
@@ -531,9 +535,9 @@ Template.peopleRow.helpers({
       return UserGroups.find({ _id: { $in: userGroupsIds } });
     }
   }
-});
+});*/
 
-Template.invitationRow.helpers({
+/*Template.invitationRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
@@ -564,7 +568,7 @@ Template.invitationRow.helpers({
 	}
   
   
-});
+});*/
 
 Template.roleRow.helpers({
   roleData() {
@@ -920,7 +924,7 @@ BlazeComponent.extendComponent({
     	 submit(evt) {
          evt.preventDefault();
        	$('#editUserPopup').find('.errorStatus').remove();
-         const user_id = Template.instance().data.userId;
+         const user_id = this.find('.invitee').value.trim();
          const user = Users.findOne(user_id);
          const fullname = this.find('.js-profile-fullname').value.trim();
          const username = this.find('.js-profile-username').value.trim();
@@ -930,7 +934,7 @@ BlazeComponent.extendComponent({
            isAdmin = this.find('.js-profile-isadmin').value.trim();
          }
          const roleId = this.find('.js-profile-role').value;
-       	const roleName = null;
+       	 const roleName = null;
          const role = Roles.findOne({_id: roleId});
          if (role && role.name) {
          	roleName = role.name;
@@ -1235,17 +1239,17 @@ BlazeComponent.extendComponent({
 
 Template.editInviteePopup.helpers({
 	user() {
-	  return Users.findOne(this.userId);
+	  return Users.findOne(Session.get('selectedUser'));
 	},
 
 	isSelected(match) {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === match;
 	},
 
 	isLdap() {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === 'ldap';
 	},
@@ -1451,14 +1455,59 @@ BlazeComponent.extendComponent({
   userGroupsList() {
   	return UserGroups.find();
   },
+  
   events() {
 	  return [{
 	    'click button#create-user-group': Popup.open('createUserGroup'),
+	    'click a.manage-user-group': function(e) {
+	    	const groupId = $(e.target).data('user-group-id');
+	    	Modal.open('editUserGroup');
+	    	Session.set('manageUserGroupId', groupId);
+    },
 	  }];
 	}
 }).register('userGroupsGeneral');
 
-BlazeComponent.extendComponent({
+Template.userGroupsGeneral.helpers({
+  userGroupsList() {
+  	return UserGroups.find();
+  },
+  tableSettings : function () {
+    return {
+        currentPage: Template.instance().currentPage,
+        fields: [
+          { key: 'title', label: 'Title' },
+          { key: 'usersQuota', label: 'Users Quota'},
+          { key: 'usedUsersQuota',  label: 'Used Users-Quota'},
+          { key: 'boardsQuota', label: 'Boards Quota' },
+          { key: 'usedBoardsQuota', label: 'Used Boards Quota'},
+          { key: '_id', label: 'Group Admin(s)', fn: function(_id) {
+          	var data = UserGroups.findOne({_id:_id});
+        		if (data && data._id) {
+        			var groupAdminsIds = new Array();
+        			AssignedUserGroups.find({userGroupId: data._id}).forEach((assignedUserGroup) => {
+        				if (assignedUserGroup.groupAdmin === 'Yes') {
+        					groupAdminsIds.push(assignedUserGroup.userId);
+        				}
+        			});
+        			var usernames = '<ul>';
+        			Users.find({_id: {$in: groupAdminsIds}}).forEach((user) => {
+        				usernames += '<li>'+user.username+'</li>';
+        			});
+        			return new Spacebars.SafeString(usernames);
+        	    
+        		}
+            return new Spacebars.SafeString('');
+          } },
+          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: '_id', 'label': 'Action', fn: function(_id) { return new Spacebars.SafeString('<a class="manage-user-group" data-user-group-id="'+_id+'" href="#">Manage</a>'); }},
+        ]
+    };
+  },
+  
+});
+
+/*BlazeComponent.extendComponent({
   events() {
 	  return [{
       'click a.manage-user-group'(e) {
@@ -1489,7 +1538,7 @@ Template.userGroupRow.helpers({
 		}
     return null;
   },
-});
+});*/
 
 BlazeComponent.extendComponent({
   onCreated() {
@@ -3262,6 +3311,7 @@ Template.invitationsGeneral.helpers({
 	  
 	  tableSettings: function() {
 	  	return{
+	  		id :'subscriptionsDataTable',
 	  		fields:[
 	  			{ key: 'username', label: 'UserName' },
 	  			{ key: 'profile.fullname', label: 'Full Name'},
@@ -3272,11 +3322,15 @@ Template.invitationsGeneral.helpers({
           { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
           { key: '_id', 'label':'Actions', 
           	fn: function (_id) {
-          		var html = "<a class='edit-invitee' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>  ";
-          			  html += "<a class='resend-invite' data-id='"+_id+"' href='#'><i class='fa fa-send'></i>Resend Invitation</a>  ";
-          			  html += "<a class='view-email' data-id='"+_id+"' href='#'><i class='fa fa-eye'></i>View Email</a>";
+          		var html = "<a class='edit-invitee renewSubscription' data-id='"+_id+"' href='#'>Edit</a>  ";
+          			  html += "<a class='resend-invite upgradeSubscription' data-id='"+_id+"' href='#'>Resend Invitation</a>  ";
+          			  html += "<a class='view-email archiveSubscription' data-id='"+_id+"' href='#'>View Email</a>";
           		return new Spacebars.SafeString(html);
-          	} 
+          	},
+          	cellClass: function(object, value) {
+          		var css = 'subscriptionsActionCol';
+          		return css;
+          	}
           },
 	  		]
 	  	}

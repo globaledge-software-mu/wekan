@@ -96,42 +96,6 @@ template(name="peopleGeneral")
       // If isAdmin
      
 
-
-template(name="peopleRow")
-  tr
-    td.username {{ userData.username }}
-    td {{ userData.profile.fullname }}
-    td
-      if userData.isAdmin
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ roleName }}
-    td {{ userData.emails.[0].address }}
-    td
-      if userData.emails.[0].verified
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ moment userData.createdAt 'LLL' }}
-    td
-      if userData.loginDisabled
-        | {{_ 'no'}}
-      else
-        | {{_ 'yes'}}
-    td
-      ul
-        each userGroup in assignedUserGroups
-          li {{ userGroup.title }}
-    td {{_ userData.authenticationMethod }}
-    td
-      a.edit-user
-        i.fa.fa-edit
-        | {{_ 'edit'}}
-      if currentUser.isAdmin
-        a.more-settings
-          i.fa.fa-ellipsis-h
-
 template(name="editUserPopup")
   if loading.get
     +spinner
@@ -185,43 +149,13 @@ template(name="invitationsGeneral")
   button#create-user.btn.btn-primary {{_ 'add-user'}}
   +reactiveTable(collection=inviteesList settings=tableSettings)
 
-template(name="invitationRow")
-  tr
-    td.username {{ userData.username }}
-    td {{ userData.profile.fullname }}
-    td
-      if userData.isAdmin
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ roleName }}
-    td {{ userData.emails.[0].address }}
-    td
-      if userData.emails.[0].verified
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ moment userData.createdAt 'LLL' }}
-    td
-      ul
-        each userGroup in assignedUserGroups
-          li {{ userGroup.title }}
-
-    td#subscriptionsActionCol
-      a.edit-invitee.renewSubscription
-        | {{_ 'edit'}}
-      a.resend-invite.upgradeSubscription
-        | {{_ 'resend'}}
-        
-      a.view-email.archiveSubscription(data-userId=userData._id)
-        | {{_ 'view-email' }}
 
 template(name="editInviteePopup")
   if loading.get
     +spinner
   else
-    form#editUserPopup
-      label.hide.userId(type="text" value=user._id)
+    form#editInviteePopup
+      input.invitee(type="hidden" value=user._id)
       label
         | {{_ 'fullname'}}
         input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
@@ -750,37 +684,7 @@ template(name="createRolePopup")
 
 template(name="userGroupsGeneral")
   button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
-  table
-    tbody
-      tr
-        th
-          ul
-            li {{_ 'title'}}
-        th
-          ul
-            li {{_ 'users-quota'}}
-        th
-          ul
-            li {{_ 'used-users-quota'}}
-        th
-          ul
-            li {{_ 'boards-quota'}}
-        th
-          ul
-            li {{_ 'used-boards-quota'}}
-        th
-          ul
-            li {{_ 'group-admins'}}
-        th
-          ul
-            li {{_ 'createdAt'}}
-        th
-          ul
-            li {{_ 'action'}}
-          // if isAdmin
-      if currentUser.isAdmin
-        each userGroup in userGroupsList
-          +userGroupRow(userGroupId=userGroup._id)
+  +reactiveTable(collection=userGroupsList settings=tableSettings)
 
 template(name="userGroupRow")
   tr
@@ -932,7 +836,7 @@ template(name="editUserGroup")
     if hasLogo
       #uploadedLogoContainer
         img.logo.logo-image(src="{{logoUrl(userGroup._id)}}")
-    input.hide.uploadLogoInput(accept="image/*;capture=camera" type="file")
+    input.invisible.uploadLogoInput(accept="image/*;capture=camera" type="file")
     button.full.uploadLogo
       i.fa.fa-upload
       | {{_ 'Upload logo'}}
@@ -956,11 +860,12 @@ template(name="editUserGroup")
                     label.bold.userGroupMemberListComponent
                       | {{user.username}}
                 td
-                  .choiceCell
-                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomDefaultLogo (user._id)}}checked{{/if}}")
+                  .radio-inline
+                    input.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomDefaultLogo (user._id)}}checked{{/if}}")
                     span.setOrUnsetUserGroupLogoForUser
                       | {{_ 'Yes'}}
-                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomDefaultLogo (user._id)}}checked{{/unless}}")
+                  .radio-inline
+                    input.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomDefaultLogo (user._id)}}checked{{/unless}}")
                     span.setOrUnsetUserGroupLogoForUser
                       | {{_ 'No'}}
           else
@@ -980,10 +885,10 @@ template(name="editUserGroup")
         | {{_ 'Board Color Settings'}}
     a.manageUserGroupResponse
     hr.hrEditUserGroupForm
-    #boardColor.row.form-group.col-md-12
-      label.form-control.col-md-6
+    #boardColor.form-inline
+      label.col-md-4
         | {{_ 'Select Color for Board'}}
-      input.form-control.setBoardColor(type="color" name="boardColor" value=boardColor)
+      input.form-control-static.setBoardColor.col-sm-4(type="color" name="boardColor" value=boardColor)
       
     hr.hrEditUserGroupForm
     label#memberLabel
@@ -1000,11 +905,12 @@ template(name="editUserGroup")
                     label.bold.userGroupMemberListComponent
                       | {{user.username}}
                 td
-                  .choiceCell
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomBoardColor (user._id)}}checked{{/if}}")
+                  .radio-inline
+                    input.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomBoardColor (user._id)}}checked{{/if}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'Yes'}}
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomBoardColor (user._id)}}checked{{/unless}}")
+                  .radio-inline
+                    input.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomBoardColor (user._id)}}checked{{/unless}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'No'}}
           else
