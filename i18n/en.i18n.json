@@ -882,5 +882,6 @@
     "invitations":"Invitations",
     "role":"Roles",
     "clear-filters": "Clear Filters",
-    "authentication-method": "Authentication Method"
+    "authentication-method": "Authentication Method",
+    "actions": "Actions"
 }

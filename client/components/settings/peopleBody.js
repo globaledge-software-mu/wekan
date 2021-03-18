@@ -1476,12 +1476,12 @@ Template.userGroupsGeneral.helpers({
     return {
         currentPage: Template.instance().currentPage,
         fields: [
-          { key: 'title', label: 'Title' },
-          { key: 'usersQuota', label: 'Users Quota'},
-          { key: 'usedUsersQuota',  label: 'Used Users-Quota'},
-          { key: 'boardsQuota', label: 'Boards Quota' },
-          { key: 'usedBoardsQuota', label: 'Used Boards Quota'},
-          { key: '_id', label: 'Group Admin(s)', fn: function(_id) {
+          { key: 'title', label: TAPi18n.__('title') },
+          { key: 'usersQuota', label: TAPi18n.__('users-quota')},
+          { key: 'usedUsersQuota',  label: TAPi18n.__('used-users-quota')},
+          { key: 'boardsQuota', label: TAPi18n.__('boards-quota') },
+          { key: 'usedBoardsQuota', label: TAPi18n.__('used-boards-quota')},
+          { key: '_id', label: TAPi18n.__('group-admin'), fn: function(_id) {
           	var data = UserGroups.findOne({_id:_id});
         		if (data && data._id) {
         			var groupAdminsIds = new Array();
@@ -1499,7 +1499,7 @@ Template.userGroupsGeneral.helpers({
         		}
             return new Spacebars.SafeString('');
           } },
-          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
           { key: '_id', 'label': 'Action', fn: function(_id) { return new Spacebars.SafeString('<a class="manage-user-group" data-user-group-id="'+_id+'" href="#">Manage</a>'); }},
         ]
     };
@@ -3253,15 +3253,15 @@ Template.peopleGeneral.helpers({
     return {
         currentPage: Template.instance().currentPage,
         fields: [
-          { key: 'username', label: 'UserName' },
-          { key: 'profile.fullname', label: 'Full Name'},
-          { key: 'isAdmin',  label: 'Admin' , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
-          { key: 'roleName', label: 'Role' },
-          { key: 'emails.0.address', label: 'Email Address'},
-          { key: 'emails.0.verified', label: 'Verified', fn: function(verified) {return verified ? 'Yes' : 'No'; } },
-          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
-          { key: 'loginDisabled', 'label': 'Active', fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
-          { key: '_id', label: 'UserGroups',
+          { key: 'username', label: TAPi18n.__('username') },
+          { key: 'profile.fullname', label: TAPi18n.__('fullname')},
+          { key: 'isAdmin',  label: TAPi18n.__('admin') , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: TAPi18n.__('role')},
+          { key: 'emails.0.address', label: TAPi18n.__('email')},
+          { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: 'loginDisabled', 'label': TAPi18n.__('active'), fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
+          { key: '_id', label: TAPi18n.__('user-groups'),
             fn: function (_id) { 
                 var userGroupsIds = new Array();
                 AssignedUserGroups.find({
@@ -3280,8 +3280,8 @@ Template.peopleGeneral.helpers({
                 return new Spacebars.SafeString(html);
             }
           },
-          { key: 'authenticationMethod', 'label':'AuthenticationMethod'},
-          { key: '_id', 'label':'Actions', 
+          { key: 'authenticationMethod', 'label': TAPi18n.__('authentication-method')},
+          { key: '_id', 'label': TAPi18n.__('actions'), 
           	fn: function (_id) {
           		var html = "<a class='edit-user' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>  ";
           		if (Meteor.user().isAdmin) {
@@ -3313,14 +3313,14 @@ Template.invitationsGeneral.helpers({
 	  	return{
 	  		id :'subscriptionsDataTable',
 	  		fields:[
-	  			{ key: 'username', label: 'UserName' },
-	  			{ key: 'profile.fullname', label: 'Full Name'},
-	  			{ key: 'isAdmin',  label: 'Admin' , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
-          { key: 'roleName', label: 'Role' },
-          { key: 'emails.0.address', label: 'Email Address'},
-          { key: 'emails.0.verified', label: 'Verified', fn: function(verified) {return verified ? 'Yes' : 'No'; } },
-          { key: 'createdAt', 'label': 'Created At', fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
-          { key: '_id', 'label':'Actions', 
+	  			{ key: 'username', label: TAPi18n.__('username') },
+	  			{ key: 'profile.fullname', label: TAPi18n.__('fullname')},
+	  			{ key: 'isAdmin',  label: TAPi18n.__('admin') , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: TAPi18n.__('role') },
+          { key: 'emails.0.address', label: TAPi18n.__('email')},
+          { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', label: TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: '_id', 'label': TAPi18n.__('actions'), 
           	fn: function (_id) {
           		var html = "<a class='edit-invitee renewSubscription' data-id='"+_id+"' href='#'>Edit</a>  ";
           			  html += "<a class='resend-invite upgradeSubscription' data-id='"+_id+"' href='#'>Resend Invitation</a>  ";

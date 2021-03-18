@@ -875,5 +875,6 @@
     "invitations":"Uitnodigingen",
     "role":"Rollen",
     "clear-filters": "Filters wissen",
-    "authentication-method": "Verificatiemethode"
+    "authentication-method": "Verificatiemethode",
+    "actions":"Acties"
 }
