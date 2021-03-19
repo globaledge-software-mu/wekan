@@ -6,14 +6,23 @@ template(name="people")
       .content-title.ext-box
         .ext-box-left
         .ext-box-right
-          span {{_ 'people-number'}} #{peopleNumber}
+          if loading.get
+            +spinner
+          else if people.get
+            span {{#unless isMiniScreen}} {{_ 'people-number'}} {{/unless}} #{peopleList}
+          else if invitations.get
+            span {{#unless isMiniScreen}} {{_ 'people-number'}} {{/unless}} #{invitationCount}
+          else if userGroups.get
+            span {{#unless isMiniScreen}} {{_ 'Total Number of User Groups'}} {{/unless}} #{userGroupsCount}
+            
+          
       .content-body
         .side-menu
           ul
             li.active
               a.js-setting-menu(data-id="people-setting") {{_ 'people'}}
             li
-              a.js-setting-menu(data-id="invitation-setting") {{_ 'Invitations'}}
+              a.js-setting-menu(data-id="invitation-setting") {{_ 'invitations'}}
             if currentUser.isAdmin
               li
                 a.js-setting-menu(data-id="roles-setting") {{_ 'roles'}}
@@ -92,75 +101,16 @@ template(name="createNewUserPopup")
 
 template(name="peopleGeneral")
   button#create-user.btn.btn-primary {{_ 'add-user'}}
-  table
-    tbody
-      tr
-        th {{_ 'username'}}
-        th {{_ 'fullname'}}
-        th {{_ 'admin'}}
-        th {{_ 'role'}}
-        th {{_ 'email'}}
-        th {{_ 'verified'}}
-        th {{_ 'createdAt'}}
-        th {{_ 'active'}}
-        th {{_ 'user-groups'}}
-        th {{_ 'authentication-method'}}
-        th
+  +reactiveTable(collection=users settings=tableSettings)
       // If isAdmin
-      if currentUser.isAdmin
-        // List all the users
-        each user in peopleList
-          +peopleRow(userId=user._id)
-      // If isManagerAndNotAdmin
-      if currentUser.isManagerAndNotAdmin
-        // List users from his own groups which have either the role 'Coach' or 'Coachee'
-        each user in managerUserGroupsUsersAndInviteesList
-          +peopleRow(userId=user._id)
-
-      // If isCoachAndNotAdmin
-      if currentUser.isCoachAndNotAdmin
-        // List users from his own groups which have the role 'Coachee'
-        each user in coachUserGroupsUsersAndInviteesList
-          +peopleRow(userId=user._id)
-
-
-template(name="peopleRow")
-  tr
-    td.username {{ userData.username }}
-    td {{ userData.profile.fullname }}
-    td
-      if userData.isAdmin
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ roleName }}
-    td {{ userData.emails.[0].address }}
-    td
-      if userData.emails.[0].verified
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ moment userData.createdAt 'LLL' }}
-    td
-      if userData.loginDisabled
-        | {{_ 'no'}}
-      else
-        | {{_ 'yes'}}
-    td
-      ul
-        each userGroup in assignedUserGroups
-          li {{ userGroup.title }}
-    td {{_ userData.authenticationMethod }}
-    td
-      a.edit-user
-        | {{_ 'edit'}}
+     
 
 template(name="editUserPopup")
   if loading.get
     +spinner
   else
     form#editUserPopup
-      label.hide.userId(type="text" value=user._id)
+      input.userId(type="hidden" value=user._id)
       label
         | {{_ 'fullname'}}
         input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
@@ -206,70 +156,15 @@ template(name="editUserPopup")
 
 template(name="invitationsGeneral")
   button#create-user.btn.btn-primary {{_ 'add-user'}}
-  table#subscriptionsDataTable
-    tbody
-      tr
-        th {{_ 'username'}}
-        th {{_ 'fullname'}}
-        th {{_ 'admin'}}
-        th {{_ 'role'}}
-        th {{_ 'email'}}
-        th {{_ 'verified'}}
-        th {{_ 'createdAt'}}
-        th {{_ 'user-groups'}}
+  +reactiveTable(collection=inviteesList settings=tableSettings)
 
-        th
-      // If isAdmin
-      if currentUser.isAdmin
-        // List all the users
-        each user in inviteesList
-          +invitationRow(userId=user._id)
-      // If isManagerAndNotAdmin
-      if currentUser.isManagerAndNotAdmin
-        // List users from his own groups which have either the role 'Coach' or 'Coachee'
-        each user in managerUserGroupsUsersAndInviteesList
-          +invitationRow(userId=user._id)
-
-      // If isCoachAndNotAdmin
-      if currentUser.isCoachAndNotAdmin
-        // List users from his own groups which have the role 'Coachee'
-        each user in coachUserGroupsUsersAndInviteesList
-          +invitationRow(userId=user._id)
-
-template(name="invitationRow")
-  tr
-    td.username {{ userData.username }}
-    td {{ userData.profile.fullname }}
-    td
-      if userData.isAdmin
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ roleName }}
-    td {{ userData.emails.[0].address }}
-    td
-      if userData.emails.[0].verified
-        | {{_ 'yes'}}
-      else
-        | {{_ 'no'}}
-    td {{ moment userData.createdAt 'LLL' }}
-    td
-      ul
-        each userGroup in assignedUserGroups
-          li {{ userGroup.title }}
-
-    td#subscriptionsActionCol
-      a.edit-invitee.renewSubscription
-        | {{_ 'edit'}}
-      a.resend-invite.upgradeSubscription
-        | {{_ 'Resend'}}
 
 template(name="editInviteePopup")
   if loading.get
     +spinner
   else
-    form#editUserPopup
-      label.hide.userId(type="text" value=user._id)
+    form#editInviteePopup
+      input.invitee(type="hidden" value=user._id)
       label
         | {{_ 'fullname'}}
         input.js-profile-fullname(type="text" value=user.profile.fullname autofocus)
@@ -798,37 +693,7 @@ template(name="createRolePopup")
 
 template(name="userGroupsGeneral")
   button#create-user-group.btn.btn-primary {{_ 'create-user-group'}}
-  table
-    tbody
-      tr
-        th
-          ul
-            li {{_ 'title'}}
-        th
-          ul
-            li {{_ 'users-quota'}}
-        th
-          ul
-            li {{_ 'used-users-quota'}}
-        th
-          ul
-            li {{_ 'boards-quota'}}
-        th
-          ul
-            li {{_ 'used-boards-quota'}}
-        th
-          ul
-            li {{_ 'group-admins'}}
-        th
-          ul
-            li {{_ 'createdAt'}}
-        th
-          ul
-            li {{_ 'action'}}
-          // if isAdmin
-      if currentUser.isAdmin
-        each userGroup in userGroupsList
-          +userGroupRow(userGroupId=userGroup._id)
+  +reactiveTable(collection=userGroupsList settings=tableSettings)
 
 template(name="userGroupRow")
   tr
@@ -980,7 +845,7 @@ template(name="editUserGroup")
     if hasLogo
       #uploadedLogoContainer
         img.logo.logo-image(src="{{logoUrl(userGroup._id)}}")
-    input.hide.uploadLogoInput(accept="image/*;capture=camera" type="file")
+    input.invisible.uploadLogoInput(accept="image/*;capture=camera" type="file")
     button.full.uploadLogo
       i.fa.fa-upload
       | {{_ 'Upload logo'}}
@@ -1004,11 +869,12 @@ template(name="editUserGroup")
                     label.bold.userGroupMemberListComponent
                       | {{user.username}}
                 td
-                  .choiceCell
-                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomDefaultLogo (user._id)}}checked{{/if}}")
+                  .radio-inline
+                    input.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomDefaultLogo (user._id)}}checked{{/if}}")
                     span.setOrUnsetUserGroupLogoForUser
                       | {{_ 'Yes'}}
-                    input.form-control.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomDefaultLogo (user._id)}}checked{{/unless}}")
+                  .radio-inline
+                    input.setOrUnsetUserGroupLogoForMember(type="radio" name="setOrUnsetUserGroupLogoForMember{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomDefaultLogo (user._id)}}checked{{/unless}}")
                     span.setOrUnsetUserGroupLogoForUser
                       | {{_ 'No'}}
           else
@@ -1028,10 +894,10 @@ template(name="editUserGroup")
         | {{_ 'Board Color Settings'}}
     a.manageUserGroupResponse
     hr.hrEditUserGroupForm
-    #boardColor.row.form-group.col-md-12
-      label.form-control.col-md-6
+    #boardColor.form-inline
+      label.col-md-4
         | {{_ 'Select Color for Board'}}
-      input.form-control.setBoardColor(type="color" name="boardColor" value=boardColor)
+      input.form-control-static.setBoardColor.col-sm-4(type="color" name="boardColor" value=boardColor)
       
     hr.hrEditUserGroupForm
     label#memberLabel
@@ -1048,11 +914,12 @@ template(name="editUserGroup")
                     label.bold.userGroupMemberListComponent
                       | {{user.username}}
                 td
-                  .choiceCell
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomBoardColor (user._id)}}checked{{/if}}")
+                  .radio-inline
+                    input.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="Yes" checked="{{#if useCustomBoardColor (user._id)}}checked{{/if}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'Yes'}}
-                    input.form-control.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomBoardColor (user._id)}}checked{{/unless}}")
+                  .radio-inline
+                    input.setOrUnsetUserBoardColorForMember(type="radio" name="defaultBoardColor{{user._id}}" data-user-id=user._id value="No" checked="{{#unless useCustomBoardColor (user._id)}}checked{{/unless}}")
                     span.setOrUnsetUserBoardColorForUser
                       | {{_ 'No'}}
           else
@@ -1192,4 +1059,26 @@ template(name="upgradeSubscriptionPopup")
         input#upgradeSubscription.primary.wide(type="submit" value="{{_ 'save'}}")
         div
         input#cancelButton.primary.wide(type="button" value="{{_ 'cancel'}}")
+
+template(name="viewEmail")
+   #viewEmailContent
+     .modalBanner
+       h4.modalLabel
+        | {{_ 'view-email'}}
+       p.description
+        | {{_ 'view_email_description'}}
+     hr.hrEditUserGroupForm
+     #emailContent
+       |  {{{emailContents.email}}}
+     hr.hrEditUserGroupForm
+     .btnContainer
+       button#openMailClient.btn.btn-primary(data-userId=emailContents.user._id) {{_ 'open-mail-client'}}
+
+
+template(name="settingsUserPopup")
+  ul.pop-over-list
+    li
+      a.impersonate-user(data-id=user._id)
+        i.fa.fa-user
+        | {{_ 'impersonate-user'}}
 

@@ -1,0 +1,24 @@
+<template name="reactiveTableFilter">
+  <div id="{{id}}" class="{{class}}">
+    <span class="input-group-addon">
+      {{#if useFontAwesome}}
+        <i class="fa fa-search"></i>
+      {{else}}
+        {{#if label}}
+          <span>{{label}}</span>
+        {{else}}
+          {{i18n 'reactiveTable.filter'}}
+        {{/if}}
+      {{/if}}
+    </span>
+    {{#if useFontAwesome}}
+      {{#if label}}
+        <input class="reactive-table-input form-control" type="text" value="{{filter}}" placeholder="{{label}}">
+      {{else}}
+        <input class="reactive-table-input form-control" type="text" value="{{filter}}" placeholder="{{i18n 'reactiveTable.filter'}}">
+      {{/if}}
+    {{else}}
+      <input class="reactive-table-input form-control" type="text" value="{{filter}}">
+    {{/if}}
+  </div>
+</template>

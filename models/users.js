@@ -1253,7 +1253,8 @@ if (Meteor.isServer) {
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
                 subject: TAPi18n.__('email-invite-subject', params, lang),
-                html: TAPi18n.__('email-invite-text', params, lang),
+                text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
+                html: TAPi18n.__('email-invite-text', params, lang)
               });
             } catch (e) {
               throw new Meteor.Error('email-fail', e.message);
@@ -1276,6 +1277,11 @@ if (Meteor.isServer) {
         // Set in lowercase email before creating account
         const email = username.toLowerCase();
         username = email.substring(0, posAt);
+        const userExists = Users.findOne({username: {$regex: username, $options:'i'} });
+        
+        if (userExists) {
+           username = username + '_' + Math.random().toString(16).substr(2, 2);
+        }
         // Create user doc
         const newUserId = Accounts.createUser({username, email});
         if (!newUserId) {
@@ -1399,7 +1405,8 @@ if (Meteor.isServer) {
           to: user.emails[0].address.toLowerCase(),
           from: Accounts.emailTemplates.from,
           subject: TAPi18n.__('email-enroll-subject', parameters, lang),
-          html: message,
+          text: message,
+          html: message
         });
 
         board.addMember(user._id);
@@ -1466,7 +1473,8 @@ if (Meteor.isServer) {
                   to: user.emails[0].address.toLowerCase(),
                   from: Accounts.emailTemplates.from,
                   subject: TAPi18n.__('email-invite-subject', params, lang),
-                  html: TAPi18n.__('email-invite-text', params, lang),
+                  text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
+                  html: '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang),
                 });
               } catch (e) {
                 throw new Meteor.Error('email-fail', e.message);
@@ -1497,12 +1505,13 @@ if (Meteor.isServer) {
     	        };
     	      const lang = users.getLanguage();
     	      try {
-    	      	const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+    	      	const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="multipart/mixed; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
     	      	Email.send({
     	    	    to: user.emails[0].address.toLowerCase(),
     	          from: Accounts.emailTemplates.from,
     	          subject: TAPi18n.__('email-enroll-subject', parameters, lang),
     	          html: message,
+    	          text: message
     	        });
     	     } catch (e) {
     	      	throw new Meteor.Error('email-fail', e.message);
@@ -1514,9 +1523,33 @@ if (Meteor.isServer) {
       }
       
       return {userID: user._id, username: user.username, email: user.emails[0].address};
-    }
+    },
+    
   });
+  
+  Accounts.registerLoginHandler("impersonate", function ({impersonateUser}) {
+    if (!impersonateUser) return undefined; // don't handle
 
+    check(this.userId, String);
+    check(impersonateUser, String);
+
+    if (impersonateUser === this.userId) {
+      return {error: Meteor.Error(400, "Bad request. You already are yourself.")};
+    }
+
+    if (!Meteor.user().isAdmin) {
+      throw new Meteor.Error(403, "Permission Denied");
+    }
+
+    if (!Meteor.users.findOne({_id: impersonateUser})) {
+      return {error: Meteor.Error(404, "User not found. Can't impersonate it.")};
+    }
+
+    return {
+      userId: impersonateUser,
+    };
+  });
+  
   Accounts.onCreateUser((options, user) => {
     const userCount = Users.find().count();
     if (userCount === 0) {

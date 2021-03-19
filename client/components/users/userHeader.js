@@ -28,9 +28,24 @@ BlazeComponent.extendComponent({
       'click .js-change-password': Popup.open('changePassword'),
       'click .js-change-language': Popup.open('changeLanguage'),
       'click .js-logout'(evt) {
+        cb = function() {};
         evt.preventDefault();
         this.setLoading(true);
-        AccountsTemplates.logout();
+        var toUser = Meteor._localStorage.getItem('impersonate.userId');
+        
+        if (toUser) {
+        	var toToken = Meteor._localStorage.getItem('impersonate.loginToken');
+          Accounts.loginWithToken(toToken, function(err) {
+            cb.apply(this, [err, toUser]);
+            Popup.close();
+            FlowRouter.go('/')
+          });
+          Meteor._localStorage.removeItem('impersonate.userId');
+          Meteor._localStorage.removeItem('impersonate.loginToken');
+       } else {
+          AccountsTemplates.logout();
+       }
+        
       },
       'click .js-go-setting'() {
         Popup.close();

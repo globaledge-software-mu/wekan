@@ -49,11 +49,15 @@ Template.header.helpers({
   
   hasDefaultBoardColor() {
 	  const user = Meteor.user();
-	  const assignedGroups = AssignedUserGroups.findOne({ userId: Meteor.user()._id, useCustomDefaultBoardColor: 'Yes'});
-	  if (assignedGroups && assignedGroups._id) {
-		  return true;
-	  } else {
+	  const board = Boards.findOne({_id: FlowRouter.current().params.id, type:'board'})
+	  
+	  if (board && board._id) {
+	    const assignedGroups = AssignedUserGroups.findOne({ userId: Meteor.user()._id, useCustomDefaultBoardColor: 'Yes'});
+	    if (assignedGroups && assignedGroups._id) {
+		    return true;
+	    } else {
 		   return false;
+	    }
 	  }
   },
   
