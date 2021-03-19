@@ -49,40 +49,6 @@ BlazeComponent.extendComponent({
   	
   },
   
-  filterPeople() {
-    const value = $('#searchInput').first().val();
-    if (value === '') {
-      this.findUsersOptions.set({});
-    } else {
-      const regex = new RegExp(value, 'i');
-      this.findUsersOptions.set({
-        $or: [
-          { username: regex },
-          { 'profile.fullname': regex },
-          { 'emails.address': regex },
-        ],
-      });
-    }
-    
-  },
-  
-  filterInvitations() {
-  	const value = $('#searchInvitationInput').first().val();
-    if (value === '') {
-      this.findInvitations.set({});
-    } else {
-      const regex = new RegExp(value, 'i');
-      this.findInvitations.set({
-        $or: [
-          { username: regex },
-          { 'profile.fullname': regex },
-          { 'emails.address': regex },
-          { 'roleName': regex },
-        ],
-      });
-    }
-  },
-  
   loadNextPage() {
     if (this.loadNextPageLocked === false) {
       this.page.set(this.page.get() + 1);
@@ -106,14 +72,41 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-  	const condition =  {'emails.verified':true};
-  	const users = Users.find(condition, {
-      fields: { _id: true },
-    });
+  	const currentUser = Meteor.user();
+  	const isAdmin = currentUser.isAdmin;
+  	if (isAdmin) {
+  		const condition =  {'emails.verified':true};
+  	  const users = Users.find(condition, {
+        fields: { _id: true },
+      });
+      this.number.set(users.count(false));
+      return this.number.get();
+    } else if (!isAdmin && currentUser.roleName === 'Manager') {
+    	this.number.set(this.managerUserGroupsUsersAndInviteesList().count());
+    	return this.number.get();
+    } else if (!isAdmin && currentUser.roleName === 'Coach') {
+    	this.number.set(this.coachUserGroupsUsersAndInviteesList().count());
+    	return this.number.get();
+    }
+  },
+  
+  invitationCount() {
+  	const users = Users.find({
+  		              'emails.verified':false, 
+  		               createdBy:Meteor.user()._id}, {
+                     fields: { _id: true },
+                  });
     this.number.set(users.count(false));
-    return users;
+    return this.number.get();
   },
    
+  
+  userGroupsCount() {
+  	const userGroupList = UserGroups.find();
+  	this.number.set(userGroupList.count());
+  	return this.number.get();
+  },
+  
   hasExpiredSubscriptions() {
   	const expiredSubscription = Subscriptions.findOne({
   		archived: { $ne: true },
@@ -249,9 +242,6 @@ BlazeComponent.extendComponent({
       return null;
     }
   },
-  peopleNumber() {
-    return this.number.get();
-  },
   roleList() {
     const roles = Roles.find(this.findRolesOptions.get(), {
       sort: ['name'],
@@ -275,10 +265,6 @@ BlazeComponent.extendComponent({
     }
   },
   
-  filterByRole(role) {
-    this.filterPeople();
-    console.log(this.filterPeople());
-  },
   events() {
     return [{
     	'click #searchButton'() {
@@ -314,13 +300,6 @@ BlazeComponent.extendComponent({
       'click .edit-user':Popup.open('editUser'),
       'click a.edit-invitee': Popup.open('editInvitee'),
       'click a.more-settings': Popup.open('settingsUser'),
-      'click .role': function(event) {
-      	const role = $(event.target).text()
-      	event.stopPropagation();
-      	this.filterByRole();
-      	Session.set('roleFilter', role);
-      	$('.roles').css('display','none');
-      },
     }];
   },
 }).register('people');
@@ -1452,10 +1431,6 @@ Template.createRolePopup.helpers({
 });
 
 BlazeComponent.extendComponent({
-  userGroupsList() {
-  	return UserGroups.find();
-  },
-  
   events() {
 	  return [{
 	    'click button#create-user-group': Popup.open('createUserGroup'),
@@ -3252,6 +3227,7 @@ Template.peopleGeneral.helpers({
 	tableSettings : function () {
     return {
         currentPage: Template.instance().currentPage,
+        class : 'table table-striped table-hover',
         fields: [
           { key: 'username', label: TAPi18n.__('username') },
           { key: 'profile.fullname', label: TAPi18n.__('fullname')},

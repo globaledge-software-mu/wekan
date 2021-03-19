@@ -6,7 +6,16 @@ template(name="people")
       .content-title.ext-box
         .ext-box-left
         .ext-box-right
-          span {{_ 'people-number'}} #{peopleNumber}
+          if loading.get
+            +spinner
+          else if people.get
+            span {{#unless isMiniScreen}} {{_ 'people-number'}} {{/unless}} #{peopleList}
+          else if invitations.get
+            span {{#unless isMiniScreen}} {{_ 'people-number'}} {{/unless}} #{invitationCount}
+          else if userGroups.get
+            span {{#unless isMiniScreen}} {{_ 'Total Number of User Groups'}} {{/unless}} #{userGroupsCount}
+            
+          
       .content-body
         .side-menu
           ul

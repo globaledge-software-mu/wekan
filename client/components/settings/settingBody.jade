@@ -128,18 +128,20 @@ template(name='accountSettings')
   ul#account-setting.setting-detail
     li.accounts-form
       .title {{_ 'accounts-allowEmailChange'}}
-      .form-group.flex
-        input.form-control#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="true" checked="{{#if allowEmailChange}}checked{{/if}}")
+      .radio-inline
+        input#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="true" checked="{{#if allowEmailChange}}checked{{/if}}")
         span {{_ 'yes'}}
-        input.form-control#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="false" checked="{{#unless allowEmailChange}}checked{{/unless}}")
+      .radio-inline
+        input#accounts-allowEmailChange(type="radio" name="allowEmailChange" value="false" checked="{{#unless allowEmailChange}}checked{{/unless}}")
         span {{_ 'no'}}
     li
     li.accounts-form
       .title {{_ 'accounts-allowUserNameChange'}}
-      .form-group.flex
-        input.form-control#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="true" checked="{{#if allowUserNameChange}}checked{{/if}}")
+      .radio-inline
+        input#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="true" checked="{{#if allowUserNameChange}}checked{{/if}}")
         span {{_ 'yes'}}
-        input.form-control#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="false" checked="{{#unless allowUserNameChange}}checked{{/unless}}")
+      .radio-inline
+        input#accounts-allowUserNameChange(type="radio" name="allowUserNameChange" value="false" checked="{{#unless allowUserNameChange}}checked{{/unless}}")
         span {{_ 'no'}}
     li
       button.js-accounts-save.primary {{_ 'save'}}
@@ -171,11 +173,13 @@ template(name='layoutSettings')
         span {{_ 'no'}}
     li.layout-form
       .title {{_ 'display-authentication-method'}}
-      .form-group.flex
-        input.form-control#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="true" checked="{{#if currentSetting.displayAuthenticationMethod}}checked{{/if}}")
+      .radio-inline
+        input#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="true" checked="{{#if currentSetting.displayAuthenticationMethod}}checked{{/if}}")
         span {{_ 'yes'}}
-        input.form-control#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="false" checked="{{#unless currentSetting.displayAuthenticationMethod}}checked{{/unless}}")
+      .radio-inline
+        input#display-authentication-method(type="radio" name="displayAuthenticationMethod" value="false" checked="{{#unless currentSetting.displayAuthenticationMethod}}checked{{/unless}}")
         span {{_ 'no'}}
+        
     li.layout-form
       .title {{_ 'default-authentication-method'}}
       +selectAuthenticationMethod(authenticationMethod=currentSetting.defaultAuthenticationMethod)
