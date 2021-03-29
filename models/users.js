@@ -1434,7 +1434,7 @@ if (Meteor.isServer) {
     resendInviteToUser(user) {
       check(user, Object);
       const users = Users.findOne({_id: user._id});
-      const inviter = Meteor.user();
+      const inviter = !Meteor.user() ? user.createdBy : Meteor.user();
       
       //
       if (user._id !== inviter._id) {
