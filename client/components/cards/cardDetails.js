@@ -878,7 +878,7 @@ BlazeComponent.extendComponent({
       
       'click .js-submit-edit-aspects-list-item-form' (evt) {
         evt.preventDefault();
-        const aspectId = $(evt.target).attr('id');
+        const aspectId = $(evt.target).data('id');
         const title = $(evt.target).parent().parent().find('textarea#'+aspectId).val();
         
         if (title.length > 0) {
