@@ -1627,23 +1627,28 @@ BlazeComponent.extendComponent({
   },
 
   setLogo(logoUrl, userGroupId) {
-    const userGroup = UserGroups.findOne({_id: userGroupId});
-    if (userGroup && userGroup._id) {
-      if (userGroup.logoUrl && userGroup.logoUrl.length > 0) {
-        const oldLogoUrl = userGroup.logoUrl;
-        const splittedUrl = oldLogoUrl.split('/');
-        const oldLogoName = splittedUrl[5];
-        if (oldLogoName.length > 0) {
-          const oldLogo = Logos.findOne({'original.name': oldLogoName});
-          if (oldLogo && oldLogo._id) {
-            Logos.remove({_id: oldLogo._id});
-          }
-        }
-      }
+  	const userGroup = UserGroups.findOne({_id: userGroupId});
+  	if (userGroup && userGroup._id) {
       userGroup.setLogoUrl(logoUrl);
     }
   },
-
+  
+  removeOldLogo(userGroupId) {
+  	const userGroup = UserGroups.findOne({_id: userGroupId});
+  	if (userGroup && userGroup._id && userGroup.logoUrl && userGroup.logoUrl.length > 0) {
+      const oldLogoUrl = userGroup.logoUrl;
+      const splittedUrl = oldLogoUrl.split('/');
+      const oldLogoName = !splittedUrl[5]? splittedUrl[4]: splittedUrl[5];
+      
+      if (oldLogoName.length > 0) {
+        const oldLogo = Logos.findOne({_id: splittedUrl[4]});
+        if (oldLogo && oldLogo._id) {
+          Logos.remove({_id: splittedUrl[4]});
+        }
+      }
+  	}
+  },
+  
   setError(error) {
     this.error.set(error);
   },
@@ -1965,6 +1970,7 @@ BlazeComponent.extendComponent({
 
         if (fileUrl) {
           this.setError('');
+          this.removeOldLogo(userGroupId);
           const fetchLogoInterval = window.setInterval(() => {
             $.ajax({
               url: fileUrl,
