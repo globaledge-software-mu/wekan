@@ -607,10 +607,23 @@ BlazeComponent.extendComponent({
         inputSelector.focus();
       },
 
+      
+      'click .aspectItem a.editAspect' (evt) {
+        evt.preventDefault();
+        const parentId = $(evt.target).parent().attr('id');
+        const aspectId = $(evt.target).attr('data-aspect-id');
+        const title = $(evt.target).attr('data-title') ;
+        
+        $('#'+parentId+' a.editAspect').css('display', 'none');
+        $('#edit-aspects-list-item-form-'+aspectId).css('display', 'block');
+        const inputSelector = $('textarea#'+aspectId);
+        inputSelector.val(title);
+        inputSelector.focus();
+      },
+      
       'click .removeAspect' (evt) {
-
-        const aspectId = $(evt.target).closest('p').data('aspect-id');
-        const aspectTitle = $(evt.target).closest('p').data('title');
+        const aspectId = $(evt.target).closest('a').data('aspect-id');
+        const aspectTitle = $(evt.target).closest('a').data('title');
         var cardId = '';
         const teamMemberAspect = TeamMembersAspects.findOne({ aspectsId: aspectId});
         if (teamMemberAspect && teamMemberAspect._id) {
@@ -800,6 +813,12 @@ BlazeComponent.extendComponent({
         $('#addAspect').css('display', 'block');
       },
 
+      
+      'click .js-close-edit-aspects-list-form' (evt) {
+         const aspectId = $(evt.target).attr('id');
+         $('.aspectItem#'+aspectId+' #edit-aspects-list-item-form-'+aspectId).css('display','none');
+         $('.aspectItem#'+aspectId+' a.editAspect').css('display','block');
+      },
       // Pressing Enter should click the submit button
       'keydown textarea#js-add-aspects-list-item'(evt) {
         if (evt.keyCode === 13) {
@@ -807,7 +826,15 @@ BlazeComponent.extendComponent({
           $('#js-close-aspects-list-item-form').click();
         }
       },
-
+      
+      'keydown textarea.js-edit-aspects-list-item' (evt) {
+      	const aspectId = $(evt.target).attr('id');
+      	if (evt.keyCode == 13) {
+      		$('button#'+aspectId).click();
+          $('a#'+aspectId).click();
+      	}
+      },
+      
       'click #js-submit-aspects-list-item-form'(evt) {
         evt.preventDefault();
         const title = $(evt.target).closest('#add-aspects-list-item-controls').siblings('#js-add-aspects-list-item').val();
@@ -848,7 +875,21 @@ BlazeComponent.extendComponent({
         }
         $('#js-close-aspects-list-item-form').click();
       },
-
+      
+      'click .js-submit-edit-aspects-list-item-form' (evt) {
+        evt.preventDefault();
+        const aspectId = $(evt.target).data('id');
+        const title = $(evt.target).parent().parent().find('textarea#'+aspectId).val();
+        
+        if (title.length > 0) {
+        	AspectsListItems.update({_id:aspectId},
+        			                   {$set:{title:title}
+        	                    });
+        }
+        $('#edit-aspects-list-item-form-'+aspectId).css('display','none');
+        $('.aspectItem#'+aspectId+' .editAspect').css('display', 'block');
+      },
+      
       // chart's data-points click event
       'click canvas.card-details-item.score-line.chartjs-render-monitor': function(evt) {
         evt.preventDefault();

@@ -60,7 +60,7 @@ Template.boardChangeTitlePopup.events({
 
 BlazeComponent.extendComponent({
   watchLevel() {
-    const currentBoard = Boards.findOne(Session.get('currentBoard'));
+    const currentBoard = Boards.findOne(Session.get('currentBoard'))
     return currentBoard && currentBoard.getWatchLevel(Meteor.userId());
   },
 
@@ -68,6 +68,11 @@ BlazeComponent.extendComponent({
     const boardId = Session.get('currentBoard');
     const user = Meteor.user();
     return user && user.hasStarred(boardId);
+  },
+  
+  isTemplate() {
+  	const board = Boards.findOne(Session.get('currentBoard'));
+  	return board && board.isTemplateBoard();
   },
 
   // Only show the star counter if the number of star is greater than 2
@@ -286,12 +291,29 @@ BlazeComponent.extendComponent({
 }).register('boardChangeVisibilityPopup');
 
 BlazeComponent.extendComponent({
+	onCreated() {
+		this.loading = new ReactiveVar(false);
+	},
+	
+	onRendered() {
+		this.setLoading(false);
+	},
+	
+	setLoading(w) {
+    this.loading.set(w);
+  },
+  
+  isLoading() {
+    return this.loading.get();
+  },
+  
   template() {
     return 'cloneBoardPopup';
   },
 
   onSubmit(evt) {
     evt.preventDefault();
+    this.setLoading(true);
     const title = this.find('.js-new-board-title').value;
 
     Meteor.call('cloneBoard', Session.get('currentBoard'), null, {title: title}, (err, res) => {

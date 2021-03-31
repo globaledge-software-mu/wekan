@@ -226,6 +226,7 @@ export class WekanCreator {
       stars: 0,
       title: boardToImport.title,
       description: boardToImport.description,
+      type: boardToImport.type,
     };
     // now add other members
     if (boardToImport.members) {

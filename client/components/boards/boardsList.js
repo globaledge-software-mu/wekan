@@ -49,47 +49,62 @@ Template.boardListHeaderBar.helpers({
 
 BlazeComponent.extendComponent({
   onCreated() {
-    Meteor.subscribe('setting');
-    Meteor.subscribe('userFolders');
-    Meteor.subscribe('templateBoards');
-    Meteor.subscribe('userCards');
+  	Meteor.subscribe('setting'),
+  	this.isBoardReady = new ReactiveVar(false);    
+  	this.showOverlay = new ReactiveVar(false);
+  	const handles = [
+      Meteor.subscribe('userFolders'),
+      Meteor.subscribe('templateBoards'),
+      Meteor.subscribe('userCards')
+    ];
+  	
+  	 Tracker.autorun(() => {
+       this.isBoardReady.set(handles.every(handle => handle.ready()));
+     });
   },
 
   showBoards() {
   	const selector = $('.board-list > .sk-spinner.sk-spinner-wave');
   	if (selector.length > 0) {
-  		selector.remove();
+  		selector.hide();
   		$('.addBoardContainer').show();
 	  }
   },
 
   onRendered() {
-  	$('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
-
-  	const folder = Session.get('folder');
-
-  	if (folder == 'uncategorised') {
-  		this.showBoards();
-      $('a#uncategorisedBoardsFolder').trigger('click');
-  	} else if (folder == 'templates') {
-  		this.showBoards();
-      $('a#templatesFolder').trigger('click');
-  	} else {
-      if ($('.myFolder[data-id="'+folder+'"]').length > 0) {
-        if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
-          this.showBoards();
-          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
-        } else {
-          $('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
-          this.showBoards();
-          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
-        }
-      } else {
-        this.showBoards();
-        $('a#uncategorisedBoardsFolder').trigger('click');
-      }
-  	}
-
+    Tracker.autorun(() =>{
+    	if (this.isBoardReady.get()) {
+    		Tracker.afterFlush(() => {
+    			
+    		  $('ul.board-list.clearfix').sortable({ cancel: '.js-toggle-sidebar' });
+    		  const folder = Session.get('folder');
+    		  
+    	  	if (folder == 'uncategorised') {
+    	  		this.showBoards();
+    	      $('a#uncategorisedBoardsFolder').trigger('click');
+    	  	} else if (folder == 'templates') {
+    	  		this.showBoards();
+    	      $('a#templatesFolder').trigger('click');
+    	  	} else {
+    	      if ($('.myFolder[data-id="'+folder+'"]').length > 0) {
+    	        if (!$('.myFolder[data-id="'+folder+'"]').hasClass('subFolderTAGli')) {
+    	          this.showBoards();
+    	          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+    	        } else {
+    	          $('.myFolder[data-id="'+folder+'"]').closest('ul.nav-second-level').siblings('a.folderOpener').children('i.folderHandle').first().click();
+    	          this.showBoards();
+    	          $('.myFolder[data-id="'+folder+'"] a.folderOpener').click();
+    	        }
+    	      } else {
+    	        this.showBoards();
+    	        $('a#uncategorisedBoardsFolder').trigger('click');
+    	      }
+    	  	}
+    	    
+    		});
+    		
+    	}
+    });
   	// Add member to its template-container, case the template-container
   	// member is null but the user has the template-container's id
   	var templatesBoardId = Meteor.user().profile.templatesBoardId;
@@ -499,14 +514,18 @@ BlazeComponent.extendComponent({
         evt.preventDefault();
       },
       'click .js-clone-board'(evt) {
+      	this.showOverlay.set(true);
+      	
         Meteor.call('cloneBoard',
           this.currentData()._id,
           Session.get('fromBoard'),
           {},
           (err, res) => {
             if (err) {
+            	$('.board-overlay').addClass('hide');
               this.setError(err.error);
             } else {
+            	$('.board-overlay').addClass('hide');
               Session.set('fromBoard', null);
               Utils.goBoardId(res);
             }

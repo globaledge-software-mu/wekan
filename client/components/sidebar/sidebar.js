@@ -186,6 +186,7 @@ Template.boardMenuPopup.events({
   'click .js-clone-board': Popup.open('cloneBoard'),
   'click .js-import-board': Popup.open('chooseBoardSource'),
   'click .js-subtask-settings': Popup.open('boardSubtaskSettings'),
+  'click .js-exportas-template': Popup.open('exportTemplate') ,
 });
 
 Template.boardMenuPopup.helpers({
@@ -228,8 +229,9 @@ Template.memberPopup.events({
   }),
   
   'click .js-reinvite'() {
-	  const userId = this.userId;
-	  Meteor.call('resendInviteToUser', userId, (err, res) => {
+	  const user = Users.findOne({_id:this.userId});
+	  Meteor.call('resendInviteToUser', user , (err, res) => {
+	  	console.log(err);
 		  if (err) {
 			 $('.danger').removeClass('hide');
 		  } else if(res.email) {
@@ -237,6 +239,13 @@ Template.memberPopup.events({
 		  }
 	  });
    },
+   
+  'click .js-viewemail'() {
+  	 Popup.close('member');
+     Modal.open('viewEmail');
+     Session.set('manageUserId', this.userId);
+     Session.set('boardId', Session.get('currentBoard'));
+   }
 });
 
 Template.removeMemberPopup.helpers({
@@ -246,6 +255,7 @@ Template.removeMemberPopup.helpers({
   board() {
     return Boards.findOne(Session.get('currentBoard'));
   },
+  
 });
 
 Template.leaveBoardPopup.helpers({
@@ -568,7 +578,7 @@ BlazeComponent.extendComponent({
         this.setLoading(false);
       }
       if (err) {
-      	self.setError(err.error);
+      	self.setError(err.message);
       	return false;
       } else if (ret.email) {
       	self.setError('email-sent');
@@ -671,3 +681,35 @@ Template.changePermissionsPopup.helpers({
     return currentBoard.hasAdmin(this.userId) && (currentBoard.activeAdmins() === 1);
   },
 });
+
+BlazeComponent.extendComponent({
+  events() {
+  	return [{
+  	  'click .js-template-name-save':function() {
+  	  	$('.enter-valid-email').hide();
+  	  	const boardId = Session.get('currentBoard');
+  	    const board = Boards.findOne({_id: boardId});
+  	    const templateName = $('input[name=template-name]').val();
+  	    if (templateName == '') {
+  	    	$('.enter-valid-email').show();
+  	    	return false;
+  	    } else{
+  	    	$('.sk-spinner-wave').removeClass('hide');
+  	    	Meteor.call('cloneBoard', board._id, Session.get('currentBoard'),{type:'template-board', title: templateName},
+  	  	      (err, res)  =>  {
+  	  	    	  if (err) {
+  	              this.setError(err.error);
+  	              $('.sk-spinner-wave').addClass('hide');
+  	         	    $('#form-container').removeClass('hide');
+  	             } else {
+  	               Session.set('fromBoard', null);
+  	               Utils.goBoardId(res);
+  	              }
+  	  	    	  }
+  	  	      );
+  	    }
+  	    /**/
+  	   }
+   }]
+ }
+}).register('exportTemplatePopup')

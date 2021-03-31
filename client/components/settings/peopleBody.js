@@ -18,6 +18,7 @@ BlazeComponent.extendComponent({
     this.findRolesOptions = new ReactiveVar({});
     this.invitations = new ReactiveVar(false);
     this.number = new ReactiveVar(0);
+    this.findInvitations = new ReactiveVar({});
 
     this.page = new ReactiveVar(1);
     this.loadNextPageLocked = false;
@@ -43,33 +44,11 @@ BlazeComponent.extendComponent({
       Meteor.subscribe('subscriptions');
     });
   },
-  events() {
-    return [{
-      'click #searchButton'() {
-        this.filterPeople();
-      },
-      'keydown #searchInput'(event) {
-        if (event.keyCode === 13 && !event.shiftKey) {
-          this.filterPeople();
-        }
-      },
-    }];
+  
+  onRendered() {
+  	
   },
-  filterPeople() {
-    const value = $('#searchInput').first().val();
-    if (value === '') {
-      this.findUsersOptions.set({});
-    } else {
-      const regex = new RegExp(value, 'i');
-      this.findUsersOptions.set({
-        $or: [
-          { username: regex },
-          { 'profile.fullname': regex },
-          { 'emails.address': regex },
-        ],
-      });
-    }
-  },
+  
   loadNextPage() {
     if (this.loadNextPageLocked === false) {
       this.page.set(this.page.get() + 1);
@@ -93,27 +72,39 @@ BlazeComponent.extendComponent({
     this.loading.set(w);
   },
   peopleList() {
-    const users = Users.find({
-    	'emails.verified':true
-    });
-    this.number.set(users.count());
-    return users;
+  	const currentUser = Meteor.user();
+  	const isAdmin = currentUser.isAdmin;
+  	if (isAdmin) {
+  		const condition =  {'emails.verified':true};
+  	  const users = Users.find(condition, {
+        fields: { _id: true },
+      });
+      this.number.set(users.count(false));
+      return this.number.get();
+    } else if (!isAdmin && currentUser.roleName === 'Manager') {
+    	this.number.set(this.managerUserGroupsUsersAndInviteesList().count());
+    	return this.number.get();
+    } else if (!isAdmin && currentUser.roleName === 'Coach') {
+    	this.number.set(this.coachUserGroupsUsersAndInviteesList().count());
+    	return this.number.get();
+    }
   },
   
-  inviteesList() {
-	  var sameUserGroupsUserIds = new Array();
-	  const user = Users.find({
-      createdBy: Meteor.user()._id
-    }).forEach((invitee) => {
-      sameUserGroupsUserIds.push(invitee._id)
-	  });
-	  
-	  const invitees = Users.find({
-      _id: { $in: sameUserGroupsUserIds },
-      'emails.verified': false,
-      }, {sort :{ createdAt: -1 }});
-	  this.number.set(invitees.count());
-	  return invitees;
+  invitationCount() {
+  	const users = Users.find({
+  		              'emails.verified':false, 
+  		               createdBy:Meteor.user()._id}, {
+                     fields: { _id: true },
+                  });
+    this.number.set(users.count(false));
+    return this.number.get();
+  },
+   
+  
+  userGroupsCount() {
+  	const userGroupList = UserGroups.find();
+  	this.number.set(userGroupList.count());
+  	return this.number.get();
   },
   
   hasExpiredSubscriptions() {
@@ -169,25 +160,16 @@ BlazeComponent.extendComponent({
       // Query the users using the ids pushed in sameUserGroupsUserIds
       // and the users can't be admins nor have the role manager
       let users;
-      users = Users.find({
-      	_id: { $in: sameUserGroupsUserIds },
-      	'emails.verified': true,
-        $nor: [
-          { isAdmin: true },
-          { roleId: role._id }
-        ]
-      });
+      let condition;
+      condition = { $and:[this.findUsersOptions.get(),{_id: { $in: sameUserGroupsUserIds }, 'emails.verified':true } ], 
+      		          $nor: [{ isAdmin: true },{ roleId: role._id }]
+                  };
+      users = Users.find(condition);
       
       if (this.invitations.get()) {
-          users = Users.find({
-              _id: { $in: sameUserGroupsUserIds },
-              'emails.verified': false,
-              $nor: [
-                { isAdmin: true },
-                { roleId: role._id }
-              ],
-            }, {sort: {createdAt:-1 }});
-          
+      	condition = { $and:[ this.findUsersOptions.get(),{_id: { $in: sameUserGroupsUserIds }, 'emails.verified': false } ], 
+	                   $nor: [{ isAdmin: true },{ roleId: role._id }] };
+          users = Users.find(condition , {sort: {createdAt:-1 }});
       }
       this.number.set(users.count());
       return users;
@@ -232,6 +214,8 @@ BlazeComponent.extendComponent({
       users = Users.find({
       	_id: { $in: sameUserGroupsUserIds },
       	'emails.verified': true,
+      	
+      	$and:[this.findUsersOptions.get()],
         $nor: [
           { isAdmin: true },
           { roleId: managerRole._id },
@@ -243,6 +227,7 @@ BlazeComponent.extendComponent({
     	  users = Users.find({
                _id: { $in: sameUserGroupsUserIds },
                'emails.verified': false,
+               $and:[this.findUsersOptions.get()],
               $nor: [
                 { isAdmin: true },
                 { roleId: managerRole._id },
@@ -256,9 +241,6 @@ BlazeComponent.extendComponent({
       this.number.set(0);
       return null;
     }
-  },
-  peopleNumber() {
-    return this.number.get();
   },
   roleList() {
     const roles = Roles.find(this.findRolesOptions.get(), {
@@ -282,13 +264,42 @@ BlazeComponent.extendComponent({
       this.invitations.set('invitation-setting' === targetID);
     }
   },
+  
   events() {
     return [{
+    	'click #searchButton'() {
+       this.filterPeople();
+      },
+      'keyup #searchInput' (event) {
+        this.filterPeople();
+      },
+      'keydown #searchInput'(event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+          this.filterPeople();
+        }
+      },
+      'click #searchInvitationButton'() {
+        this.filterInvitations();
+      },
+      'keydown #searchInvitationButton'(event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+          this.filterInvitations();
+        }
+      },
+      'keyup #searchInvitationButton'(event) {
+      	this.filterInvitations();
+      },
       'click a.js-setting-menu'(e) {
       	Popup.close();
       	this.switchMenu(e);
       },
       'click #create-user': Popup.open('createNewUser'),
+      'click .js-btn-dropdown': function() {
+         $('.roles').toggle('show');
+      },
+      'click .edit-user':Popup.open('editUser'),
+      'click a.edit-invitee': Popup.open('editInvitee'),
+      'click a.more-settings': Popup.open('settingsUser'),
     }];
   },
 }).register('people');
@@ -442,32 +453,41 @@ BlazeComponent.extendComponent({
   
   events() {
     return [{
-      'click a.edit-invitee': Popup.open('editInvitee'),
-      'click a.resend-invite': function () {
-    	  const user = Template.instance().data.userId;
-          Meteor.call('resendInviteToUser', user , (err, ret) => {
-        	  if (err) {
-                  var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
-                  $('#header-main-bar').before($message);
-                  $message.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-              } else if (ret.email) {
-            	  var message = TAPi18n.__('email-sent');
-                  var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
-                  $('#header-main-bar').before($successMessage);
-                  $successMessage.delay(10000).slideUp(500, function() {
-                    $(this).remove();
-                  });
-             }
-         });
+    	'click a.edit-invitee': function(evt) {
+    		const userId = $(evt.target).data('id');
+    		Session.set('selectedUser', userId);
+    	 }, 
+      'click a.resend-invite': function (evt) {
+        const user = Users.findOne({_id:$(evt.target).data('id')});
+        Meteor.call('resendInviteToUser', user , (err, ret) => {
+          if (err) {
+          	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err.error+'</b></p></div>');
+          	$('#header-main-bar').before($message);
+            $message.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          } else if (ret.email) {
+          	var message = TAPi18n.__('email-sent');
+          	var $successMessage = $('<div class="successStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
+            $('#header-main-bar').before($successMessage);
+            $successMessage.delay(10000).slideUp(500, function() {
+              $(this).remove();
+            });
+          }
+        });
       },
+     'click a.view-email': function(e)  {
+    	  const userId = $(e.target).data('id');
+    	  Modal.open('viewEmail');
+    	  Session.set('manageUserId', userId);
+     }
+     
     }]
   }
-}).register('invitationRow');
+}).register('invitationsGeneral');
 
 
-Template.peopleRow.helpers({
+/*Template.peopleRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
@@ -494,9 +514,9 @@ Template.peopleRow.helpers({
       return UserGroups.find({ _id: { $in: userGroupsIds } });
     }
   }
-});
+});*/
 
-Template.invitationRow.helpers({
+/*Template.invitationRow.helpers({
   userData() {
     const userCollection = this.esSearch ? ESSearchResults : Users;
     return userCollection.findOne(this.userId);
@@ -521,13 +541,13 @@ Template.invitationRow.helpers({
     let user = userCollection.findOne(this.userId);
     if (!user.roleId) {
 	      return '-';
-	}
+	  }
     let role = Roles.findOne(user.roleId);
-      return role.name;
+    return role.name;
 	}
   
   
-});
+});*/
 
 Template.roleRow.helpers({
   roleData() {
@@ -544,6 +564,7 @@ BlazeComponent.extendComponent({
   events() {
     return [{
       'click a.edit-user': Popup.open('editUser'),
+      'click a.more-settings': Popup.open('settingsUser')
     }];
   },
 }).register('peopleRow');
@@ -570,7 +591,7 @@ BlazeComponent.extendComponent({
       submit(evt) {
         evt.preventDefault();
       	$('#editUserPopup').find('.errorStatus').remove();
-        const user_id = Template.instance().data.userId;
+        const user_id = this.find('.userId').value.trim();
         const user = Users.findOne(user_id);
         const fullname = this.find('.js-profile-fullname').value.trim();
         const username = this.find('.js-profile-username').value.trim();
@@ -882,7 +903,7 @@ BlazeComponent.extendComponent({
     	 submit(evt) {
          evt.preventDefault();
        	$('#editUserPopup').find('.errorStatus').remove();
-         const user_id = Template.instance().data.userId;
+         const user_id = this.find('.invitee').value.trim();
          const user = Users.findOne(user_id);
          const fullname = this.find('.js-profile-fullname').value.trim();
          const username = this.find('.js-profile-username').value.trim();
@@ -892,7 +913,7 @@ BlazeComponent.extendComponent({
            isAdmin = this.find('.js-profile-isadmin').value.trim();
          }
          const roleId = this.find('.js-profile-role').value;
-       	const roleName = null;
+       	 const roleName = null;
          const role = Roles.findOne({_id: roleId});
          if (role && role.name) {
          	roleName = role.name;
@@ -1197,17 +1218,17 @@ BlazeComponent.extendComponent({
 
 Template.editInviteePopup.helpers({
 	user() {
-	  return Users.findOne(this.userId);
+	  return Users.findOne(Session.get('selectedUser'));
 	},
 
 	isSelected(match) {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === match;
 	},
 
 	isLdap() {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === 'ldap';
 	},
@@ -1215,17 +1236,17 @@ Template.editInviteePopup.helpers({
 
 Template.editUserPopup.helpers({
 	user() {
-	  return Users.findOne(this.userId);
+	  return Users.findOne(Session.get('selectedUser'));
 	},
 
 	isSelected(match) {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === match;
 	},
 
 	isLdap() {
-	  const userId = Template.instance().data.userId;
+	  const userId = Session.get('selectedUser');
 	  const selected = Users.findOne(userId).authenticationMethod;
 	  return selected === 'ldap';
 	},
@@ -1233,7 +1254,7 @@ Template.editUserPopup.helpers({
 
 Template.roleOptions.helpers({
   currentRole(match) {
-    const userId = Template.instance().data.userId;
+    const userId = Session.get('selectedUser');
     if (userId) {
       const selected = Users.findOne(userId).roleId;
       return selected === match;
@@ -1410,17 +1431,58 @@ Template.createRolePopup.helpers({
 });
 
 BlazeComponent.extendComponent({
-  userGroupsList() {
-  	return UserGroups.find();
-  },
   events() {
 	  return [{
 	    'click button#create-user-group': Popup.open('createUserGroup'),
+	    'click a.manage-user-group': function(e) {
+	    	const groupId = $(e.target).data('user-group-id');
+	    	Modal.open('editUserGroup');
+	    	Session.set('manageUserGroupId', groupId);
+    },
 	  }];
 	}
 }).register('userGroupsGeneral');
 
-BlazeComponent.extendComponent({
+Template.userGroupsGeneral.helpers({
+  userGroupsList() {
+  	return UserGroups.find();
+  },
+  tableSettings : function () {
+    return {
+        currentPage: Template.instance().currentPage,
+        fields: [
+          { key: 'title', label: TAPi18n.__('title') },
+          { key: 'usersQuota', label: TAPi18n.__('users-quota')},
+          { key: 'usedUsersQuota',  label: TAPi18n.__('used-users-quota')},
+          { key: 'boardsQuota', label: TAPi18n.__('boards-quota') },
+          { key: 'usedBoardsQuota', label: TAPi18n.__('used-boards-quota')},
+          { key: '_id', label: TAPi18n.__('group-admin'), fn: function(_id) {
+          	var data = UserGroups.findOne({_id:_id});
+        		if (data && data._id) {
+        			var groupAdminsIds = new Array();
+        			AssignedUserGroups.find({userGroupId: data._id}).forEach((assignedUserGroup) => {
+        				if (assignedUserGroup.groupAdmin === 'Yes') {
+        					groupAdminsIds.push(assignedUserGroup.userId);
+        				}
+        			});
+        			var usernames = '<ul>';
+        			Users.find({_id: {$in: groupAdminsIds}}).forEach((user) => {
+        				usernames += '<li>'+user.username+'</li>';
+        			});
+        			return new Spacebars.SafeString(usernames);
+        	    
+        		}
+            return new Spacebars.SafeString('');
+          } },
+          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: '_id', 'label': 'Action', fn: function(_id) { return new Spacebars.SafeString('<a class="manage-user-group" data-user-group-id="'+_id+'" href="#">Manage</a>'); }},
+        ]
+    };
+  },
+  
+});
+
+/*BlazeComponent.extendComponent({
   events() {
 	  return [{
       'click a.manage-user-group'(e) {
@@ -1451,7 +1513,7 @@ Template.userGroupRow.helpers({
 		}
     return null;
   },
-});
+});*/
 
 BlazeComponent.extendComponent({
   onCreated() {
@@ -1565,23 +1627,28 @@ BlazeComponent.extendComponent({
   },
 
   setLogo(logoUrl, userGroupId) {
-    const userGroup = UserGroups.findOne({_id: userGroupId});
-    if (userGroup && userGroup._id) {
-      if (userGroup.logoUrl && userGroup.logoUrl.length > 0) {
-        const oldLogoUrl = userGroup.logoUrl;
-        const splittedUrl = oldLogoUrl.split('/');
-        const oldLogoName = splittedUrl[5];
-        if (oldLogoName.length > 0) {
-          const oldLogo = Logos.findOne({'original.name': oldLogoName});
-          if (oldLogo && oldLogo._id) {
-            Logos.remove({_id: oldLogo._id});
-          }
-        }
-      }
+  	const userGroup = UserGroups.findOne({_id: userGroupId});
+  	if (userGroup && userGroup._id) {
       userGroup.setLogoUrl(logoUrl);
     }
   },
-
+  
+  removeOldLogo(userGroupId) {
+  	const userGroup = UserGroups.findOne({_id: userGroupId});
+  	if (userGroup && userGroup._id && userGroup.logoUrl && userGroup.logoUrl.length > 0) {
+      const oldLogoUrl = userGroup.logoUrl;
+      const splittedUrl = oldLogoUrl.split('/');
+      const oldLogoName = !splittedUrl[5]? splittedUrl[4]: splittedUrl[5];
+      
+      if (oldLogoName.length > 0) {
+        const oldLogo = Logos.findOne({_id: splittedUrl[4]});
+        if (oldLogo && oldLogo._id) {
+          Logos.remove({_id: splittedUrl[4]});
+        }
+      }
+  	}
+  },
+  
   setError(error) {
     this.error.set(error);
   },
@@ -1903,6 +1970,7 @@ BlazeComponent.extendComponent({
 
         if (fileUrl) {
           this.setError('');
+          this.removeOldLogo(userGroupId);
           const fetchLogoInterval = window.setInterval(() => {
             $.ajax({
               url: fileUrl,
@@ -2237,7 +2305,53 @@ Template.editUserGroup.helpers({
     return '#2980B9';
   }
 });
+BlazeComponent.extendComponent({
 
+  events() {
+    return [{
+    	'click #openMailClient': function(e) {
+    		const userId = $(e.target).data('userid');
+    		const user = Users.findOne({_id: userId});
+    		let email = user.emails[0].address;
+        
+    		window.location.href='mailto:'+email;
+    		
+    	}
+    }];
+  }
+}).register('viewEmail');
+
+Template.viewEmail.helpers({
+  emailContents() {
+    const userid = Session.get('manageUserId');
+	  const user = Users.findOne({_id: userid });
+	  const contents = {};
+	  const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+	  const board = Boards.findOne({_id: Session.get('currentBoard')});
+	  const lang = user.profile.language == undefined ? 'nl' : user.profile.lang;
+	  
+	  if (user && user._id) {
+	    contents.user = user ;
+	  }
+	  
+	  if (user && user.services && user.services.password && user.services.password.bcrypt) {
+	  	const inviter = Meteor.user();
+	  	const params = {user: user.username,
+	  			            inviter: inviter.username,
+	  			            board: board.title,
+	  			            url: board.absoluteUrl(),
+	  	                logoUrl: logoUrl
+	  		             }
+	                                   
+	  	contents.email = TAPi18n.__('email-invite-text', params, lang);
+	  } else {
+	  	const token = user.services.password.reset.token;
+	  	const enrollLink = Meteor.absoluteUrl()+'enroll-account/'+token;
+		  contents.email = TAPi18n.__('email-enroll-text',{user: user.username, enrollUrl:enrollLink, logoUrl: logoUrl}, lang);
+	  }
+	  return contents;
+	 }
+});
 BlazeComponent.extendComponent({
   plans() {
     return Plans.find();
@@ -2431,7 +2545,7 @@ Template.subscriptionRow.events({
     	    	              	var message = ret.output + TAPi18n.__('mail-not-sent');
     	    	                var $errorMessage = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+message+'</b></p></div>');
     	    	                $('#header-main-bar').before($errorMessage);
-    	    	                $errorMessage.delay(10000).slideUp(500, function() {
+-    	    	                $errorMessage.delay(10000).slideUp(500, function() {
     	    	                  $(this).remove();
     	    	                });
     	    		            } else if (ret.output && ret.output == 'success') {
@@ -2969,4 +3083,238 @@ BlazeComponent.extendComponent({
   },
 }).register('addSubscriptionPopup');
 
+BlazeComponent.extendComponent({
+	  onCreated() {
+	   this.loading = new ReactiveVar(false);
+	  },
+	  
+	 onRendered() {
+	  	
+	 },
+	  
+  events() {
+     return[{
+    		'click a.impersonate-user' : function() {
+    			  var userId = Session.get('impersonatedUser');
+    			  cb = function() {};
+    		    var fromUser = Meteor.userId();
+    		  	if (!fromUser) throw new Error("Permission denied. You need to be logged in to impersonate users.");
+    		  	var fromToken = Accounts._storedLoginToken();
+    		    Accounts.callLoginMethod({
+    		  	  methodArguments: [{
+    		  	    impersonateUser: userId,
+    		  	  }],
+    		  	  userCallback: function(err) {
+  		  	      if (err) {
+  		  	      	var $message = $('<div class="errorStatus"><a href="#" class="pull-right closeStatus" data-dismiss="alert" aria-label="close">&times;</a><p><b>'+err+'</b></p></div>');
+  		          	$('#header-main-bar').before($message);
+  		            $message.delay(10000).slideUp(500, function() {
+  		              $(this).remove();
+  		            });
+  		  	      }
+  		  	      
+  		  	      if (!err && Meteor._localStorage.getItem('impersonate.loginToken') == null) {
+  		  	        // Store initial user in local storage allowing us to return to this user
+  		  	        Meteor._localStorage.setItem('impersonate.userId', fromUser);
+  		  	        Meteor._localStorage.setItem('impersonate.loginToken', fromToken);
+  		  	        FlowRouter.go('/');
+  		  	      }
+  		  	      cb.apply(this, [err, userId]);
+    		  	  }
+    		  });
+    		
+    		}
+    	}]
+  }
+}).register('settingsUserPopup');
 
+
+Template.peopleGeneral.events({
+  'click .edit-user':function(evt) {
+    const userId = $(evt.target).data('id');
+    Session.set('selectedUser', userId);
+  },
+  'click .more-settings':function(evt) {
+    const userId = $(evt.target).parent().data('id');
+    Session.set('impersonatedUser', userId);
+  },
+});
+
+Template.peopleGeneral.helpers({
+	users() {
+		const isAdmin = Meteor.user().isAdmin;
+		if (isAdmin) {
+			return Users.find({'emails.verified':true});
+		}
+		
+		if (!isAdmin && Meteor.user().roleName === 'Manager') {
+		  const role = Roles.findOne({name: 'Manager'});
+	    if (role && role._id) {
+	    	const userId = Meteor.user()._id;
+	    	var userUserGroupsIds = new Array();
+	  		AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+	  			if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+	    			userUserGroupsIds.push(assignedUserGroup.userGroupId);
+	  			}
+	    	});
+	    	var sameUserGroupsUserIds = new Array();
+
+	      // First push the users created by the logged in user, its invitees
+	      Users.find({
+	        createdBy: Meteor.user()._id,
+	      }).forEach((invitee) => {
+	        sameUserGroupsUserIds.push(invitee._id)
+	      });
+
+	      // Then push the users of the same user groups as of the logged in user
+	    	AssignedUserGroups.find({
+	    		userGroupId: { $in: userUserGroupsIds }
+	    	}).forEach((assignedUserGroup) => {
+	        // Filter out the userIds already pushed earlier
+	  			if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+	      		sameUserGroupsUserIds.push(assignedUserGroup.userId);
+	  			}
+	    	});
+
+	      return Users.find({
+	      	_id: { $in: sameUserGroupsUserIds },
+	      	'emails.verified': true,
+	        $nor: [
+	          { isAdmin: true },
+	          { roleId: role._id }
+	        ]
+	      });
+	    }
+	}
+	
+	if (!isAdmin && Meteor.user().roleName === 'Coach') {
+		 const managerRole = Roles.findOne({name: 'Manager'});
+	   const coachRole = Roles.findOne({name: 'Coach'});
+	   if (managerRole && managerRole._id && coachRole && coachRole._id) {
+	     const userId = Meteor.user()._id;
+	     var userUserGroupsIds = new Array();
+  		 AssignedUserGroups.find({userId}).forEach((assignedUserGroup) => {
+  		  if (!userUserGroupsIds.includes(assignedUserGroup.userGroupId)) {
+    	    userUserGroupsIds.push(assignedUserGroup.userGroupId);
+  			}
+    	 });
+  		 
+	    var sameUserGroupsUserIds = new Array();
+	    
+	    // First push the users created by the logged in user, its invitees
+	    Users.find({
+	      createdBy: Meteor.user()._id,
+	    }).forEach((invitee) => {
+	        sameUserGroupsUserIds.push(invitee._id)
+	    });
+	    
+	    // Then push the users of the same user groups as of the logged in user
+	   AssignedUserGroups.find({
+	     userGroupId: { $in: userUserGroupsIds }
+	   }).forEach((assignedUserGroup) => {
+	   // Filter out the userIds already pushed earlier
+	   if (!sameUserGroupsUserIds.includes(assignedUserGroup.userId)) {
+	  	   sameUserGroupsUserIds.push(assignedUserGroup.userId);
+	  	}
+	  });
+	   
+	 return Users.find({
+	  _id: { $in: sameUserGroupsUserIds },
+	    'emails.verified': true,
+	     $nor: [
+	       { isAdmin: true },
+	       { roleId: managerRole._id },
+	       { roleId: coachRole._id }
+	     ]
+	 });
+	}
+ }
+},
+	tableSettings : function () {
+    return {
+        currentPage: Template.instance().currentPage,
+        class : 'table table-striped table-hover',
+        fields: [
+          { key: 'username', label: TAPi18n.__('username') },
+          { key: 'profile.fullname', label: TAPi18n.__('fullname')},
+          { key: 'isAdmin',  label: TAPi18n.__('admin') , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: TAPi18n.__('role')},
+          { key: 'emails.0.address', label: TAPi18n.__('email')},
+          { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: 'loginDisabled', 'label': TAPi18n.__('active'), fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
+          { key: '_id', label: TAPi18n.__('user-groups'),
+            fn: function (_id) { 
+                var userGroupsIds = new Array();
+                AssignedUserGroups.find({
+                  userId: _id
+                }).forEach((assignedUserGroup) => {
+                  userGroupsIds.push(assignedUserGroup.userGroupId);
+                });
+                
+                var html = '<ul>';
+                UserGroups.find({ _id: { $in: userGroupsIds } }).
+                           forEach((userGroup) => {
+                             html += '<li>'+userGroup.title+'</li>';
+                           });
+                html += '</ul>';
+                
+                return new Spacebars.SafeString(html);
+            }
+          },
+          { key: 'authenticationMethod', 'label': TAPi18n.__('authentication-method')},
+          { key: '_id', 'label': TAPi18n.__('actions'), 
+          	fn: function (_id) {
+          		var html = "<a class='edit-user' data-id='"+_id+"' href='#'><i class='fa fa-edit'></i>Edit</a>  ";
+          		if (Meteor.user().isAdmin) {
+          			html += "<a class='more-settings' data-id='"+_id+"' href='#'><i class='fa fa-ellipsis-h'></i></a>";
+          		}
+          		return new Spacebars.SafeString(html);
+          	} 
+          },
+          
+        ]
+    };
+  },
+
+});
+
+Template.invitationsGeneral.helpers({
+	 inviteesList() {
+		  var sameUserGroupsUserIds = new Array();
+		  const user = Users.find({
+	      createdBy: Meteor.user()._id
+	    }).forEach((invitee) => {
+	      sameUserGroupsUserIds.push(invitee._id)
+		  });
+		  
+		  return Users.find({'emails.verified':false,_id: { $in: sameUserGroupsUserIds }}, {sort :{ createdAt: -1 }});
+	  },
+	  
+	  tableSettings: function() {
+	  	return{
+	  		id :'subscriptionsDataTable',
+	  		fields:[
+	  			{ key: 'username', label: TAPi18n.__('username') },
+	  			{ key: 'profile.fullname', label: TAPi18n.__('fullname')},
+	  			{ key: 'isAdmin',  label: TAPi18n.__('admin') , fn: function (isAdmin) { return isAdmin ? 'Yes' : 'No'; }},
+          { key: 'roleName', label: TAPi18n.__('role') },
+          { key: 'emails.0.address', label: TAPi18n.__('email')},
+          { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
+          { key: 'createdAt', label: TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: '_id', 'label': TAPi18n.__('actions'), 
+          	fn: function (_id) {
+          		var html = "<a class='edit-invitee renewSubscription' data-id='"+_id+"' href='#'>Edit</a>  ";
+          			  html += "<a class='resend-invite upgradeSubscription' data-id='"+_id+"' href='#'>Resend Invitation</a>  ";
+          			  html += "<a class='view-email archiveSubscription' data-id='"+_id+"' href='#'>View Email</a>";
+          		return new Spacebars.SafeString(html);
+          	},
+          	cellClass: function(object, value) {
+          		var css = 'subscriptionsActionCol';
+          		return css;
+          	}
+          },
+	  		]
+	  	}
+	  }
+});

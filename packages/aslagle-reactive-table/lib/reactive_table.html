@@ -1,0 +1,126 @@
+<template name="reactiveTable">
+  {{#with context}}
+  {{#if ready}}
+    <div class="clearfix">
+      <div class="reactive-table-options col-sm-8 pull-right">
+        {{#if showFilter}}
+          <div class="reactive-table-filter form-group col-sm-4 pull-right">
+            {{> reactiveTableFilter id=getFilterId useFontAwesome=useFontAwesome}}
+          </div>
+        {{/if}}
+        {{#if showColumnToggles}}
+          <div class="reactive-table-columns-dropdown col-sm-4 pull-right">
+            <button class="btn btn-default dropdown-toggle" id="reactive-table-add-column-{{id}}" data-toggle="dropdown">
+              {{i18n 'reactiveTable.columns'}}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="reactive-table-add-column-{{id}}">
+              {{#each fields}}
+                {{#unless hideToggle}}
+                  <li role="presentation"><a role="menuitem" tabindex="-1" data-target="#">
+                    {{#if isVisible}}
+                      <input type="checkbox" checked data-fieldid="{{fieldId}}">
+                    {{else}}
+                      <input type="checkbox" data-fieldid="{{fieldId}}">
+                    {{/if}}
+                    <label>
+                      {{#if labelIsTemplate}}{{#with labelData}}{{> ../label}}{{else}}{{> label}}{{/with}}{{else}}{{getLabel}}{{/if}}
+                    </label>
+                  </a></li>
+                {{/unless}}
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+    {{#unless noData}}
+      <table id="{{id}}" class="{{class}} reactive-table">
+        <thead>
+          <tr>
+            {{#each fields}}
+              {{#if isVisible}}
+                {{#if isPrimarySortField}}
+                  <th class="{{#if isSortable}}sortable {{/if}}{{getHeaderClass}}" fieldid="{{getFieldFieldId}}">
+                    {{#if labelIsTemplate}}{{#with labelData}}{{> ../label}}{{else}}{{> label}}{{/with}}{{else}}{{getLabel}}{{/if}}&nbsp;&nbsp;
+                    {{#if isAscending}}
+                      {{#if ../useFontAwesome}}
+                        <i class="fa fa-sort-asc"></i>
+                      {{else}}
+                        &#x25B2;
+                      {{/if}}
+                    {{else}}
+                      {{#if ../useFontAwesome}}
+                        <i class="fa fa-sort-desc"></i>
+                      {{else}}
+                        &#x25BC;
+                      {{/if}}
+                    {{/if}}
+                  </th>
+                {{else}}
+                  {{#if isSortable}}
+                    <th class="{{getHeaderClass}} sortable" fieldid="{{getFieldFieldId}}">{{#if labelIsTemplate}}{{#with labelData}}{{> ../label}}{{else}}{{> label}}{{/with}}{{else}}{{getLabel}}{{/if}}</th>
+                  {{else}}
+                    <th class="{{getHeaderClass}}" fieldid="{{getFieldFieldId}}">{{#if labelIsTemplate}}{{#with labelData}}{{> ../label}}{{else}}{{> label}}{{/with}}{{else}}{{getLabel}}{{/if}}</th>
+                  {{/if}}
+                {{/if}}
+              {{/if}}
+            {{/each}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each sortedRows}}
+            <tr class="{{../rowClass this}}">
+              {{#each ../fields}}
+                {{#if isVisible}}
+                  <td class="{{getCellClass ..}}">{{#if tmpl}}{{#with ..}}{{> ../tmpl}}{{/with}}{{else}}{{getField ..}}{{/if}}</td>
+                {{/if}}
+              {{/each}}
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if showNavigation}}
+        <div class="reactive-table-navigation">
+          {{#if showNavigationRowsPerPage}}
+            <div class="form-inline form-group rows-per-page">
+              <label>
+                <span>{{i18n 'reactiveTable.show'}}</span>
+                <input class="form-control" type="text" value="{{getRowsPerPage}}">
+                {{#if showRowCount}}
+                  <span>{{i18n 'reactiveTable.of'}}</span>
+                  <span class="rows-per-page-count">{{getRowCount}}</span>
+                {{/if}}
+                <span class="rows-per-page-label">{{i18n 'reactiveTable.rowsPerPage'}}</span>
+              </label>
+            </div>
+          {{/if}}
+          <div class="form-inline form-group page-number">
+            <label>
+			  {{#if isntFirstPage}}
+              {{#if useFontAwesome}}
+                <i class="previous-page fa fa-caret-left"></i>
+              {{else}}
+                <span class="previous-page">&lt;</span>
+              {{/if}}
+            {{/if}}
+              <span>{{i18n 'reactiveTable.page'}}</span>
+              <input class="form-control" type="text" value="{{getCurrentPage}}" />
+              <span>{{i18n 'reactiveTable.of'}}</span>
+              <span class="page-number-count">{{getPageCount}}</span>
+			  {{#if isntLastPage}}
+              {{#if useFontAwesome}}
+                <i class="next-page fa fa-caret-right"></i>
+              {{else}}
+                <span class="next-page">&gt;</span>
+              {{/if}}
+            {{/if}}
+            </label>
+          </div>
+        </div>
+      {{/if}}
+    {{else}}
+      {{> noDataTmpl}}
+    {{/unless}}
+  {{/if}}
+  {{/with}}
+</template>
