@@ -89,7 +89,7 @@ template(name="changeAvatarPopup")
       if noAvatarUrl
         i.fa.fa-check
        p.sub-name {{_ 'default-avatar'}}
-  input.hide.js-upload-avatar-input(accept="image/*;capture=camera" type="file")
+  input.invisible.js-upload-avatar-input(accept="image/*;capture=camera" type="file")
   button.full.js-upload-avatar
     i.fa.fa-upload
     | {{_ 'upload-avatar'}}
