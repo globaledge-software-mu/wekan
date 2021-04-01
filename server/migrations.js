@@ -565,3 +565,24 @@ Migrations.add('mutate-boardIds-in-customfields', () => {
     }, noValidateMulti);
   });
 });
+
+Migrations.remove('remainders');
+Migrations.add('remainders', () => {
+  Users.find().forEach((user) => {
+  	var date = new Date();
+  	date.setDate(date.getDate() + 3); 
+    if (user.emails[0].verified == false) {
+      Remainders.insert({
+      	invitee:user._id,
+      	messageContent: 'email-enroll-subject'
+      }, noValidateMulti);
+    } else if (user.profile.invitedBoards && 
+    		       user.profile.invitedBoards.length > 0 && 
+    		       user.emails[0].verified == true) {
+              Remainders.insert({
+              	invitee:user._id,
+              	messageContent: 'email-invite-text'
+              }, noValidateMulti);
+    }
+  });
+});
