@@ -5,7 +5,7 @@ Remainders.attachSchema(new SimpleSchema({
 		type: String
 	},
 	messageContent:{
-		type:String
+		type: Object
 	},
 	nextRunAt:{
 	  type:Date,
@@ -13,6 +13,27 @@ Remainders.attachSchema(new SimpleSchema({
 	},
 	lastRunAt : {
 		type: Date,
-		optional: true
+		autoValue() {
+      if (this.isInsert) {
+        return new Date();
+      } else {
+        this.unset();
+      }
+    },
 	},
+	
 }));
+
+Remainders.allow({
+	insert() {
+	  return true;
+	},
+  update() {
+	  
+  },
+  remove() {
+    return true;
+  },
+  fetch: [],
+});
+
