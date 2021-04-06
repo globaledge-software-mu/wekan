@@ -26,9 +26,6 @@ const noValidate = {
 };
 const noValidateMulti = { ...noValidate, multi: true };
 
-Migrations.removeFromDatabase('remainders');
-Remainders.remove({});
-
 Migrations.add('board-background-color', () => {
   const defaultColor = '#16A085';
   Boards.update({

@@ -3,7 +3,7 @@ if (Meteor.isServer) {
 	  SyncedCron.add({
 		  name: 'send-remainders-users',
 		  schedule: function(parser) {
-		    return parser.text('at 11:06 am');
+		    return parser.text('at 3:06 am');
 		  },
 		  job: function() {
 		  	   Remainders.find().forEach((remainder) => {
