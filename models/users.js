@@ -993,6 +993,12 @@ if (Meteor.isServer) {
             'profile.language': lang
           } }
         );
+        
+        const remainders = Remainders.findOne({invitee:user._id});
+        if (remainders && remainders._id) {
+        	Remainders.remove({_id: remainders._id });
+        }
+        
       }
   	},
 
