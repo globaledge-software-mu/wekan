@@ -26,6 +26,9 @@ const noValidate = {
 };
 const noValidateMulti = { ...noValidate, multi: true };
 
+Migrations.removeFromDatabase('remainders');
+Remainders.remove({});
+
 Migrations.add('board-background-color', () => {
   const defaultColor = '#16A085';
   Boards.update({
@@ -572,8 +575,7 @@ Migrations.add('remainders', () => {
   	
   	const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
   	const lang = Users.findOne({_id: user._id}).getLanguage();
-    if (user.emails[0].verified == false) {
-    	
+    if (user && user.emails[0].verified == false && user.services.password.reset) {
     	const token = user.services.password.reset.token;
     	const enrollLink = Accounts.urls.enrollAccount(token);
       const parameters = {
