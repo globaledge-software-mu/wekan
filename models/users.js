@@ -464,9 +464,15 @@ if (Meteor.isClient) {
       }
     },
 
+    isTemplateAndIsAdmin(board) {
+    	if ( board && board.type== 'template-board' && Meteor.user().isAdmin ) {
+        return true;
+		  }
+    	return false;
+    },
     isBoardAdmin() {
       const board = Boards.findOne(Session.get('currentBoard'));
-      return board && board.hasAdmin(this._id);
+      return board && board.hasAdmin(this._id) || this.isTemplateAndIsAdmin(board);
     },
 
     isCoach() {
@@ -1823,7 +1829,6 @@ if (Meteor.isServer) {
     if (_.contains(fieldNames,'profile') && modifier.$pull) {
     	const boardId = modifier.$pull['profile.invitedBoards'];
     	const board = Boards.findOne({_id: boardId, 'members.userId': user._id });
-    	console.log(board);
     	if (board && board._id){
     		Activities.insert({
           userId: user._id,

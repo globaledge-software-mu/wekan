@@ -59,6 +59,9 @@ Template.boardChangeTitlePopup.events({
 });
 
 BlazeComponent.extendComponent({
+	onCreated() {
+    console.log(Meteor.user().isBoardAdmin());
+	}, 
   watchLevel() {
     const currentBoard = Boards.findOne(Session.get('currentBoard'))
     return currentBoard && currentBoard.getWatchLevel(Meteor.userId());
