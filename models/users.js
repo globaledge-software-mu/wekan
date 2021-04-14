@@ -465,7 +465,10 @@ if (Meteor.isClient) {
     },
 
     isTemplateAndIsAdmin(board) {
-    	if ( board && board.type== 'template-board' && Meteor.user().isAdmin ) {
+    	const user = Meteor.user();
+    	const isManager = (user.isAdmin == false && user.roleName == 'Manager') ? true : false;
+    	
+    	if ( board && board.type== 'template-board' && user.isAdmin || isManager) {
         return true;
 		  }
     	return false;
