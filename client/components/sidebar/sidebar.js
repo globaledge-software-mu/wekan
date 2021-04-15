@@ -19,6 +19,7 @@ BlazeComponent.extendComponent({
     this._isOpen = new ReactiveVar(false);
     this._view = new ReactiveVar(defaultView);
     Sidebar = this;
+    Meteor.subscribe('remainders');
   },
 
   onDestroyed() {
@@ -218,6 +219,13 @@ Template.memberPopup.events({
       card.unassignMember(memberId);
     });
     Boards.findOne(boardId).removeMember(memberId);
+    Users.findOne(memberId).removeInvite(boardId);
+    
+    const remainder = Remainders.findOne({invitee:memberId});
+    if (remainder && remainder._id) {
+       Remainders.remove(remainder._id);
+    }
+    
     Popup.close();
   }),
   'click .js-leave-member': Popup.afterConfirm('leaveBoard', () => {

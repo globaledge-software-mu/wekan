@@ -993,6 +993,12 @@ if (Meteor.isServer) {
             'profile.language': lang
           } }
         );
+        
+        const remainders = Remainders.findOne({invitee:user._id});
+        if (remainders && remainders._id) {
+        	Remainders.remove({_id: remainders._id });
+        }
+        
       }
   	},
 
@@ -1174,10 +1180,24 @@ if (Meteor.isServer) {
           enrollUrl: enrollLink,
           logoUrl: logoUrl
         };
+        
+        const noValidate = {
+              validate: false,
+              filter: false,
+              removeEmptyStrings: false
+        };
         const lang = user.getLanguage();
 
         const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
 
+        const messageContent = {subject: TAPi18n.__('email-enroll-subject', parameters, lang) , content: message};
+        const date = new Date();
+        Remainders.insert({
+      	  invitee: newUserId,
+      	  messageContent: messageContent,
+      	  nextRunAt: date.setDate(date.getDate() + 3)
+      	}, noValidate);
+        
         Email.send({
           to: user.emails[0].address.toLowerCase(),
           from: Accounts.emailTemplates.from,
@@ -1198,6 +1218,12 @@ if (Meteor.isServer) {
       check(roleId, String);
       check(selectedUserGroupId, String);
 
+      
+      const noValidate = {
+          validate: false,
+          filter: false,
+          removeEmptyStrings: false
+      	};
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
       var allowInvite;
@@ -1249,6 +1275,20 @@ if (Meteor.isServer) {
                 logoUrl: logoUrl
               };
               const lang = user.getLanguage();
+              const date = new Date();
+              const messageContent = {subject: TAPi18n.__('email-invite-subject', params, lang), 
+                                      content: '<!DOCTYPE html><html lang="en"><head>'
+         	                            +'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang)
+         	                           };
+               
+               //insert into remainders collection
+              
+              Remainders.insert({
+            		invitee: user._id,
+            		messageContent: messageContent,
+            		nextRunAt: date.setDate(date.getDate() + 3)
+            	}, noValidate);
+              
               Email.send({
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
@@ -1434,7 +1474,7 @@ if (Meteor.isServer) {
     resendInviteToUser(user) {
       check(user, Object);
       const users = Users.findOne({_id: user._id});
-      const inviter = Meteor.user();
+      const inviter = !Meteor.user() ? user.createdBy : Meteor.user();
       
       //
       if (user._id !== inviter._id) {

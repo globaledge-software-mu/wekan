@@ -26,6 +26,9 @@ const noValidate = {
 };
 const noValidateMulti = { ...noValidate, multi: true };
 
+Migrations.removeFromDatabase('remainders');
+Remainders.remove({});
+
 Migrations.add('board-background-color', () => {
   const defaultColor = '#16A085';
   Boards.update({
@@ -564,4 +567,63 @@ Migrations.add('mutate-boardIds-in-customfields', () => {
       },
     }, noValidateMulti);
   });
+});
+
+
+Migrations.add('remainders', () => {
+  Users.find().forEach((user) => {
+  	
+  	const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+  	const lang = Users.findOne({_id: user._id}).getLanguage();
+    if (user && user.emails[0].verified == false && user.services.password.reset) {
+    	const token = user.services.password.reset.token;
+    	const enrollLink = Accounts.urls.enrollAccount(token);
+      const parameters = {
+          user: user.username,
+          enrollUrl: enrollLink,
+          logoUrl: logoUrl
+        };
+      
+      const messageContent = {
+      		  subject: TAPi18n.__('email-enroll-subject', parameters, lang),
+      		  content: '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang)
+      };
+      
+      Remainders.insert({
+      	invitee:user._id,
+      	messageContent: messageContent
+      }, noValidateMulti);
+    } else if (user.profile.invitedBoards && 
+    		       user.profile.invitedBoards.length > 0 && 
+    		       user.emails[0].verified == true) {
+    	
+    	        const invitedBoards = user.profile.invitedBoards;
+    	        for (var i = 0; i< invitedBoards.length ;i++) {
+    	        	const board = Boards.findOne({_id: invitedBoards[i] });
+    	        	var inviterId = '';
+    	        	
+    	        	if (board && board._id)  {
+    	        		inviterId = board.members.filter(obj => { return obj.isAdmin == true;})[0].userId;
+    	        		const inviter = Users.findOne({_id: inviterId});
+    	        		const params = {
+    	        					user: user.username,
+    	        					inviter: inviter.username,
+    	        					board: Boards.findOne({_id: invitedBoards[i] }).title,
+    	        					url: Boards.findOne({_id: invitedBoards[i] }).absoluteUrl(),
+    	        					logoUrl: logoUrl
+    	        			};
+    	        		
+    	        		const messageContent = {
+    	        				subject : TAPi18n.__('email-invite-subject', params, lang),
+    	        				content: '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang)
+    	        		};
+    	        		
+    	        		Remainders.insert({
+                  	invitee:user._id,
+                  	messageContent: messageContent
+                  }, noValidateMulti);
+    	          }
+    	      }
+    	  }
+   });
 });
