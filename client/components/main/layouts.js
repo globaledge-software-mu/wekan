@@ -116,7 +116,7 @@ Template.userFormsLayout.events({
   },
   'click #at-btn'(event, instance) {
     if (FlowRouter.getRouteName() === 'atSignIn') {
-      const username = $('#at-field-username_and_email').val();
+      const username = $('#at-field-username_and_email').val() == null ? $('#at-field-email').val(): $('#at-field-username_and_email').val();
       const lang = $('.js-userform-set-language').val();
       Meteor.call('setLanguageExistingUser', username, lang);
       instance.isLoading.set(true);

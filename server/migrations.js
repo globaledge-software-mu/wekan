@@ -25,6 +25,7 @@ const noValidate = {
   getAutoValues: false,
 };
 const noValidateMulti = { ...noValidate, multi: true };
+Migrations.removeFromDatabase('use-css-class-for-boards-colors');
 
 Migrations.removeFromDatabase('remainders');
 Remainders.remove({});
@@ -88,9 +89,19 @@ Migrations.add('use-css-class-for-boards-colors', () => {
     '#8E44AD': 'wisteria',
     '#2C3E50': 'midnight',
     '#E67E22': 'pumpkin',
+    '#CD5A91': 'moderatepink',
+    '#00AECC': 'strongcyan',
+    '#4BBF6B': 'limegreen',
+    '#2C3E51': 'dark',
+    '#27AE61': 'relax',
+    '#568BA2': 'corteza',
+    '#499BEA': 'clearblue',
+    '#596557': 'natural',
+    '#2A80B8': 'modern',
+    '#2a2a2a': 'moderndark',
   };
   Boards.find().forEach((board) => {
-    const oldBoardColor = board.background.color;
+    const oldBoardColor = board.color;
     const newBoardColor = associationTable[oldBoardColor];
     Boards.update(board._id, {
       $set: { color: newBoardColor },
