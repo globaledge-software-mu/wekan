@@ -314,7 +314,7 @@ export class WekanCreator {
       }
       // add members {
       if (card.members) {
-        const wekanMembers = [];
+        /*const wekanMembers = [];
         // we can't just map, as some members may not have been mapped
         card.members.forEach((sourceMemberId) => {
           if (this.members[sourceMemberId]) {
@@ -326,10 +326,13 @@ export class WekanCreator {
             }
           }
           return true;
-        });
-        if (wekanMembers.length > 0) {
-          cardToCreate.members = wekanMembers;
-        }
+        });*/
+        cardToCreate.members = card.members;
+        
+      }
+      
+      if (card.team_members) {
+      	cardToCreate.team_members = card.team_members;
       }
       // set color
       if (card.color) {
@@ -451,6 +454,29 @@ export class WekanCreator {
           // todo XXX set cover - if need be
         });
       }
+      
+      const aspectsListId = AspectsLists.insert({
+    		cardId:cardId
+    	});
+      AspectsListItems.find({cardId:card._id}).forEach((aspectListItem) => {
+      	
+          if (aspectListItem && aspectListItem._id) {
+          	if (aspectsListId) {
+          		AspectsListItems.insert({
+          			aspectsListId: aspectsListId,
+          			cardId: cardId,
+          			title: aspectListItem.title
+          		})
+          	}
+          	
+          	Cards.update({_id:cardId}, {$set:{
+          		             aspectsListId:aspectsListId
+          		           }
+          	    });
+            }
+      });
+      
+      
       result.push(cardId);
     });
     return result;
