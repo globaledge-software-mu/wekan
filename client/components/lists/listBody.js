@@ -588,8 +588,9 @@ BlazeComponent.extendComponent({
     	} else {
       	// if Admin or Manager
       	if (Meteor.user().isAdminOrManager()) {
-        	boards = Cards.find({
-            type: 'cardType-linkedBoard',
+        	boards = Boards.find({
+            type: 'template-board',
+            'members.userId': Meteor.user()._id,
             archived: false,
           });
       	}
