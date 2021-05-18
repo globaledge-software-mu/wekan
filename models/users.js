@@ -504,7 +504,7 @@ if (Meteor.isClient) {
 
     isBoardMemberAndCoach() {
       const board = Boards.findOne(Session.get('currentBoard'));
-      return board && board.hasMember(this._id) && this.isCoach();
+      return board && board.hasMember(this._id) && this.isCoach() || this.isCoachee();
     },
 
     // is Admin, Manager or Coach

@@ -28,7 +28,6 @@ const noValidateMulti = { ...noValidate, multi: true };
 Migrations.removeFromDatabase('use-css-class-for-boards-colors');
 
 Migrations.removeFromDatabase('remainders');
-Remainders.remove({});
 
 Migrations.add('board-background-color', () => {
   const defaultColor = '#16A085';

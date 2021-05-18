@@ -289,8 +289,7 @@ template(name="addMemberPopup")
         .manage-member-section
           p.quiet {{_ 'no-results'}}
         hr
-        unless currentUser.isCoachee
-          .js-set-role
+        .js-set-role
             label
               | {{_ 'role'}}
               span.error.hide.role-not-selected.invite-not-sent
