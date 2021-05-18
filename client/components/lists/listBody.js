@@ -588,8 +588,9 @@ BlazeComponent.extendComponent({
     	} else {
       	// if Admin or Manager
       	if (Meteor.user().isAdminOrManager()) {
-        	boards = Cards.find({
-            type: 'cardType-linkedBoard',
+        	boards = Boards.find({
+            type: 'template-board',
+            'members.userId': Meteor.user()._id,
             archived: false,
           });
       	}
@@ -667,7 +668,7 @@ BlazeComponent.extendComponent({
           element.type = 'swimlalne';
           _id = element.copy(this.boardId);
         } else if (this.isBoardTemplateSearch) {
-          board = Boards.findOne(element.linkedId);
+          let board = Boards.findOne(element._id);
           board.sort = Boards.find({archived: false}).count();
           board.type = 'board';
           board.title = element.title;
