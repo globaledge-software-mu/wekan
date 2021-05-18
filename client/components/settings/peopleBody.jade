@@ -223,6 +223,12 @@ template(name="roleOptions")
         option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
       else
         option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
+    if currentUser.isCoachee
+      if currentRole coacheeRole._id
+        option(value='{{coacheeRole._id}}' selected) {{coacheeRole.name}}
+      else
+        option(value='{{coacheeRole._id}}') {{coacheeRole.name}}
+      
 
 template(name="rolesGeneral")
   h2.listHeader {{_ 'Dots at the bottom-right of the avatar'}}:
