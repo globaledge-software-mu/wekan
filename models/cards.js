@@ -314,7 +314,8 @@ Cards.allow({
     return true;
   },
   remove(userId, doc) {
-    return allowIsBoardMember(userId, Boards.findOne(doc.boardId));
+    const card = Cards.findOne({_id:doc._id});
+    return allowIsBoardMember(userId, Boards.findOne(card.boardId));
   },
   fetch: [],
 });
