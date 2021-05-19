@@ -2068,8 +2068,6 @@ if (Meteor.isServer) {
   });
   
   Users.after.remove((userId, doc) => {
-  	console.log(doc);
-  	console.log(userId);
   	var userId = Remainders.find({invitee: doc._id}).forEach((remainder) => {
   	   if (remainder && remainder._id) {
   	  	 Remainders.remove({_id: remainder._id});
