@@ -552,6 +552,10 @@ BlazeComponent.extendComponent({
         Meteor.call('quitBoard', boardId, (err, ret) => {
           if (!err && ret) {
             Meteor.user().removeInvite(boardId);
+            const remainder = Remainders.findOne({invitee:Meteor.user()._id});
+            if (remainder && remainder._id) {
+              Remainders.remove({_id: remainder._id});
+            }
             FlowRouter.go('home');
           }
         });
