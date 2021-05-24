@@ -1,4 +1,4 @@
-if (Meteor.isServer) {
+/*if (Meteor.isServer) {
 	Meteor.startup(() => {
 	  SyncedCron.add({
 		  name: 'send-remainders-users',
@@ -43,5 +43,5 @@ if (Meteor.isServer) {
 		     },
 		 });
 	});
-}
+}*/
 
