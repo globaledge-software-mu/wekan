@@ -203,12 +203,22 @@ Boards.attachSchema(new SimpleSchema({
      */
     type: String,
     allowedValues: [
-      'belize',
+    	'belize',
       'nephritis',
       'pomegranate',
       'pumpkin',
       'wisteria',
+      'moderatepink',
+      'strongcyan',
+      'limegreen',
       'midnight',
+      'dark',
+      'relax',
+      'corteza',
+      'clearblue',
+      'natural',
+      'modern',
+      'moderndark'
     ],
     autoValue() { // eslint-disable-line consistent-return
       if (this.isInsert && !this.isSet) {

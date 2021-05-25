@@ -50,6 +50,7 @@ Template.boardListHeaderBar.helpers({
 BlazeComponent.extendComponent({
   onCreated() {
   	Meteor.subscribe('setting'),
+  	Meteor.subscribe('remainders');
   	this.isBoardReady = new ReactiveVar(false);    
   	this.showOverlay = new ReactiveVar(false);
   	const handles = [
@@ -541,12 +542,20 @@ BlazeComponent.extendComponent({
       'click .js-accept-invite'() {
         const boardId = this.currentData()._id;
         Meteor.user().removeInvite(boardId);
+        const remainder = Remainders.findOne({invitee:Meteor.user()._id});
+        if (remainder && remainder._id) {
+          Remainders.remove({_id: remainder._id});
+        }
       },
       'click .js-decline-invite'() {
         const boardId = this.currentData()._id;
         Meteor.call('quitBoard', boardId, (err, ret) => {
           if (!err && ret) {
             Meteor.user().removeInvite(boardId);
+            const remainder = Remainders.findOne({invitee:Meteor.user()._id});
+            if (remainder && remainder._id) {
+              Remainders.remove({_id: remainder._id});
+            }
             FlowRouter.go('home');
           }
         });

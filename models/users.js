@@ -464,9 +464,18 @@ if (Meteor.isClient) {
       }
     },
 
+    isTemplateAndIsAdmin(board) {
+    	const user = Meteor.user();
+    	const isManager = (user.isAdmin == false && user.roleName == 'Manager') ? true : false;
+    	
+    	if ( board && board.type== 'template-board' && user.isAdmin || isManager) {
+        return true;
+		  }
+    	return false;
+    },
     isBoardAdmin() {
       const board = Boards.findOne(Session.get('currentBoard'));
-      return board && board.hasAdmin(this._id);
+      return board && board.hasAdmin(this._id) || this.isTemplateAndIsAdmin(board);
     },
 
     isCoach() {
@@ -495,7 +504,7 @@ if (Meteor.isClient) {
 
     isBoardMemberAndCoach() {
       const board = Boards.findOne(Session.get('currentBoard'));
-      return board && board.hasMember(this._id) && this.isCoach();
+      return board && board.hasMember(this._id) && this.isCoach() || this.isCoachee();
     },
 
     // is Admin, Manager or Coach
@@ -993,6 +1002,12 @@ if (Meteor.isServer) {
             'profile.language': lang
           } }
         );
+        
+        const remainders = Remainders.findOne({invitee:user._id});
+        if (remainders && remainders._id) {
+        	Remainders.remove({_id: remainders._id });
+        }
+        
       }
   	},
 
@@ -1174,10 +1189,24 @@ if (Meteor.isServer) {
           enrollUrl: enrollLink,
           logoUrl: logoUrl
         };
+        
+        const noValidate = {
+              validate: false,
+              filter: false,
+              removeEmptyStrings: false
+        };
         const lang = user.getLanguage();
 
         const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
 
+        const messageContent = {subject: TAPi18n.__('email-enroll-subject', parameters, lang) , content: message};
+        const date = new Date();
+        Remainders.insert({
+      	  invitee: newUserId,
+      	  messageContent: messageContent,
+      	  nextRunAt: date.setDate(date.getDate() + 3)
+      	}, noValidate);
+        
         Email.send({
           to: user.emails[0].address.toLowerCase(),
           from: Accounts.emailTemplates.from,
@@ -1198,6 +1227,12 @@ if (Meteor.isServer) {
       check(roleId, String);
       check(selectedUserGroupId, String);
 
+      
+      const noValidate = {
+          validate: false,
+          filter: false,
+          removeEmptyStrings: false
+      	};
       const inviter = Meteor.user();
       const board = Boards.findOne(boardId);
       var allowInvite;
@@ -1249,6 +1284,20 @@ if (Meteor.isServer) {
                 logoUrl: logoUrl
               };
               const lang = user.getLanguage();
+              const date = new Date();
+              const messageContent = {subject: TAPi18n.__('email-invite-subject', params, lang), 
+                                      content: '<!DOCTYPE html><html lang="en"><head>'
+         	                            +'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang)
+         	                           };
+               
+               //insert into remainders collection
+              
+              Remainders.insert({
+            		invitee: user._id,
+            		messageContent: messageContent,
+            		nextRunAt: date.setDate(date.getDate() + 3)
+            	}, noValidate);
+              
               Email.send({
                 to: user.emails[0].address.toLowerCase(),
                 from: Accounts.emailTemplates.from,
@@ -1434,7 +1483,7 @@ if (Meteor.isServer) {
     resendInviteToUser(user) {
       check(user, Object);
       const users = Users.findOne({_id: user._id});
-      const inviter = Meteor.user();
+      const inviter = !Meteor.user() ? user.createdBy : Meteor.user();
       
       //
       if (user._id !== inviter._id) {
@@ -1823,7 +1872,6 @@ if (Meteor.isServer) {
     if (_.contains(fieldNames,'profile') && modifier.$pull) {
     	const boardId = modifier.$pull['profile.invitedBoards'];
     	const board = Boards.findOne({_id: boardId, 'members.userId': user._id });
-    	console.log(board);
     	if (board && board._id){
     		Activities.insert({
           userId: user._id,
@@ -2017,6 +2065,15 @@ if (Meteor.isServer) {
         InvitationCodes.update(invitationCode._id, {$set: {valid: false}});
       }
     }
+  });
+  
+  Users.after.remove((userId, doc) => {
+  	var userId = Remainders.find({invitee: doc._id}).forEach((remainder) => {
+  	   if (remainder && remainder._id) {
+  	  	 Remainders.remove({_id: remainder._id});
+  	   }
+  	});
+  	
   });
 }
 

@@ -44,7 +44,8 @@ Template.userAvatar.helpers({
 
   presenceStatusClassName() {
     const user = Users.findOne(this.userId);
-    const userPresence = presences.findOne({ userId: this.userId });
+    const userPresence = presences.findOne({ userId: this.userId,'state.currentBoardId':Session.get('currentBoard') });
+    
     if (user && user.isInvitedTo(Session.get('currentBoard')))
       return 'pending';
     else if (!userPresence)
