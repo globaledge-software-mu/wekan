@@ -3241,7 +3241,11 @@ Template.peopleGeneral.helpers({
           { key: 'roleName', label: TAPi18n.__('role')},
           { key: 'emails.0.address', label: TAPi18n.__('email')},
           { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
-          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          { key: 'createdAt', 'label': TAPi18n.__('createdAt'), fn: function(createdAt) { 
+          	var sortValue = moment(createdAt).format('YYYY-MM-DD');
+            return new Spacebars.SafeString("<span sort=" + sortValue + ">" + moment(createdAt).format('LLL') + "</span>");
+            }
+          },
           { key: 'loginDisabled', 'label': TAPi18n.__('active'), fn: function(loginDisabled) { return loginDisabled ? 'No' : 'Yes'; }},
           { key: '_id', label: TAPi18n.__('user-groups'),
             fn: function (_id) { 
@@ -3283,7 +3287,6 @@ Template.invitationsGeneral.helpers({
 	 inviteesList() {
 		  var sameUserGroupsUserIds = new Array();
 		  const user = Users.find({
-	      createdBy: Meteor.user()._id
 	    }).forEach((invitee) => {
 	      sameUserGroupsUserIds.push(invitee._id)
 		  });
@@ -3294,6 +3297,7 @@ Template.invitationsGeneral.helpers({
 	  tableSettings: function() {
 	  	return{
 	  		id :'subscriptionsDataTable',
+	  		rowsPerPage:10,
 	  		fields:[
 	  			{ key: 'username', label: TAPi18n.__('username') },
 	  			{ key: 'profile.fullname', label: TAPi18n.__('fullname')},
@@ -3301,7 +3305,11 @@ Template.invitationsGeneral.helpers({
           { key: 'roleName', label: TAPi18n.__('role') },
           { key: 'emails.0.address', label: TAPi18n.__('email')},
           { key: 'emails.0.verified', label: TAPi18n.__('verified'), fn: function(verified) {return verified ? 'Yes' : 'No'; } },
-          { key: 'createdAt', label: TAPi18n.__('createdAt'), fn: function(createdAt) { return moment(createdAt).format('LLL'); }},
+          
+          { key: 'createdAt', label: TAPi18n.__('createdAt'), fn: function(createdAt) {
+          	var sortValue = moment(createdAt).format('YYYY-MM-DD');
+            return new Spacebars.SafeString("<span sort=" + sortValue + ">" + moment(createdAt).format('LLL') + "</span>");
+          }},
           { key: '_id', 'label': TAPi18n.__('actions'), 
           	fn: function (_id) {
           		var html = "<a class='edit-invitee renewSubscription' data-id='"+_id+"' href='#'>Edit</a>  ";
