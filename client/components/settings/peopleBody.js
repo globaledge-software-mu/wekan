@@ -697,7 +697,7 @@ BlazeComponent.extendComponent({
       },
 
       'click #deleteButton'() {
-      	const toBeDeletedUserId = Template.instance().data.userId;
+      	const toBeDeletedUserId = Session.get('selectedUser');
         Popup.close();
         swal({
           title: 'Confirm Delete User!',

@@ -40,6 +40,15 @@ Template.userFormsLayout.onRendered(() => {
   // Setting the default language nl at set password for new user
   if (FlowRouter.getRouteName() === 'atEnrollAccount') {
     T9n.setLanguage(i18nTagToT9n('nl'));
+    const token = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+    Meteor.call('checkResetToken', token, (err, res) => {
+    	if (!res) {
+    		console.log(err)
+    		$('<div class="at-error"><p>'+err.reason+'</p></div>').insertAfter('.at-title');
+    		$("#at-field-password").prop('disabled', true);
+    	}
+    })
+    return false;
   } else if (i18nTag) {
     T9n.setLanguage(i18nTagToT9n(i18nTag));
   }

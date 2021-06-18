@@ -1574,6 +1574,34 @@ if (Meteor.isServer) {
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
     
+    checkResetToken(token) {
+      check(token, String);
+      const self = this;
+      console.log(self);
+      const user = Meteor.users.findOne({
+        "services.password.reset.token": token});
+      if (!user) { // never existed or already been used
+        throw new Meteor.Error(403, "Token expired");
+      }
+     
+      const when = user.services.password.reset.when;
+      const reason = user.services.password.reset.reason;
+      
+      let tokenLifetimeMs = Accounts._getPasswordResetTokenLifetimeMs();
+      if (reason === "enroll") {
+        tokenLifetimeMs = Accounts._getPasswordEnrollTokenLifetimeMs();
+      }
+      
+      const currentTimeMs = Date.now();
+      if ((currentTimeMs - new Date(when)) > tokenLifetimeMs) {
+        throw new Meteor.Error(403, "Token expired");
+        return false;
+      }
+      
+      return user;
+    },
+    
+    
   });
   
   Accounts.registerLoginHandler("impersonate", function ({impersonateUser}) {

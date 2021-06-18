@@ -1,6 +1,9 @@
 const passwordField = AccountsTemplates.removeField('password');
 const emailField = AccountsTemplates.removeField('email');
-
+Accounts.config({
+	passwordEnrollTokenExpirationInDays:1,
+	passwordResetTokenExpirationInDays:1
+});
 AccountsTemplates.addFields([{
   _id: 'username',
   type: 'text',
