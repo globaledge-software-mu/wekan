@@ -42,8 +42,7 @@ Template.userFormsLayout.onRendered(() => {
     T9n.setLanguage(i18nTagToT9n('nl'));
     const token = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
     Meteor.call('checkResetToken', token, (err, res) => {
-    	if (!res) {
-    		console.log(err)
+    	if (err) {
     		$('<div class="at-error"><p>'+err.reason+'</p></div>').insertAfter('.at-title');
     		$("#at-field-password").prop('disabled', true);
     	}
