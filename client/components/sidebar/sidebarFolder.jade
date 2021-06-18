@@ -28,9 +28,9 @@ template(name='foldersWidget')
         a#uncategorisedBoardsFolder.fa.fa-folder.selected
           | &nbsp;
           span.nav-label.generalFont {{_ 'uncategorised'}}
-    ul.nav.metismenu#side-menu.folders
+    ul.nav.metismenu#side-menu.folders.drag
       each folders
-        li.nav.sub-root.myFolder(data-id="{{_id}}" data-name="{{name}}")
+        li.nav.sub-root.myFolder.draggable.droppable(data-id="{{_id}}" data-name="{{name}}")
           a.folderOpener
             i.fa.fa-caret-right.folderHandle
               | &nbsp;

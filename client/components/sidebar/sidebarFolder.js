@@ -6,6 +6,32 @@ BlazeComponent.extendComponent({
   },
 
   onRendered() {
+  	 $(".drag li").each(function() {
+  		 $(this).draggable();
+     });
+  	 
+  	 $(".droppable").droppable({
+  		 drop: function(event,ui) {
+  			 const draggable = ui.draggable;
+  			 const droppable = $(this);
+  			 const secondlevelUl = $(this).find('.nav-second-level');
+  			 draggable.addClass('subFolderTAGli');
+  			 draggable.find('ul.nav-second-level').remove();
+  			 draggable.find('i').removeClass('fa fa-caret-right folderHandle');
+  			 draggable.find('i').addClass('fa fa-folder');
+  			 draggable.find('i span.fa.fa-folder').remove();
+  			 draggable.removeAttr('style');
+  			 secondlevelUl.append(draggable);
+  			 
+  			 Folders.update({
+  				              _id: ui.draggable.attr('data-id')},{
+  				               $set: {
+  					        	     level: 'second',
+  					        	     parentId: droppable.attr('data-id')
+  					             }
+  					         });
+  		 }
+  	 });
     // turning the Categorised Folder(s) into droppable(s)
   	$('ul.nav.metismenu#side-menu.folders').droppable({
   	  // accepts all three Template, Uncategorised and Categorised Folders Boards
