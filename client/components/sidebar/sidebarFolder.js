@@ -333,6 +333,26 @@ BlazeComponent.extendComponent({
             );
 
             $('#header-main-bar').before($successMessage);
+            $('li.myFolder').draggable();
+            $('li.myFolder').droppable({
+            	drop:function(event,ui) {
+            		const draggable = ui.draggable;
+        			  const droppable = $(this);
+        			  const secondlevelUl = $(this).find('.nav-second-level');
+        			  draggable.addClass('subFolderTAGli');
+        			  draggable.find('ul.nav-second-level').remove();
+        			  draggable.find('i').removeClass('fa fa-caret-right folderHandle');
+        			  draggable.find('i').addClass('fa fa-folder');
+        			  draggable.find('i span.fa.fa-folder').remove();
+        			  draggable.removeAttr('style');
+        			  secondlevelUl.append(draggable);
+        			  Folders.update({ _id: ui.draggable.attr('data-id')},
+        			  		           {$set: {level: 'second',
+        			  		          	parentId: droppable.attr('data-id')
+        			  		           }
+        					            });
+        		   }
+            });
             $successMessage.delay(10000).slideUp(500, function() {
               $(this).remove();
             });
