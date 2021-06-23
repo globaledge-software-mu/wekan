@@ -18,7 +18,9 @@ template(name="setting")
               a.js-setting-menu(data-id="announcement-setting") {{_ 'admin-announcement'}}
             li
               a.js-setting-menu(data-id="layout-setting") {{_ 'layout'}}
-        .main-body.settings-invite
+            li
+              a.js-setting-menu(data-id="batch-invitation") {{_ 'Batch Invitation'}}
+        .main-body.settings-invite.col-xs-6
           if loading.get
             +spinner
           else if generalSetting.get
@@ -31,6 +33,8 @@ template(name="setting")
             +announcementSettings
           else if layoutSetting.get
             +layoutSettings
+          else if batchSetting.get
+            +batchInvitation
 
 template(name="general")
   ul#registration-setting.setting-detail
@@ -195,6 +199,47 @@ template(name='layoutSettings')
       textarea#customHTMLbeforeBodyEnd.form-control= currentSetting.customHTMLbeforeBodyEnd
     li
       button.js-save-layout.primary {{_ 'save'}}
+
+template(name="batchInvitation")
+  ul.setting-detail.invitation-form
+    li.invitation.emailAddress
+      div.form-group
+        label(class="control-label title")
+          {{_ 'Email Address'}}
+        input(type="text" class="form-control")
+    li.invitation.firstName
+      div.form-group
+        label(class="control-label title")
+          {{_ 'First Name'}}
+        input(type="text" class="form-control")
+    li.invitation.lastName
+      div.form-group
+        label(class="control-label title")
+          {{_ 'Last Name'}}
+        input(type="text" class="form-control")
+    li
+      .title {{_ 'role'}}
+         select
+           if currentUser.isAdmin
+             each role in roles
+               option(value='{{role._id}}') {{role.name}}
+    li
+      .title {{_ 'Include Me as User Of New Board'}}
+      .radio-inline
+        input(type="radio" name="allowEmailChange" value="true")
+        span {{_ 'yes'}}
+      .radio-inline
+        input(type="radio" name="allowEmailChange" value="false")
+        span {{_ 'no'}}
+    li
+    li.accounts-form
+      .title {{_ 'accounts-allowUserNameChange'}}
+      .radio-inline
+        input#accounts-allowUserNameChange(type="radio" name="allowUserNameChange"  checked="checked")
+        span {{_ 'yes'}}
+      .radio-inline
+        input#accounts-allowUserNameChange(type="radio" name="allowUserNameChange"  checked="checked")
+        span {{_ 'no'}}
 
 
 template(name='selectAuthenticationMethod')

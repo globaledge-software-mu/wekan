@@ -7,6 +7,7 @@ BlazeComponent.extendComponent({
     this.accountSetting = new ReactiveVar(false);
     this.announcementSetting = new ReactiveVar(false);
     this.layoutSetting = new ReactiveVar(false);
+    this.batchSetting = new ReactiveVar(false);
 
     Meteor.subscribe('setting');
     Meteor.subscribe('mailServer');
@@ -108,6 +109,8 @@ BlazeComponent.extendComponent({
       this.accountSetting.set('account-setting' === targetID);
       this.announcementSetting.set('announcement-setting' === targetID);
       this.layoutSetting.set('layout-setting' === targetID);
+      this.batchSetting.set('batch-invitation' === targetID);
+      console.log(this.batchSetting.get());
     }
   },
 
@@ -542,4 +545,30 @@ Template.selectAuthenticationMethod.helpers({
   isSelected(match) {
     return Template.instance().data.authenticationMethod === match;
   },
+});
+
+BlazeComponent.extendComponent({
+  onCreated() {
+    this.loading = new ReactiveVar(false);
+  },
+  onRendered() {
+  },
+  setLoading(w) {
+    this.loading.set(w);
+  },
+  roles() {
+    return Roles.find({});
+  },
+  events() {
+  	return [{
+     /*'click .js-add'(evt) {
+    	 const form = $('ul.setting-detail').clone();
+    	 form.insertAfter('.settings-invite');
+  	 }*/
+  	}];
+  }
+}).register('batchInvitation');
+
+Template.batchInvitation.helpers({
+  
 });
