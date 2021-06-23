@@ -552,6 +552,10 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
   },
   onRendered() {
+  	 const cloneEle = $('.invitation').not('.clone-row');
+     for (var i = 0; i < 5; i++) {
+       cloneEle.clone().insertAfter('li.invitation:last');
+     }
   },
   setLoading(w) {
     this.loading.set(w);
@@ -559,12 +563,29 @@ BlazeComponent.extendComponent({
   roles() {
     return Roles.find({});
   },
+  
+  boards() {
+    return Boards.find({
+      archived: false,
+      members: {
+        $elemMatch: {
+          userId: Meteor.userId(),
+          isAdmin: true
+        }
+      },
+      type: {$ne: 'template-container'}
+    }, {
+      sort: ['title'],
+    });
+  },
+  folders() {
+  	return Folders.find({ userId: Meteor.userId() });
+  },
+  
   events() {
   	return [{
-     /*'click .js-add'(evt) {
-    	 const form = $('ul.setting-detail').clone();
-    	 form.insertAfter('.settings-invite');
-  	 }*/
+     'click .clone-row'(evt) {
+  	 }
   	}];
   }
 }).register('batchInvitation');
