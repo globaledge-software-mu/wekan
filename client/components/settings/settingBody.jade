@@ -201,71 +201,66 @@ template(name='layoutSettings')
       button.js-save-layout.primary {{_ 'save'}}
 
 template(name="batchInvitation")
-  ul.setting-detail.invitation-form
-    li.invitation.emailAddress
-      div.form-group
-        label(class="control-label title")
-          {{_ 'Email Address'}}
-        input(type="text" class="form-control")
-    li.invitation.firstName
-      div.form-group
-        label(class="control-label title")
-          {{_ 'First Name'}}
-        input(type="text" class="form-control")
-    li.invitation.lastName
-      div.form-group
-      label(class="control-label title")
-        {{_ 'Last Name'}}
-      input(type="text" class="form-control")
-      
-    li.invitation.clone-row
-      div.form-group
-        a#clone-row
-          i.fa.fa-copy
-    li
-      .title {{_ 'role'}}
+  div.invi-form
+    ul.setting-detail.invitation-form
+      div.form-fields
+        li.invitation#emailAddress
+          .title {{_ 'Email Address'}}
+          input(type="text" class="form-control")
+        li.invitation#firstName
+          .title {{_ 'First Name'}}
+          input(type="text" class="form-control")
+        li.invitation#lastName
+          .title {{_ 'Last Name'}}
+          input(type="text" class="form-control")
+          
+  div.setting-form
+    ul
+      li
+        .title {{_ 'role'}}
         select
           if currentUser.isAdmin
             each role in roles
               option(value='{{role._id}}') {{role.name}}
-    li
-      .title {{_ 'Use this Board to Create New Boards' }}
+      li
+        .title {{_ 'Use this Board to Create New Boards' }}
         select
           each board in boards
             option(value='{{board._id}}') {{board.title}}
-    li
-      .title {{_ 'Include Me as User Of New Board'}}
-      .radio-inline
-        input(type="radio" name="allowAdminAsUser" value="true" checked="checked")
-        span {{_ 'yes'}}
-      .radio-inline
-        input(type="radio" name="allowAdminAsUser" value="false")
-        span {{_ 'no'}}
+              
+      li
+        .title {{_ 'Include Me as User Of New Board'}}
+        .radio-inline
+          input(type="radio" name="allowAdminAsUser" value="true" checked="checked")
+          span {{_ 'yes'}}
+        .radio-inline
+          input(type="radio" name="allowAdminAsUser" value="false")
+          span {{_ 'no'}}
         
-    li.accounts-form
-      .title {{_ 'Make the new user member on the new board'}}
-      .radio-inline
-        input#accounts-allowUserNameChange(type="radio" name="makeUserMember"  value="true" checked="checked")
-        span {{_ 'yes'}}
-      .radio-inline
-        input#accounts-allowUserNameChange(type="radio" name="makeUserMember" value="false")
-        span {{_ 'no'}}
+      li
+        .title {{_ 'Make the new user member on the new board'}}
+        .radio-inline
+          input#accounts-allowUserNameChange(type="radio" name="makeUserMember"  value="true" checked="checked")
+          span {{_ 'yes'}}
+        .radio-inline
+          input#accounts-allowUserNameChange(type="radio" name="makeUserMember" value="false")
+          span {{_ 'no'}}
     
-    li
-      .title {{ _ 'Move new boards from uncategorised to my specific folder'}}
-        select
-          each folder in folders
-            option(value="{{folder._id}}") {{folder.name}}
-    li
-      .title {{_ ' Create separate boards for each user'}}
-      .radio-inline
-        input(type="radio" name="createSeperateBoard" value="true")
-        span {{_ 'yes'}}
-      .radio-inline
-        input(type="radio" name="createSepaerateBoard" value="false" checked="checked")
-        span {{_ 'no'}}
-    li
-      button.js-save.js-invite-batch.primary {{_ 'invite'}}
+      li
+        .title {{ _ 'Move new boards from uncategorised to my specific folder'}}
+         select
+           each folder in folders
+             option(value="{{folder._id}}") {{folder.name}}
+      li
+        .title {{_ ' Create separate boards for each user'}}
+        .radio-inline
+          input(type="radio" name="createSeperateBoard" value="true")
+          span {{_ 'yes'}}
+        .radio-inline
+          input(type="radio" name="createSepaerateBoard" value="false" checked="checked")
+          span {{_ 'no'}}
+      li
+        button.js-save.js-invite-batch.primary {{_ 'invite'}}
    
 
 

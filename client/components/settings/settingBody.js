@@ -552,10 +552,20 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
   },
   onRendered() {
-  	 const cloneEle = $('.invitation').not('.clone-row');
-     for (var i = 0; i < 5; i++) {
-       cloneEle.clone().insertAfter('li.invitation:last');
+  	 const cloneEle = $('.form-fields').clone();
+  	 
+     for (var i = 0; i < 9; i++) {
+    	 cloneEle.clone().insertAfter('.form-fields:last');
      }
+     
+     $('.form-fields').each(function(index,value) {
+    	 var dataId= index+1;
+       $(value).attr('data-id', dataId);
+       $(value).find('li#emailAddress').attr('data-id', dataId);
+       $(value).find('li#firstName').attr('data-id', dataId);
+       $(value).find('li#lastName').attr('data-id', dataId);
+       $(value).find('li .enter-valid-input').attr('data-id', dataId);
+     });
   },
   setLoading(w) {
     this.loading.set(w);
@@ -584,8 +594,22 @@ BlazeComponent.extendComponent({
   
   events() {
   	return [{
-     'click .clone-row'(evt) {
-  	 }
+     'click .js-invite-batch'(evt) {
+    	   var batchData = [];
+    	   $('.form-fields').each(function(index,value) {
+    	  	 var dataId = index+1
+    	  	 var email = $(value).children('li#emailAddress[data-id='+dataId+']').children('input[type="text"]').val();
+    	  	 var firstName = $(value).children('li#firstName[data-id='+dataId+']').children('input[type="text"]').val();
+    	  	 var lastName = $(value).children('li#lastName[data-id='+dataId+']').children('input[type="text"]').val();
+    	  	 
+    	  	  
+    	  	 if (email !== '' && firstName != '' & lastName != '') {
+    	  	   batchData.push(email);
+    	  	 } 
+    	   });
+    	   
+    	   console.log(batchData);
+  	  }
   	}];
   }
 }).register('batchInvitation');
