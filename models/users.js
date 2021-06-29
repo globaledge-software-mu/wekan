@@ -1576,19 +1576,18 @@ if (Meteor.isServer) {
     
     batchInviteUsers(user) {
     	check(user, Object);
-      const user = Users.findOne({
+      const userObj = Users.findOne({
       	'emails.Address':user.emailAddress
       });
-      if (user && user._id) {
+      if (userObj && userObj._id) {
         
       } else {
-      	const email = users.emailAddress
+      	const email = user.emailAddress
       	const userId = Accounts.createUser({email});
       	//update user role etc from settings form
         //send email to user to complete registration
       	try {
-          const user = Users.findOne({_id: newUserId});
-
+          const user = Users.findOne({_id: userId});
           var token = Random.secret();
           var newDate = new Date();
           var tokenRecord = JSON.parse(JSON.stringify({
@@ -1598,7 +1597,7 @@ if (Meteor.isServer) {
             reason: 'enroll'
           }));
 
-          Users.update({ _id: newUserId }, {
+          Users.update({ _id: userId }, {
             $set: {
               'services.password.reset': tokenRecord
             }
