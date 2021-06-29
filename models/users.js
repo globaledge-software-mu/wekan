@@ -1574,6 +1574,73 @@ if (Meteor.isServer) {
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
     
+    batchInviteUsers(user) {
+    	check(user, Object);
+      const user = Users.findOne({
+      	'emails.Address':user.emailAddress
+      });
+      if (user && user._id) {
+        
+      } else {
+      	const email = users.emailAddress
+      	const userId = Accounts.createUser({email});
+      	//update user role etc from settings form
+        //send email to user to complete registration
+      	try {
+          const user = Users.findOne({_id: newUserId});
+
+          var token = Random.secret();
+          var newDate = new Date();
+          var tokenRecord = JSON.parse(JSON.stringify({
+            token: token,
+            email: email,
+            when: newDate,
+            reason: 'enroll'
+          }));
+
+          Users.update({ _id: newUserId }, {
+            $set: {
+              'services.password.reset': tokenRecord
+            }
+          });
+
+          // before passing to template, update user object with new token
+          Meteor._ensure(user, 'services', 'password').reset = tokenRecord;
+
+          const enrollLink = Accounts.urls.enrollAccount(token);
+          const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+
+          const parameters = {
+            user: user.username,
+            enrollUrl: enrollLink,
+            logoUrl: logoUrl
+          };
+          
+          const noValidate = {
+                validate: false,
+                filter: false,
+                removeEmptyStrings: false
+          };
+          const lang = user.getLanguage();
+
+          const message = '<!DOCTYPE html><html lang="en"><head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-enroll-text', parameters, lang);
+          const messageContent = {subject: TAPi18n.__('email-enroll-subject', parameters, lang) , content: message};
+          const date = new Date();
+          
+          Email.send({
+            to: user.emails[0].address.toLowerCase(),
+            from: Accounts.emailTemplates.from,
+            subject: TAPi18n.__('email-enroll-subject', parameters, lang),
+            html: message,
+          });
+
+          return userId;
+        } catch (e) {
+          throw new Meteor.Error('email-fail', e.message);
+        }
+      }
+    },
+    
   });
   
   Accounts.registerLoginHandler("impersonate", function ({impersonateUser}) {
