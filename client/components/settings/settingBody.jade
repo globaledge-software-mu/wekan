@@ -201,18 +201,18 @@ template(name='layoutSettings')
       button.js-save-layout.primary {{_ 'save'}}
 
 template(name="batchInvitation")
-  div.invi-form
+  form.invi-form#invi-form
     ul.setting-detail.invitation-form
       div.form-fields
         li.invitation#emailAddress
           .title {{_ 'Email Address'}}
-          input(type="text" class="form-control")
+          input(type="text" class="form-control" name="emailAddress")
         li.invitation#firstName
           .title {{_ 'First Name'}}
-          input(type="text" class="form-control")
+          input(type="text" class="form-control" name="firstName")
         li.invitation#lastName
           .title {{_ 'Last Name'}}
-          input(type="text" class="form-control")
+          input(type="text" class="form-control" name="lastName")
           
   div.setting-form
     ul

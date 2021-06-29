@@ -564,7 +564,7 @@ BlazeComponent.extendComponent({
        $(value).find('li#emailAddress').attr('data-id', dataId);
        $(value).find('li#firstName').attr('data-id', dataId);
        $(value).find('li#lastName').attr('data-id', dataId);
-       $(value).find('li .enter-valid-input').attr('data-id', dataId);
+       //$(value).find('li .enter-valid-input').attr('data-id', dataId);
      });
   },
   setLoading(w) {
@@ -595,20 +595,41 @@ BlazeComponent.extendComponent({
   events() {
   	return [{
      'click .js-invite-batch'(evt) {
-    	   var batchData = [];
-    	   $('.form-fields').each(function(index,value) {
-    	  	 var dataId = index+1
-    	  	 var email = $(value).children('li#emailAddress[data-id='+dataId+']').children('input[type="text"]').val();
-    	  	 var firstName = $(value).children('li#firstName[data-id='+dataId+']').children('input[type="text"]').val();
-    	  	 var lastName = $(value).children('li#lastName[data-id='+dataId+']').children('input[type="text"]').val();
-    	  	 
-    	  	  
-    	  	 if (email !== '' && firstName != '' & lastName != '') {
-    	  	   batchData.push(email);
-    	  	 } 
-    	   });
+    	 var batchData = [];
+    	 var isValid = true;
+    	 $('.form-fields').each(function(index, value) {
+    		 const emailAddress =  $(this).find('input[name="emailAddress"]').val();
+    		 const firstName = $(this).find('input[name="firstName"]').val();
+  	     const lastName = $(this).find('input[name="lastName"]').val();
+    		 //validation
+    		 if ($(this).find('input[name="emailAddress"]').val() !='' &&  
+    				 !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress))
+    		  {
+    			  alert('Enter valid email');
+    		    return false;
+    		  }
+    		  
+    		  if ($(this).find('input[name="emailAddress"]').val() !='' &&  
+     				 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress)) {
+    		     
+    		  	  batchData.push({ emailAddress: emailAddress,
+              firstName: firstName,
+              lastName: lastName
+              
+            })
+    		  }
     	   
-    	   console.log(batchData);
+    	 });
+    	 
+    	 if (batchData.length > 0) {
+    		 console.log(batchData);
+    		 for (var i = 0; i < batchData.length;i++) {
+    			 console.log(batchData[i]);
+    			 Meteor.call('batchInviteUsers', batchData[i], function(err, success) {
+                  
+    			 });
+    		 }
+    	 }
   	  }
   	}];
   }
