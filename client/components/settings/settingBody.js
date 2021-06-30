@@ -597,6 +597,15 @@ BlazeComponent.extendComponent({
      'click .js-invite-batch'(evt) {
     	 var batchData = [];
     	 var isValid = true;
+    	 var errors = [];
+    	 
+    	 
+    	  const title = 'test'; ;
+		    var selectedUserGroupId = '';
+		    if ($('.choose-specific-quota-to-use option:selected')) {
+		      selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+		    }
+		    
     	 $('.form-fields').each(function(index, value) {
     		 const emailAddress =  $(this).find('input[name="emailAddress"]').val();
     		 const firstName = $(this).find('input[name="firstName"]').val();
@@ -611,8 +620,8 @@ BlazeComponent.extendComponent({
     		  
     		  if ($(this).find('input[name="emailAddress"]').val() !='' &&  
      				 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress)) {
-    		     
-    		  	  batchData.push({ emailAddress: emailAddress,
+    		  	  batchData.push({
+    		  	  emailAddress: emailAddress,
               firstName: firstName,
               lastName: lastName
               
@@ -620,18 +629,31 @@ BlazeComponent.extendComponent({
     		  }
     	   
     	 });
+    	 /*if (errors.length > 0 ) {
+    		 $('.errors').show();
+    		 return false;
+    	 }*/
     	 
-    	 if (batchData.length > 0) {
-    		 console.log(batchData);
+       if (batchData.length > 0) {
+      	 const visibility = 'private';
+			   var boardId = '';
     		 for (var i = 0; i < batchData.length;i++) {
-    			 console.log(batchData[i]);
-    			 Meteor.call('batchInviteUsers', batchData[i], function(err, success) {
-                  
+ 		       if (selectedUserGroupId.length > 0) {
+ 		         boardId = Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId });
+ 		       } else {
+ 		         boardId = Boards.insert({ title, permission: visibility });
+ 		       }
+ 		       
+    	     Meteor.call('batchInviteUsers', batchData[i],boardId, function(err, success) {
+    				 if (err) {
+    					 throw new Meteor.Error('email-fail', err.message);
+    				 }
+    			   
     			 });
     		 }
     	 }
   	  }
-  	}];
+   }];
   }
 }).register('batchInvitation');
 

@@ -1292,11 +1292,11 @@ if (Meteor.isServer) {
                
                //insert into remainders collection
               
-              Remainders.insert({
+              /*Remainders.insert({
             		invitee: user._id,
             		messageContent: messageContent,
             		nextRunAt: date.setDate(date.getDate() + 3)
-            	}, noValidate);
+            	}, noValidate);*/
               
               Email.send({
                 to: user.emails[0].address.toLowerCase(),
@@ -1574,12 +1574,46 @@ if (Meteor.isServer) {
       return {userID: user._id, username: user.username, email: user.emails[0].address};
     },
     
-    batchInviteUsers(user) {
+    batchInviteUsers(user, boardId) {
     	check(user, Object);
+    	check(boardId, String);
+    	console.log(boardId);
       const userObj = Users.findOne({
-      	'emails.Address':user.emailAddress
+      	'emails.address':user.emailAddress
       });
-      if (userObj && userObj._id) {
+      
+      const board = Boards.findOne({_id:boardId});
+
+      if (userObj && userObj._id && board && board._id) {
+      	board.addMember(userObj._id);
+        userObj.addInvite(board._id);
+      	const inviter = Meteor.user();
+      	
+        try {
+          const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
+          const params = {
+            user: userObj.username,
+            inviter: inviter.username,
+            board: board.title,
+            url: board.absoluteUrl(),
+            logoUrl: logoUrl
+          };
+          const lang = userObj.getLanguage();
+          const date = new Date();
+          const messageContent = {subject: TAPi18n.__('email-invite-subject', params, lang), 
+                                  content: '<!DOCTYPE html><html lang="en"><head>'
+     	                            +'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + TAPi18n.__('email-invite-text', params, lang)
+     	                           };
+          Email.send({
+            to: userObj.emails[0].address.toLowerCase(),
+            from: Accounts.emailTemplates.from,
+            subject: TAPi18n.__('email-invite-subject', params, lang),
+            text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
+            html: TAPi18n.__('email-invite-text', params, lang)
+          });
+        } catch (e) {
+          throw new Meteor.Error('email-fail', e.message);
+        }
         
       } else {
       	const email = user.emailAddress

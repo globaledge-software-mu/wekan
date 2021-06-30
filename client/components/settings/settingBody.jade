@@ -220,6 +220,7 @@ template(name="batchInvitation")
         .title {{_ 'role'}}
         select
           if currentUser.isAdmin
+            option(value='', selected='selected') Select One
             each role in roles
               option(value='{{role._id}}') {{role.name}}
       li
@@ -259,6 +260,15 @@ template(name="batchInvitation")
         .radio-inline
           input(type="radio" name="createSepaerateBoard" value="false" checked="checked")
           span {{_ 'no'}}
+      
+      if currentUser.hasMultipleUsableUserQuotaGroups
+        li
+          .title {{_ 'choose-specific-quota-to-use'}}
+          select.choose-specific-quota-to-use
+            option(value='', selected='selected') Select One
+            each usableBoardsQuotaGroup in currentUser.usableUsersQuotaGroups
+              option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
+      
       li
         button.js-save.js-invite-batch.primary {{_ 'invite'}}
    
