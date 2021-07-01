@@ -599,8 +599,6 @@ BlazeComponent.extendComponent({
     	 var isValid = true;
     	 var errors = [];
     	 
-    	 
-    	  const title = 'test'; ;
 		    var selectedUserGroupId = '';
 		    if ($('.choose-specific-quota-to-use option:selected')) {
 		      selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
@@ -614,43 +612,63 @@ BlazeComponent.extendComponent({
     		 if ($(this).find('input[name="emailAddress"]').val() !='' &&  
     				 !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress))
     		  {
-    			  alert('Enter valid email');
+    			  $(this).find('input[name="emailAddress"]').css('border','1px solid #d62f2f');
+    		    return false;
+    		  }
+    		  
+    		  if ($(this).find('input[name="emailAddress"]').val() != '' && firstName == '' && lastName == '') {
+    		    $(this).find('input[name="firstName"]').css('border','1px solid #d62f2f');
+    		    $(this).find('input[name="lastName"]').css('border','1px solid #d62f2f');
     		    return false;
     		  }
     		  
     		  if ($(this).find('input[name="emailAddress"]').val() !='' &&  
-     				 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress)) {
-    		  	  batchData.push({
-    		  	  emailAddress: emailAddress,
-              firstName: firstName,
-              lastName: lastName
-              
-            })
-    		  }
+      				 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress)) {
+     		  	  batchData.push({
+     		  	  emailAddress: emailAddress,
+               firstName: firstName,
+               lastName: lastName
+               
+             })
+     		  }
     	   
     	 });
-    	 /*if (errors.length > 0 ) {
-    		 $('.errors').show();
-    		 return false;
-    	 }*/
     	 
        if (batchData.length > 0) {
-      	 const visibility = 'private';
-			   var boardId = '';
-    		 for (var i = 0; i < batchData.length;i++) {
- 		       if (selectedUserGroupId.length > 0) {
- 		         boardId = Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId });
- 		       } else {
- 		         boardId = Boards.insert({ title, permission: visibility });
- 		       }
- 		       
-    	     Meteor.call('batchInviteUsers', batchData[i],boardId, function(err, success) {
-    				 if (err) {
-    					 throw new Meteor.Error('email-fail', err.message);
-    				 }
-    			   
-    			 });
-    		 }
+      	 const role = $('.setting-form li').find('input[name="role"] option:selected').val();
+         const createBoard = $('.setting-form li').find('input[name="createSeperateBoard"]:checked').val();
+         const boardId = $('.setting-form li').find('select[name="boards"] option:selected').val();
+         
+         if (role === '') {
+        	 $('.setting-form li').find('select[name="role"]').css('border', '1px solid #d62f2f');
+        	 return false;
+         }
+         if (board  === '') {
+        	 $('.setting-form li').find('select[name="boards"]').css('border', '1px solid #d62f2f');
+        	 return false;
+         }
+         
+         if (createBoard) {
+           const visibility = 'private';
+  			   var boardId = '';
+  			   const board = Boards.findOne({_id:boardId});
+  			   
+  			   for (var i = 0; i < batchData.length;i++) {
+      		   const title = board.title+ '_' +batchData[i].firstName + batchData[i].lastName;
+   		       if (selectedUserGroupId.length > 0) {
+   		         boardId = Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId });
+   		       } else {
+   		         boardId = Boards.insert({ title, permission: visibility });
+   		       }
+      		   
+   		       
+      	     Meteor.call('batchInviteUsers', batchData[i],boardId, function(err, success) {
+      				 if (err) {
+      					 throw new Meteor.Error('email-fail', err.message);
+      				 }
+      			 });
+      		 }
+         }
     	 }
   	  }
    }];

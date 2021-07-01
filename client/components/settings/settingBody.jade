@@ -218,14 +218,15 @@ template(name="batchInvitation")
     ul
       li
         .title {{_ 'role'}}
-        select
+        select(name="role")
           if currentUser.isAdmin
             option(value='', selected='selected') Select One
             each role in roles
               option(value='{{role._id}}') {{role.name}}
       li
         .title {{_ 'Use this Board to Create New Boards' }}
-        select
+        select(name="boards")
+          option(value='', selected="selected") Select One
           each board in boards
             option(value='{{board._id}}') {{board.title}}
               
@@ -249,7 +250,8 @@ template(name="batchInvitation")
     
       li
         .title {{ _ 'Move new boards from uncategorised to my specific folder'}}
-         select
+         select(name="folders")
+           option(value='',selected='selected') Select One
            each folder in folders
              option(value="{{folder._id}}") {{folder.name}}
       li
@@ -258,7 +260,7 @@ template(name="batchInvitation")
           input(type="radio" name="createSeperateBoard" value="true")
           span {{_ 'yes'}}
         .radio-inline
-          input(type="radio" name="createSepaerateBoard" value="false" checked="checked")
+          input(type="radio" name="createSeperateBoard" value="false" checked="checked")
           span {{_ 'no'}}
       
       if currentUser.hasMultipleUsableUserQuotaGroups
