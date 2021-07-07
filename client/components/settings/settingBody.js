@@ -552,19 +552,12 @@ BlazeComponent.extendComponent({
     this.loading = new ReactiveVar(false);
   },
   onRendered() {
-  	 const cloneEle = $('.form-fields').clone();
-  	 
-     for (var i = 0; i < 9; i++) {
-    	 cloneEle.clone().insertAfter('.form-fields:last');
-     }
-     
      $('.form-fields').each(function(index,value) {
     	 var dataId= index+1;
        $(value).attr('data-id', dataId);
        $(value).find('li#emailAddress').attr('data-id', dataId);
        $(value).find('li#firstName').attr('data-id', dataId);
        $(value).find('li#lastName').attr('data-id', dataId);
-       //$(value).find('li .enter-valid-input').attr('data-id', dataId);
      });
   },
   setLoading(w) {
@@ -594,14 +587,27 @@ BlazeComponent.extendComponent({
   
   events() {
   	return [{
+  		'change input[name="customEmailText"]'(evt) {
+  			//console.log($(evt));
+  		},
+  		'click a.clone'(evt) {
+  			evt.preventDefault();
+  			evt.stopPropagation();
+  			var formfields = $('.form-fields').length;
+  			var cloneEle = $('.form-fields:first').clone();
+  			cloneEle.find('li.clone').remove();
+  			cloneEle.attr('data-id', formfields+1);
+  			cloneEle.children().attr('data-id', formfields+1);
+  			$('ul.invitation-form').append(cloneEle)
+  		},
      'click .js-invite-batch'(evt) {
     	 var batchData = [];
     	 var isValid = true;
     	 var errors = [];
     	 
 		    var selectedUserGroupId = '';
-		    if ($('.choose-specific-quota-to-use option:selected')) {
-		      selectedUserGroupId = this.find('.choose-specific-quota-to-use option:selected').value;
+		    if ($('.choose-specific-quota-to-use option:selected').val() !='') {
+		      selectedUserGroupId = $('.choose-specific-quota-to-use option:selected').val();
 		    }
 		    
     	 $('.form-fields').each(function(index, value) {
@@ -625,7 +631,7 @@ BlazeComponent.extendComponent({
     		  if ($(this).find('input[name="emailAddress"]').val() !='' &&  
       				 /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress)) {
      		  	  batchData.push({
-     		  	  emailAddress: emailAddress,
+     		  	   emailAddress: emailAddress,
                firstName: firstName,
                lastName: lastName
                
@@ -635,15 +641,15 @@ BlazeComponent.extendComponent({
     	 });
     	 
        if (batchData.length > 0) {
-      	 const role = $('.setting-form li').find('input[name="role"] option:selected').val();
+      	 const role = $('.setting-form li').find('select[name="role"] option:selected').val();
          const createBoard = $('.setting-form li').find('input[name="createSeperateBoard"]:checked').val();
-         const boardId = $('.setting-form li').find('select[name="boards"] option:selected').val();
+         const boardIdVal = $('.setting-form li').find('select[name="boards"] option:selected').val();
          
          if (role === '') {
         	 $('.setting-form li').find('select[name="role"]').css('border', '1px solid #d62f2f');
         	 return false;
          }
-         if (board  === '') {
+         if (boardIdVal === '') {
         	 $('.setting-form li').find('select[name="boards"]').css('border', '1px solid #d62f2f');
         	 return false;
          }
@@ -651,22 +657,22 @@ BlazeComponent.extendComponent({
          if (createBoard) {
            const visibility = 'private';
   			   var boardId = '';
-  			   const board = Boards.findOne({_id:boardId});
-  			   
+           const board = Boards.findOne({_id:boardIdVal});
+           
   			   for (var i = 0; i < batchData.length;i++) {
+  			  	 const userObj = batchData[i];
       		   const title = board.title+ '_' +batchData[i].firstName + batchData[i].lastName;
-   		       if (selectedUserGroupId.length > 0) {
-   		         boardId = Boards.insert({ title, permission: visibility, quotaGroupId: selectedUserGroupId });
-   		       } else {
-   		         boardId = Boards.insert({ title, permission: visibility });
-   		       }
-      		   
-   		       
-      	     Meteor.call('batchInviteUsers', batchData[i],boardId, function(err, success) {
-      				 if (err) {
-      					 throw new Meteor.Error('email-fail', err.message);
-      				 }
-      			 });
+      		   Meteor.call('cloneBoard',boardIdVal, Session.get('currentBoard'), function(err, boardId) {
+          		 if (boardId) {
+          		   Meteor.call('batchInviteUsers', userObj, boardId , function(error, success) {
+          		     if (success) {
+          		    	 console.log(boardId);
+          		    	 Boards.update({_id: boardId},{$set:{title:title, type:'board'}});
+          		     }
+          		     console.log(error);
+          		   });
+          		 }
+          	 });
       		 }
          }
     	 }

@@ -214,6 +214,11 @@ template(name="batchInvitation")
           .title {{_ 'Last Name'}}
           input(type="text" class="form-control" name="lastName")
           
+        li.invitation.clone
+          a.clone
+            i.fa.fa-copy
+        
+        
   div.setting-form
     ul
       li
@@ -270,6 +275,14 @@ template(name="batchInvitation")
             option(value='', selected='selected') Select One
             each usableBoardsQuotaGroup in currentUser.usableUsersQuotaGroups
               option(value='{{usableBoardsQuotaGroup._id}}') {{usableBoardsQuotaGroup.title}}
+      li
+        .title {{_ 'Use Custom email text'}}
+        .radio-inline
+          input(type="radio" name="customEmailText" value="true")
+          span {{_ 'yes'}}
+        .radio-inline
+          input(type="radio" name="customEmailText" value="false" checked="checked")
+          span {{_ 'no'}}
       
       li
         button.js-save.js-invite-batch.primary {{_ 'invite'}}
