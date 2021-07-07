@@ -1585,8 +1585,8 @@ if (Meteor.isServer) {
       const board = Boards.findOne({_id:boardId});
 
       if (userObj && userObj._id && board && board._id) {
-      	board.addMember(userObj._id);
-        userObj.addInvite(board._id);
+      	 board.addMember(userObj._id);
+         userObj.addInvite(board._id);
       	const inviter = Meteor.user();
       	
         try {
@@ -1616,7 +1616,7 @@ if (Meteor.isServer) {
         }
         
       } else {
-      	const email = user.emailAddress
+      	const email = user.emailAddress;
       	const userId = Accounts.createUser({email});
       	//update user role etc from settings form
         //send email to user to complete registration

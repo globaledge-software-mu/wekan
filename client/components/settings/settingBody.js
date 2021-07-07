@@ -615,6 +615,13 @@ BlazeComponent.extendComponent({
     		 const firstName = $(this).find('input[name="firstName"]').val();
   	     const lastName = $(this).find('input[name="lastName"]').val();
     		 //validation
+  	     
+  	     if (firstName == '' && lastName == '' && emailAddress == '') {
+  	    	 $(this).find('input[name="emailAddress"]').css('border','1px solid #d62f2f');
+  	       $(this).find('input[name="firstName"]').css('border','1px solid #d62f2f');
+   		     $(this).find('input[name="lastName"]').css('border','1px solid #d62f2f');
+  	     }
+  	     
     		 if ($(this).find('input[name="emailAddress"]').val() !='' &&  
     				 !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(emailAddress))
     		  {
@@ -641,11 +648,11 @@ BlazeComponent.extendComponent({
     	 });
     	 
        if (batchData.length > 0) {
-      	 const role = $('.setting-form li').find('select[name="role"] option:selected').val();
+      	 const roleId = $('.setting-form li').find('select[name="role"] option:selected').val();
          const createBoard = $('.setting-form li').find('input[name="createSeperateBoard"]:checked').val();
          const boardIdVal = $('.setting-form li').find('select[name="boards"] option:selected').val();
          
-         if (role === '') {
+         if (roleId === '') {
         	 $('.setting-form li').find('select[name="role"]').css('border', '1px solid #d62f2f');
         	 return false;
          }
@@ -658,15 +665,18 @@ BlazeComponent.extendComponent({
            const visibility = 'private';
   			   var boardId = '';
            const board = Boards.findOne({_id:boardIdVal});
+           const role = Roles.findOne({_id: roleId});
            
   			   for (var i = 0; i < batchData.length;i++) {
   			  	 const userObj = batchData[i];
       		   const title = board.title+ '_' +batchData[i].firstName + batchData[i].lastName;
       		   Meteor.call('cloneBoard',boardIdVal, Session.get('currentBoard'), function(err, boardId) {
           		 if (boardId) {
-          		   Meteor.call('batchInviteUsers', userObj, boardId , function(error, success) {
-          		     if (success) {
+          		   Meteor.call('batchInviteUsers', userObj, boardId , function(error, userId) {
+          		     if (userId) {
+          		    	 console.log(userId);
           		    	 console.log(boardId);
+          		    	 Users.update({_id: userId},{$set:{roleName: role.name}});
           		    	 Boards.update({_id: boardId},{$set:{title:title, type:'board'}});
           		     }
           		     console.log(error);
