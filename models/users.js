@@ -1259,20 +1259,19 @@ if (Meteor.isServer) {
       } else {
         user = Users.findOne(username) || Users.findOne({username});
       }
-
+      console.log(username);
+      console.log(user);
       var continueExecution = true;
       var removedUnconfirmedUser = false;
       if (user) {
         continueExecution = false;
-
+        console.log('if'+user._id);
         if (user._id !== inviter._id) {
-          board.addMember(user._id);
-          user.addInvite(boardId);
-
           // If its a user that was already invited and has already set its own password,
           // we just send the invite to join the board
           if (user && user.services && user.services.password && user.services.password.bcrypt) {
-
+          	board.addMember(user._id);
+            user.addInvite(boardId);
             // Send Invite 'Login To Accept Invite To Board'
             try {
               const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
@@ -1384,7 +1383,7 @@ if (Meteor.isServer) {
             updateUsingDefaultGroupOrder = true;
           }
           if (updateUsingDefaultGroupOrder) {
-            const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}} ).fetch();
+            const userAssignedUserGroups = AssignedUserGroups.find({ userId: inviter._id }, {$sort: {groupOrder: 1}}).fetch();
             var hadUsableQuota = false;
             for (var i = 0; i < userAssignedUserGroups.length; i++) {
               const userGroup = UserGroups.findOne({_id: userAssignedUserGroups[i].userGroupId});
@@ -1578,6 +1577,7 @@ if (Meteor.isServer) {
     	check(user, Object);
     	check(boardId, String);
     	console.log(boardId);
+    	var userId = '';
       const userObj = Users.findOne({
       	'emails.address':user.emailAddress
       });
@@ -1585,10 +1585,9 @@ if (Meteor.isServer) {
       const board = Boards.findOne({_id:boardId});
 
       if (userObj && userObj._id && board && board._id) {
-      	 board.addMember(userObj._id);
-         userObj.addInvite(board._id);
-      	const inviter = Meteor.user();
-      	
+      	 userId = userObj._id;
+      	 const inviter = Meteor.user();
+      	 
         try {
           const logoUrl = Meteor.absoluteUrl() + 'rh-logo.png';
           const params = {
@@ -1611,13 +1610,15 @@ if (Meteor.isServer) {
             text: TAPi18n.__('email-invite-text', params, lang).replace(/(<([^>]+)>)/gi, ""),
             html: TAPi18n.__('email-invite-text', params, lang)
           });
+          return userId;
         } catch (e) {
           throw new Meteor.Error('email-fail', e.message);
         }
         
       } else {
       	const email = user.emailAddress;
-      	const userId = Accounts.createUser({email});
+      	const userName = email.split('@')[0]
+      	userId = Accounts.createUser({userName, email});
       	//update user role etc from settings form
         //send email to user to complete registration
       	try {
@@ -1671,6 +1672,11 @@ if (Meteor.isServer) {
         } catch (e) {
           throw new Meteor.Error('email-fail', e.message);
         }
+      }
+      
+      if (userId!='') {
+      	board.addMember(userId);
+        userObj.addInvite(boardId);
       }
     },
     

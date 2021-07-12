@@ -672,11 +672,11 @@ BlazeComponent.extendComponent({
       		   const title = board.title+ '_' +batchData[i].firstName + batchData[i].lastName;
       		   Meteor.call('cloneBoard',boardIdVal, Session.get('currentBoard'), function(err, boardId) {
           		 if (boardId) {
-          		   Meteor.call('batchInviteUsers', userObj, boardId , function(error, userId) {
+          		   Meteor.call('inviteUserToBoard', userObj.emailAddress, boardId,roleId, selectedUserGroupId,function(error, userId) {
           		     if (userId) {
           		    	 console.log(userId);
           		    	 console.log(boardId);
-          		    	 Users.update({_id: userId},{$set:{roleName: role.name}});
+          		    	 //Users.update({_id: userId},{$set:{roleName: role.name}});
           		    	 Boards.update({_id: boardId},{$set:{title:title, type:'board'}});
           		     }
           		     console.log(error);
