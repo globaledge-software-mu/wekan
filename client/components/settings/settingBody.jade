@@ -216,7 +216,7 @@ template(name="batchInvitation")
           
         li.invitation.clone
           a.clone
-            i.fa.fa-add
+            i.fa.fa-plus
         
         
   div.setting-form
@@ -283,6 +283,8 @@ template(name="batchInvitation")
         .radio-inline
           input(type="radio" name="customEmailText" value="false" checked="checked")
           span {{_ 'no'}}
+        .email-text
+          textarea(class="email-text hide" id="email-text")
       
       li
         button.js-save.js-invite-batch.primary {{_ 'invite'}}

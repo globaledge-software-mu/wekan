@@ -588,7 +588,7 @@ BlazeComponent.extendComponent({
   events() {
   	return [{
   		'change input[name="customEmailText"]'(evt) {
-  			//console.log($(evt));
+  			$('textarea.email-text').toggle();
   		},
   		'click a.clone'(evt) {
   			evt.preventDefault();
@@ -651,6 +651,7 @@ BlazeComponent.extendComponent({
       	 const roleId = $('.setting-form li').find('select[name="role"] option:selected').val();
          const createBoard = $('.setting-form li').find('input[name="createSeperateBoard"]:checked').val();
          const boardIdVal = $('.setting-form li').find('select[name="boards"] option:selected').val();
+         const customEmailText = $('.setting-form li').find('input[name="customEmailText"]:checked').val();
          
          if (roleId === '') {
         	 $('.setting-form li').find('select[name="role"]').css('border', '1px solid #d62f2f');
@@ -658,6 +659,11 @@ BlazeComponent.extendComponent({
          }
          if (boardIdVal === '') {
         	 $('.setting-form li').find('select[name="boards"]').css('border', '1px solid #d62f2f');
+        	 return false;
+         }
+         
+         if (customEmailText && $('.email-text').val() === '') {
+        	 $('.setting-form li').find('textarea.email-text').css('border', '1px solid #d62f2f');
         	 return false;
          }
          
@@ -674,12 +680,8 @@ BlazeComponent.extendComponent({
           		 if (boardId) {
           		   Meteor.call('inviteUserToBoard', userObj.emailAddress, boardId,roleId, selectedUserGroupId,function(error, userId) {
           		     if (userId) {
-          		    	 console.log(userId);
-          		    	 console.log(boardId);
-          		    	 //Users.update({_id: userId},{$set:{roleName: role.name}});
           		    	 Boards.update({_id: boardId},{$set:{title:title, type:'board'}});
           		     }
-          		     console.log(error);
           		   });
           		 }
           	 });
